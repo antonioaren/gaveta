@@ -2,7 +2,7 @@
   "name": "@gaveta/core",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared core for the CLI, server, and app. Empty until phase 1.",
+  "description": "Shared core: authoring contract and stable error catalog.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
