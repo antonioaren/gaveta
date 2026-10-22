@@ -245,6 +245,9 @@ describe('authoring contract attributes and classes', () => {
       { name: 'slide', elements: ['section'], priority: 'P0' },
       { name: 'notes', elements: ['aside'], priority: 'P0' },
       { name: 'tasks', elements: ['ul'], priority: 'P0' },
+      { name: 'badge', elements: ['span'], priority: 'P0' },
+      { name: 'note-header', elements: ['header'], priority: 'P0' },
+      { name: 'toc', elements: ['nav'], priority: 'P0' },
       { name: 'mermaid', elements: ['pre'], priority: 'P1' },
     ]);
     expect(isAllowedClass('aside', 'callout')).toBe(true);
@@ -252,6 +255,9 @@ describe('authoring contract attributes and classes', () => {
     expect(isAllowedClass('section', 'slide')).toBe(true);
     expect(isAllowedClass('ul', 'tasks')).toBe(true);
     expect(isAllowedClass('pre', 'mermaid')).toBe(true);
+    expect(isAllowedClass('span', 'badge')).toBe(true);
+    expect(isAllowedClass('header', 'note-header')).toBe(true);
+    expect(isAllowedClass('nav', 'toc')).toBe(true);
     expect(isAllowedClass('code', 'language-ts')).toBe(true);
     expect(isAllowedClass('code', 'language-c++')).toBe(true);
     expect(isAllowedClass('code', 'language-c#')).toBe(true);
@@ -368,13 +374,17 @@ describe('REQ-TYPE-01 to REQ-TYPE-05 structures and components', () => {
     const callout = componentById('callout');
     expect(callout?.element).toBe('aside');
     expect(callout?.className).toBe('callout');
-    expect(callout?.kinds).toEqual(['info', 'warn']);
+    expect(callout?.kinds).toEqual(['info', 'warn', 'warning', 'tip', 'note', 'danger', 'success']);
     expect(callout?.example).toContain('class="callout"');
     expect(callout?.example).toContain('data-kind="info"');
     expect(isCalloutKind('info')).toBe(true);
     expect(isCalloutKind('warn')).toBe(true);
-    expect(isCalloutKind('note')).toBe(false);
-    expect(isCalloutKind('warning')).toBe(false);
+    expect(isCalloutKind('warning')).toBe(true);
+    expect(isCalloutKind('tip')).toBe(true);
+    expect(isCalloutKind('note')).toBe(true);
+    expect(isCalloutKind('danger')).toBe(true);
+    expect(isCalloutKind('success')).toBe(true);
+    expect(isCalloutKind('bogus')).toBe(false);
 
     expect(componentById('table')?.example).toContain('<table>');
     expect(componentById('table')?.example).toContain('<th>');

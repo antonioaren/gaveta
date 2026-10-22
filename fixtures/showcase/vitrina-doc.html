@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vitrina del tema — documento</title>
+    <meta name="gaveta:id" content="01VITRINAD0000000000000001" />
+    <meta name="gaveta:type" content="doc" />
+    <meta name="gaveta:tags" content="vitrina, tema, demo" />
+    <meta name="gaveta:created" content="2026-10-22T12:00:00Z" />
+    <meta name="gaveta:updated" content="2026-10-22T12:00:00Z" />
+    <link rel="stylesheet" href=".gaveta/theme.css" />
+  </head>
+  <body>
+    <article>
+      <header class="note-header">
+        <span class="note-type">Documento</span>
+        <h1>Vitrina del tema Gaveta</h1>
+        <p class="note-meta">Creada el <time datetime="2026-10-22">22 de octubre de 2026</time></p>
+        <ul class="note-tags">
+          <li><span class="badge">vitrina</span></li>
+          <li><span class="badge">tema</span></li>
+          <li><span class="badge">demo</span></li>
+        </ul>
+      </header>
+      <nav class="toc">
+        <a href="#componentes">Componentes</a>
+        <a href="#enlaces">Enlaces</a>
+        <a href="#tabla">Tabla</a>
+      </nav>
+      <section id="componentes">
+        <h2>Componentes</h2>
+        <aside class="callout" data-kind="info">
+          <p>Aviso informativo con <code>data-kind="info"</code>.</p>
+        </aside>
+        <aside class="callout" data-kind="tip">
+          <p>Consejo útil con <code>data-kind="tip"</code>.</p>
+        </aside>
+        <aside class="callout" data-kind="note">
+          <p>Estilo Obsidian <code>note</code>.</p>
+        </aside>
+        <aside class="callout" data-kind="warn">
+          <p>Advertencia clásica <code>warn</code>.</p>
+        </aside>
+        <aside class="callout" data-kind="warning">
+          <p>Alias Obsidian <code>warning</code>.</p>
+        </aside>
+        <aside class="callout" data-kind="danger">
+          <p>Peligro o error grave.</p>
+        </aside>
+        <aside class="callout" data-kind="success">
+          <p>Confirmación positiva.</p>
+        </aside>
+        <blockquote>
+          <p>Cita con borde de acento y fondo suave.</p>
+        </blockquote>
+        <pre><code class="language-ts">const tema = 'gaveta';</code></pre>
+        <p>Texto con <kbd>Ctrl</kbd>+<kbd>K</kbd> y <mark>resaltado</mark>.</p>
+      </section>
+      <section id="enlaces">
+        <h2>Enlaces</h2>
+        <p>
+          <a href="vitrina-slides.html" data-g-to="01VITRINAS0000000000000002">Presentación</a>
+          y
+          <a data-g-pending="Nota fantasma">enlace pendiente</a>.
+        </p>
+      </section>
+      <section id="tabla">
+        <h2>Tabla</h2>
+        <table>
+          <caption>
+            Colores semánticos del tema
+          </caption>
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Uso</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--color-accent</code></td>
+              <td>Enlaces y acentos</td>
+            </tr>
+            <tr>
+              <td><code>--color-pending</code></td>
+              <td>Enlaces fantasma</td>
+            </tr>
+            <tr>
+              <td><code>--color-surface</code></td>
+              <td>Tarjetas y diapositivas</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <section id="tareas">
+        <h2>Tareas</h2>
+        <ul class="tasks">
+          <li data-g-task id="probar-tema" data-g-priority="high">
+            <input type="checkbox" checked />
+            Probar contraste en claro y oscuro
+          </li>
+          <li data-g-task id="capturar-pantallas" data-g-due="2026-10-22" data-g-priority="medium">
+            <input type="checkbox" />
+            Capturar pantallas para la PR
+          </li>
+        </ul>
+      </section>
+    </article>
+  </body>
+</html>

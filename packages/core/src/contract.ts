@@ -138,7 +138,7 @@ const KNOWN_DATA_ATTRIBUTES: ReadonlySet<string> = new Set([
   'data-g-priority',
 ]);
 
-const CALLOUT_KINDS = ['info', 'warn'] as const;
+const CALLOUT_KINDS = ['info', 'warn', 'warning', 'tip', 'note', 'danger', 'success'] as const;
 
 const HEADINGS = {
   plain: ['h1', 'h2', 'h3'],
@@ -223,6 +223,9 @@ export const CONTRACT_CLASSES: readonly ContractClass[] = [
   { name: 'slide', elements: ['section'], priority: 'P0' },
   { name: 'notes', elements: ['aside'], priority: 'P0' },
   { name: 'tasks', elements: ['ul'], priority: 'P0' },
+  { name: 'badge', elements: ['span'], priority: 'P0' },
+  { name: 'note-header', elements: ['header'], priority: 'P0' },
+  { name: 'toc', elements: ['nav'], priority: 'P0' },
   { name: 'mermaid', elements: ['pre'], priority: 'P1' },
 ];
 

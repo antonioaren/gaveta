@@ -84,6 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      - run: pnpm exec playwright install chromium
       - run: pnpm test:e2e
 
   unit-min-node:
@@ -112,6 +113,7 @@ jobs:
           node-version: '22.18.0'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install chromium
       - run: pnpm test:e2e
 
   audit:
