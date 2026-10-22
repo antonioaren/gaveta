@@ -90,6 +90,9 @@ importers:
 
   fixtures:
     devDependencies:
+      '@gaveta/core':
+        specifier: workspace:*
+        version: link:../packages/core
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.5

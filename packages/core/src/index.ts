@@ -76,6 +76,17 @@ export type {
   WikilinkParts,
 } from './parser.ts';
 
+export { validateNote, validateVault } from './validate.ts';
+
+export type {
+  ValidateNoteOptions,
+  ValidateVaultOptions,
+  ValidationResult,
+  VaultFileValidation,
+  VaultNoteSource,
+  VaultValidation,
+} from './validate.ts';
+
 export {
   GAVETA_DIRECTORY,
   GAVETA_VAULT_ENV,

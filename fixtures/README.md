@@ -2,7 +2,7 @@
 
 Hand-written Gaveta vaults and a deterministic generator. Notes follow the HTML shape in `docs/PRD.md` and `docs/REQUIREMENTS.md` (`gaveta:*` meta, `data-g-to` ULIDs, `[[Title]]`, and ghost links). The core contract (T1.1) was not used to produce them.
 
-**Re-validate these fixtures once the T1.3 validator lands.** Until then, the tests in this package only check the shape described here. They are not proof that `gaveta validate` accepts a note.
+**Re-validated in T1.3.** `validateNote` / `validateVault` accept the empty vault, the backlinks vault, and the seeded generator output with no errors. The problems vault fails on the invalid task and on the duplicate id. The malicious vault produces the codes in the table below. Shape tests in this package are not a substitute for that check.
 
 `config.json` is provisional until T1.6. `theme.css` is a placeholder until T1.5 (dark text `#1a1a1a` on `#ffffff` so a note opened with `file://` is not unstyled). The same two files are copied into every vault. There is no `index.sqlite`; the index is a cache.
 
@@ -50,24 +50,26 @@ This vault has no `[[…]]` wikilinks. Those live in the backlinks vault, so a w
 
 ## `vaults/malicious` (REQ-SEC-01, REQ-SEC-02)
 
-Each file is still a full note (id, type, created, title, local theme). The payload is the point. Remote URLs use the reserved host `evil.example`. Expected codes are the CLI contract names; T1.3 has not confirmed them yet.
+Each file is still a full note (id, type, created, title, local theme). The payload is the point. Remote URLs use the reserved host `evil.example`. The codes are the set `validateNote` reports for that file (T1.3).
 
-| File                  | Case                                                        | Codes to expect                                        |
-| --------------------- | ----------------------------------------------------------- | ------------------------------------------------------ |
-| `script.html`         | Inline `<script>` and `<script src="https://…">`            | `E_UNSAFE_SCRIPT`                                      |
-| `handler.html`        | `onerror`, `onclick`, `onload`                              | `E_UNSAFE_HANDLER`                                     |
-| `url-javascript.html` | `javascript:`, `JAVASCRIPT:`, and a leading space           | `E_UNSAFE_URL`                                         |
-| `iframe.html`         | `<iframe>` to `https:` and `data:`                          | `E_UNSAFE_ELEMENT`                                     |
-| `object.html`         | `<object>`                                                  | `E_UNSAFE_ELEMENT`                                     |
-| `embed.html`          | `<embed>`                                                   | `E_UNSAFE_ELEMENT`                                     |
-| `formulario.html`     | `<form action="https://…">`                                 | `E_UNSAFE_ELEMENT`                                     |
-| `base.html`           | `<base href="https://…">`                                   | `E_UNSAFE_ELEMENT`                                     |
-| `imagen-remota.html`  | `https`, `http`, protocol-relative, and `srcset`            | `W_REMOTE_RESOURCE`                                    |
-| `hoja-remota.html`    | Remote stylesheet and font                                  | `W_REMOTE_RESOURCE`                                    |
-| `path-traversal.html` | `../`, `/etc/passwd`, backslash, and `attachments/../../`   | Path escape (same class as REQ-SEC-05). Not a symlink. |
-| `meta-refresh.html`   | `<meta http-equiv="refresh">`                               | Unclassified until T1.3.                               |
-| `estilo-inline.html`  | Inline style with a remote `url()` and `expression()`       | `W_INLINE_STYLE_REMOVED`, `W_REMOTE_RESOURCE`          |
-| `combinada.html`      | `<script>`, `onerror`, and `<img src="https://…">` together | The REQ-SEC-01 specimen.                               |
+| File                  | Case                                                        | Codes                                                      |
+| --------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
+| `script.html`         | Inline `<script>` and `<script src="https://…">`            | `E_UNSAFE_SCRIPT`, `W_REMOTE_RESOURCE`                     |
+| `handler.html`        | `onerror`, `onclick`, `onload`, plus an `svg`               | `E_UNSAFE_HANDLER`, `E_HTML_INVALID`                       |
+| `url-javascript.html` | `javascript:`, `JAVASCRIPT:`, and a leading space           | `E_UNSAFE_URL`                                             |
+| `iframe.html`         | `<iframe>` to `https:` and `data:`                          | `E_UNSAFE_ELEMENT`, `W_REMOTE_RESOURCE`                    |
+| `object.html`         | `<object>`                                                  | `E_UNSAFE_ELEMENT`, `W_REMOTE_RESOURCE`                    |
+| `embed.html`          | `<embed>`                                                   | `E_UNSAFE_ELEMENT`, `W_REMOTE_RESOURCE`                    |
+| `formulario.html`     | `<form action="https://…">` and a text input                | `E_UNSAFE_ELEMENT`, `E_HTML_INVALID`, `W_REMOTE_RESOURCE`  |
+| `base.html`           | `<base href="https://…">`                                   | `E_UNSAFE_ELEMENT`, `W_REMOTE_RESOURCE`                    |
+| `imagen-remota.html`  | `https`, `http`, protocol-relative, and `srcset`            | `E_HTML_INVALID`, `W_REMOTE_RESOURCE`                      |
+| `hoja-remota.html`    | Remote stylesheet and a preload font                        | `E_HTML_INVALID`, `W_REMOTE_RESOURCE`                      |
+| `path-traversal.html` | `../`, `/etc/passwd`, backslash, and `attachments/../../`   | `E_PATH_OUTSIDE_VAULT`                                     |
+| `meta-refresh.html`   | `<meta http-equiv="refresh">` to a remote URL               | `E_HTML_INVALID`, `W_REMOTE_RESOURCE`                      |
+| `estilo-inline.html`  | Inline style with a remote `url()` and `expression()`       | `W_INLINE_STYLE_REMOVED`, `W_REMOTE_RESOURCE`              |
+| `combinada.html`      | `<script>`, `onerror`, and `<img src="https://…">` together | `E_UNSAFE_SCRIPT`, `E_UNSAFE_HANDLER`, `W_REMOTE_RESOURCE` |
+
+`srcset` is outside the authoring contract, so the remote image is also `E_HTML_INVALID`. `svg`, the text input, `rel="preload"`, and `http-equiv="refresh"` are outside the shell too. CSS `expression()` is not executed; the inline style is `W_INLINE_STYLE_REMOVED` (the normalizer removes it in T1.4). A remote `https` URL on an anchor is a link, not `W_REMOTE_RESOURCE`.
 
 ## Generator (REQ-NFR-01, REQ-NFR-02, REQ-NFR-03, REQ-NFR-04)
 
