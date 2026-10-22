@@ -1,0 +1,961 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`connection commands > lists backlinks with context 1`] = `
+{
+  "backlinks": [
+    {
+      "context": "Enlace
+El enlace 01 apunta a Nota X.",
+      "rel": "related",
+      "section": "enlace",
+      "sourceId": "01M5HGV8800000000000000004",
+      "sourcePath": "enlaces/enlace-01.html",
+      "sourceTitle": "Enlace 01",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 02 apunta a Nota X.",
+      "rel": "depends-on",
+      "section": "enlace",
+      "sourceId": "01M5HGV8800000000000000005",
+      "sourcePath": "enlaces/enlace-02.html",
+      "sourceTitle": "Enlace 02",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 03 apunta a Nota X.",
+      "rel": "part-of",
+      "section": "enlace",
+      "sourceId": "01M5HGV8800000000000000006",
+      "sourcePath": "enlaces/enlace-03.html",
+      "sourceTitle": "Enlace 03",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 04 apunta a Nota X.",
+      "rel": "supersedes",
+      "section": "enlace",
+      "sourceId": "01M5HGV8800000000000000007",
+      "sourcePath": "enlaces/enlace-04.html",
+      "sourceTitle": "Enlace 04",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 05 apunta a Nota X.",
+      "rel": "references",
+      "section": "enlace",
+      "sourceId": "01M5HGV8800000000000000008",
+      "sourcePath": "enlaces/enlace-05.html",
+      "sourceTitle": "Enlace 05",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 06 apunta a Nota X.",
+      "rel": "related",
+      "section": "enlace",
+      "sourceId": "01M5HGV8800000000000000009",
+      "sourcePath": "enlaces/enlace-06.html",
+      "sourceTitle": "Enlace 06",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 07 apunta a Nota X.",
+      "rel": "depends-on",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000A",
+      "sourcePath": "enlaces/enlace-07.html",
+      "sourceTitle": "Enlace 07",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 08 apunta a Nota X.",
+      "rel": "part-of",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000B",
+      "sourcePath": "enlaces/enlace-08.html",
+      "sourceTitle": "Enlace 08",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 09 apunta a Nota X.",
+      "rel": "supersedes",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000C",
+      "sourcePath": "enlaces/enlace-09.html",
+      "sourceTitle": "Enlace 09",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 10 apunta a Nota X.",
+      "rel": "references",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000D",
+      "sourcePath": "enlaces/enlace-10.html",
+      "sourceTitle": "Enlace 10",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 11 apunta a Nota X.",
+      "rel": "related",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000E",
+      "sourcePath": "enlaces/mas/enlace-11.html",
+      "sourceTitle": "Enlace 11",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 12 apunta a Nota X.",
+      "rel": "depends-on",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000F",
+      "sourcePath": "enlaces/mas/enlace-12.html",
+      "sourceTitle": "Enlace 12",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 13 apunta a Nota X.",
+      "rel": "part-of",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000G",
+      "sourcePath": "enlaces/mas/enlace-13.html",
+      "sourceTitle": "Enlace 13",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 14 apunta a Nota X.",
+      "rel": "supersedes",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000H",
+      "sourcePath": "enlaces/mas/enlace-14.html",
+      "sourceTitle": "Enlace 14",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 15 apunta a Nota X.",
+      "rel": "references",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000J",
+      "sourcePath": "enlaces/mas/enlace-15.html",
+      "sourceTitle": "Enlace 15",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 16 apunta a Nota X.",
+      "rel": "related",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000K",
+      "sourcePath": "enlaces/mas/enlace-16.html",
+      "sourceTitle": "Enlace 16",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 17 apunta a Nota X.",
+      "rel": "depends-on",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000M",
+      "sourcePath": "enlaces/mas/enlace-17.html",
+      "sourceTitle": "Enlace 17",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+El enlace 18 apunta a Nota X.",
+      "rel": "part-of",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000N",
+      "sourcePath": "enlaces/mas/enlace-18.html",
+      "sourceTitle": "Enlace 18",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace
+La diapositiva apunta a Nota X.",
+      "rel": "supersedes",
+      "section": "enlace",
+      "sourceId": "01M5HGV880000000000000000P",
+      "sourcePath": "enlaces/mas/enlace-19.html",
+      "sourceTitle": "Enlace 19",
+      "text": "Nota X",
+    },
+    {
+      "context": "Enlace 20
+Revisar Nota X
+Hecho",
+      "rel": "references",
+      "section": null,
+      "sourceId": "01M5HGV880000000000000000Q",
+      "sourcePath": "enlaces/mas/enlace-20.html",
+      "sourceTitle": "Enlace 20",
+      "text": "Nota X",
+    },
+  ],
+  "ref": "Nota X",
+}
+`;
+
+exports[`connection commands > lists outgoing links with stable JSON 1`] = `
+{
+  "links": [
+    {
+      "rel": "related",
+      "section": "atajos",
+      "target": {
+        "ghost": false,
+        "id": "01M5HGV8800000000000000002",
+        "path": "destino-enlace.html",
+        "title": "Destino enlace",
+      },
+      "text": "Destino enlace",
+    },
+    {
+      "rel": null,
+      "section": "atajos",
+      "target": {
+        "ghost": false,
+        "id": null,
+        "path": null,
+        "title": "Destino enlace",
+      },
+      "text": "Destino enlace",
+    },
+    {
+      "rel": null,
+      "section": "atajos",
+      "target": {
+        "ghost": false,
+        "id": null,
+        "path": null,
+        "title": "Destino enlace",
+      },
+      "text": "texto visible",
+    },
+    {
+      "rel": null,
+      "section": "atajos",
+      "target": {
+        "ghost": false,
+        "id": null,
+        "path": null,
+        "title": "Destino enlace",
+      },
+      "text": "Destino enlace",
+    },
+    {
+      "rel": null,
+      "section": "atajos",
+      "target": {
+        "ghost": true,
+        "id": null,
+        "path": null,
+        "title": "Nota fantasma",
+      },
+      "text": "Nota fantasma",
+    },
+  ],
+  "ref": "formas-de-enlace.html",
+}
+`;
+
+exports[`connection commands > returns a local graph when ref and depth are set > local depth 1 1`] = `
+{
+  "depth": 1,
+  "edges": [
+    {
+      "from": "enlaces/enlace-01.html",
+      "rel": "related",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-02.html",
+      "rel": "depends-on",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-03.html",
+      "rel": "part-of",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-04.html",
+      "rel": "supersedes",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-05.html",
+      "rel": "references",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-06.html",
+      "rel": "related",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-07.html",
+      "rel": "depends-on",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-08.html",
+      "rel": "part-of",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-09.html",
+      "rel": "supersedes",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-10.html",
+      "rel": "references",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-11.html",
+      "rel": "related",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-12.html",
+      "rel": "depends-on",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-13.html",
+      "rel": "part-of",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-14.html",
+      "rel": "supersedes",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-15.html",
+      "rel": "references",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-16.html",
+      "rel": "related",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-17.html",
+      "rel": "depends-on",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-18.html",
+      "rel": "part-of",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-19.html",
+      "rel": "supersedes",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-20.html",
+      "rel": "references",
+      "to": "nota-x.html",
+    },
+  ],
+  "nodes": [
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000004",
+      "path": "enlaces/enlace-01.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 01",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000005",
+      "path": "enlaces/enlace-02.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 02",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000006",
+      "path": "enlaces/enlace-03.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 03",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000007",
+      "path": "enlaces/enlace-04.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 04",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000008",
+      "path": "enlaces/enlace-05.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 05",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000009",
+      "path": "enlaces/enlace-06.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 06",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000A",
+      "path": "enlaces/enlace-07.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 07",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000B",
+      "path": "enlaces/enlace-08.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 08",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000C",
+      "path": "enlaces/enlace-09.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 09",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000D",
+      "path": "enlaces/enlace-10.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 10",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000E",
+      "path": "enlaces/mas/enlace-11.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 11",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000F",
+      "path": "enlaces/mas/enlace-12.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 12",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000G",
+      "path": "enlaces/mas/enlace-13.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 13",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000H",
+      "path": "enlaces/mas/enlace-14.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 14",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000J",
+      "path": "enlaces/mas/enlace-15.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 15",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000K",
+      "path": "enlaces/mas/enlace-16.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 16",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000M",
+      "path": "enlaces/mas/enlace-17.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 17",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000N",
+      "path": "enlaces/mas/enlace-18.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 18",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000P",
+      "path": "enlaces/mas/enlace-19.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 19",
+      "type": "slides",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000Q",
+      "path": "enlaces/mas/enlace-20.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 20",
+      "type": "todo",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000001",
+      "path": "nota-x.html",
+      "tags": [
+        "fixture",
+        "backlinks",
+      ],
+      "title": "Nota X",
+      "type": "doc",
+    },
+  ],
+  "ref": "nota-x.html",
+  "rel": null,
+  "tag": null,
+  "type": null,
+}
+`;
+
+exports[`connection commands > returns the global graph and filters by rel > global graph 1`] = `
+{
+  "depth": null,
+  "edges": [
+    {
+      "from": "enlaces/enlace-01.html",
+      "rel": "related",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-02.html",
+      "rel": "depends-on",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-03.html",
+      "rel": "part-of",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-04.html",
+      "rel": "supersedes",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-05.html",
+      "rel": "references",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-06.html",
+      "rel": "related",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-07.html",
+      "rel": "depends-on",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-08.html",
+      "rel": "part-of",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-09.html",
+      "rel": "supersedes",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/enlace-10.html",
+      "rel": "references",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-11.html",
+      "rel": "related",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-12.html",
+      "rel": "depends-on",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-13.html",
+      "rel": "part-of",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-14.html",
+      "rel": "supersedes",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-15.html",
+      "rel": "references",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-16.html",
+      "rel": "related",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-17.html",
+      "rel": "depends-on",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-18.html",
+      "rel": "part-of",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-19.html",
+      "rel": "supersedes",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "enlaces/mas/enlace-20.html",
+      "rel": "references",
+      "to": "nota-x.html",
+    },
+    {
+      "from": "formas-de-enlace.html",
+      "rel": "related",
+      "to": "destino-enlace.html",
+    },
+    {
+      "from": "formas-de-enlace.html",
+      "rel": null,
+      "to": "ghost:Nota fantasma",
+    },
+  ],
+  "nodes": [
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000002",
+      "path": "destino-enlace.html",
+      "tags": [
+        "fixture",
+      ],
+      "title": "Destino enlace",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000004",
+      "path": "enlaces/enlace-01.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 01",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000005",
+      "path": "enlaces/enlace-02.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 02",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000006",
+      "path": "enlaces/enlace-03.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 03",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000007",
+      "path": "enlaces/enlace-04.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 04",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000008",
+      "path": "enlaces/enlace-05.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 05",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000009",
+      "path": "enlaces/enlace-06.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 06",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000A",
+      "path": "enlaces/enlace-07.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 07",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000B",
+      "path": "enlaces/enlace-08.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 08",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000C",
+      "path": "enlaces/enlace-09.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 09",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000D",
+      "path": "enlaces/enlace-10.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 10",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000E",
+      "path": "enlaces/mas/enlace-11.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 11",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000F",
+      "path": "enlaces/mas/enlace-12.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 12",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000G",
+      "path": "enlaces/mas/enlace-13.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 13",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000H",
+      "path": "enlaces/mas/enlace-14.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 14",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000J",
+      "path": "enlaces/mas/enlace-15.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 15",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000K",
+      "path": "enlaces/mas/enlace-16.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 16",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000M",
+      "path": "enlaces/mas/enlace-17.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 17",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000N",
+      "path": "enlaces/mas/enlace-18.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 18",
+      "type": "doc",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000P",
+      "path": "enlaces/mas/enlace-19.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 19",
+      "type": "slides",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV880000000000000000Q",
+      "path": "enlaces/mas/enlace-20.html",
+      "tags": [
+        "backlink",
+      ],
+      "title": "Enlace 20",
+      "type": "todo",
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000003",
+      "path": "formas-de-enlace.html",
+      "tags": [
+        "fixture",
+      ],
+      "title": "Formas de enlace",
+      "type": "doc",
+    },
+    {
+      "ghost": true,
+      "id": null,
+      "path": null,
+      "tags": [],
+      "title": "Nota fantasma",
+      "type": null,
+    },
+    {
+      "ghost": false,
+      "id": "01M5HGV8800000000000000001",
+      "path": "nota-x.html",
+      "tags": [
+        "fixture",
+        "backlinks",
+      ],
+      "title": "Nota X",
+      "type": "doc",
+    },
+  ],
+  "ref": null,
+  "rel": null,
+  "tag": null,
+  "type": null,
+}
+`;

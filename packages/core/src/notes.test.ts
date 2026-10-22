@@ -9,6 +9,7 @@ import {
   createDefaultVaultConfig,
   createNote,
   editNote,
+  linkNote,
   globalGraph,
   graphGhostKey,
   isUlid,
@@ -26,6 +27,7 @@ const NOW = '2026-10-22T12:00:00.000Z';
 const ID_A = '01JB7Z3K9QX4T5M2N8V6R0WYHC';
 const ID_B = '01JB8A2M4R7C9D1E3F5G7H9J0K';
 const ID_C = '01JB9C3N5S8D0E2F4G6H8J1K2M';
+const ID_ARTIFACT = '01JC0F6R8T1G3H5J7K9M2N4P6Q';
 const HASH = `sha256:${'ab'.repeat(32)}`;
 
 const FIXED = [
@@ -510,6 +512,120 @@ describe('editNote', () => {
   });
 });
 
+describe('linkNote', () => {
+  it('adds a canonical link in Relacionado and is idempotent', async () => {
+    await withTemp(async (parent) => {
+      const root = await makeVault(parent);
+      await writeFile(join(root, 'fija.html'), FIXED);
+      const destino = await createNote({
+        vaultRoot: root,
+        title: 'Destino',
+        type: 'doc',
+        html: '<article><h1>Destino</h1></article>',
+        now: NOW,
+        id: ID_B,
+      });
+      expect(destino.ok).toBe(true);
+      if (!destino.ok) {
+        return;
+      }
+      const first = await linkNote({ vaultRoot: root, from: ID_A, to: ID_B });
+      expect(first.ok).toBe(true);
+      if (!first.ok) {
+        return;
+      }
+      expect(first.added).toBe(true);
+      expect(first.section).toBe('relacionado');
+      const html = await readVaultText(root, 'fija.html');
+      expect(html).toContain('id="relacionado"');
+      expect(html).toContain(`data-g-to="${ID_B}"`);
+      const second = await linkNote({
+        vaultRoot: root,
+        from: ID_A,
+        to: ID_B,
+        text: 'Destino',
+      });
+      expect(second.ok).toBe(true);
+      if (!second.ok) {
+        return;
+      }
+      expect(second.added).toBe(false);
+      expect(second.hash).toBe(first.hash);
+      expect(await readVaultText(root, 'fija.html')).toBe(html);
+      await withIndex(root, (index) => {
+        const outgoing = outgoingLinks(index, 'fija.html').filter(
+          (link) => link.kind === 'canonical',
+        );
+        expect(outgoing.filter((link) => link.target.id === ID_B)).toHaveLength(1);
+      });
+    });
+  });
+
+  it('adds links in the article body of an artifact note, not inside iframe srcdoc', async () => {
+    await withTemp(async (parent) => {
+      const root = await makeVault(parent);
+      await createNote({
+        vaultRoot: root,
+        title: 'Destino',
+        type: 'doc',
+        html: '<article><h1>Destino</h1></article>',
+        now: NOW,
+        id: ID_B,
+      });
+      const artifact = await createNote({
+        vaultRoot: root,
+        title: 'Demo',
+        type: 'artifact',
+        now: NOW,
+        id: ID_ARTIFACT,
+      });
+      expect(artifact.ok).toBe(true);
+      if (!artifact.ok) {
+        return;
+      }
+      const before = await readVaultText(root, artifact.path);
+      const srcdocBefore = readArtifactSrcdoc(before);
+      expect(srcdocBefore).not.toBeNull();
+      const linked = await linkNote({ vaultRoot: root, from: ID_ARTIFACT, to: ID_B });
+      expect(linked.ok).toBe(true);
+      const after = await readVaultText(root, artifact.path);
+      expect(readArtifactSrcdoc(after)).toBe(srcdocBefore);
+      expect(after).toContain(`data-g-to="${ID_B}"`);
+      expect(after.indexOf('data-g-to')).toBeLessThan(after.indexOf('<iframe'));
+      expect(after.lastIndexOf('data-g-to')).toBeLessThan(after.indexOf('<iframe'));
+    });
+  });
+
+  it('honors --section and --rel', async () => {
+    await withTemp(async (parent) => {
+      const root = await makeVault(parent);
+      await writeFile(join(root, 'fija.html'), FIXED);
+      await createNote({
+        vaultRoot: root,
+        title: 'Destino',
+        type: 'doc',
+        html: '<article><h1>Destino</h1></article>',
+        now: NOW,
+        id: ID_B,
+      });
+      const linked = await linkNote({
+        vaultRoot: root,
+        from: ID_A,
+        to: ID_B,
+        section: 'keep',
+        rel: 'related',
+        text: 'ver destino',
+      });
+      expect(linked.ok).toBe(true);
+      const html = await readVaultText(root, 'fija.html');
+      expect(html).toContain('<section id="keep">');
+      expect(html).toContain('rel="related"');
+      expect(html).toContain('ver destino');
+      expect(html).not.toContain('id="relacionado"');
+    });
+  });
+});
+
 describe('note arguments', () => {
   it('rejects unknown shapes', async () => {
     await withTemp(async (parent) => {
@@ -538,6 +654,11 @@ describe('note arguments', () => {
       );
       await expectCode(
         () => editNote({ vaultRoot: root, ref: 'A', html: '<p>a</p>', mode: 'append' }),
+        'E_ARG_INVALID',
+      );
+      await expectCode(() => linkNote(null), 'E_ARG_INVALID');
+      await expectCode(
+        () => linkNote({ vaultRoot: root, from: 'A', to: 'B', extra: true }),
         'E_ARG_INVALID',
       );
     });

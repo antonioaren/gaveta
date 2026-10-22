@@ -247,11 +247,13 @@ export { removeNote } from './ops/remove.ts';
 
 export type { AffectedNote, MoveNoteResult, RemoveNoteResult } from './ops/types.ts';
 
-export { createNote, editNote, noteContentHash, readNote } from './notes.ts';
+export { createNote, editNote, linkNote, noteContentHash, readNote } from './notes.ts';
 
 export type {
   CreateNoteResult,
   EditNoteResult,
+  LinkNoteResult,
+  LinkNoteSuccess,
   NoteOutline,
   NoteWarning,
   NoteWriteFailure,
