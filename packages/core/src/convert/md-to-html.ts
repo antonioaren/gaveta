@@ -1,6 +1,6 @@
 /**
  * Markdown → HTML conversion for vault import (REQ-MIG-04).
- * Uses unified/remark/rehype (DEC-07) with Gaveta-specific plugins, then the core normalizer.
+ * Uses unified/remark/rehype (DEC-07) with Gaveta-specific plugins, then the core normalizer and validator.
  */
 import { posix } from 'node:path';
 import rehypeRaw from 'rehype-raw';
