@@ -162,7 +162,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [ ] **T4.2 Menciones no enlazadas** en la CLI y en la app ("Enlazar"). Cubre: REQ-LINK-12.
 - [ ] **T4.3 Transclusión con `<gaveta-embed>`.** Cubre: REQ-LINK-13.
 - [ ] **T4.4 Vista agregada de tareas.** Cubre: REQ-APP-15.
-- [ ] **T4.5 Mermaid y exportación de presentaciones a PDF.** Cubre: REQ-TYPE-06, REQ-APP-16.
+- [x] **T4.5 Mermaid y exportación de presentaciones a PDF.** *(Adelantado: render Mermaid offline en `file://`; export PDF queda pendiente.)* Cubre: REQ-TYPE-06, REQ-APP-16.
 - [ ] **T4.6 Plantillas por tipo.** Cubre: REQ-TYPE-07.
 - [ ] **T4.7 `gaveta stats`** con un log local opcional. Cubre: REQ-CLI-15.
 - [ ] **T4.8 CI en Windows.** Añadir `windows-latest` a la matriz de GitHub Actions (REQ-NFR-05). Aplazado al final del proyecto.

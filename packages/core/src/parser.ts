@@ -6,6 +6,7 @@
 import { html, parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
 import { plainTextFromSrcdoc, readArtifactSrcdoc } from './artifact.ts';
+import { isTrustedMermaidScript } from './mermaid/normalize.ts';
 import {
   BODY_ELEMENTS,
   DOCUMENT_SHELL,
@@ -392,7 +393,7 @@ function inspectElement(
   const tag = element.tagName.toLowerCase();
   const location = elementLocation(element);
   const noteType = meta.rawType.value;
-  const forbidden = forbiddenDiagnostic(tag, noteType);
+  const forbidden = forbiddenDiagnostic(tag, noteType, element);
   if (forbidden !== null) {
     unsafe.push(makeDiagnostic(forbidden, location, { element: tag }));
   }
@@ -883,10 +884,14 @@ function checkboxChecked(element: ParseElement): boolean {
   return false;
 }
 
-function forbiddenDiagnostic(tag: string, noteType: string | null): DiagnosticCode | null {
+function forbiddenDiagnostic(
+  tag: string,
+  noteType: string | null,
+  element: ParseElement,
+): DiagnosticCode | null {
   switch (tag) {
     case 'script':
-      return FORBIDDEN_ELEMENTS.script;
+      return isTrustedMermaidScript(element) ? null : FORBIDDEN_ELEMENTS.script;
     case 'iframe':
       return noteType === 'artifact' ? null : 'E_UNSAFE_ELEMENT';
     case 'object':

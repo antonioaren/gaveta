@@ -291,6 +291,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `W_LINK_HREF_STALE` | `href` canónico desfasado respecto a `data-g-to` |
 | `W_NOTE_ORPHAN` | Nota sin enlaces entrantes ni salientes |
 | `W_THEME_HREF` | Ruta del tema incorrecta para la profundidad de la nota |
+| `W_MERMAID_ASSET_MISSING` | Faltan `mermaid.min.js` o `mermaid-boot.js` en `.gaveta/` |
 | `W_REL_UNKNOWN` | `rel` fuera del vocabulario |
 | `W_REMOTE_RESOURCE` | Recurso remoto bloqueado |
 | `W_INLINE_STYLE_REMOVED` | Estilos inline eliminados por el normalizador |

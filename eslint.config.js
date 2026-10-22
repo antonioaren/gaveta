@@ -6,7 +6,14 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/.vite/**', 'pnpm-lock.yaml'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/.vite/**',
+      'pnpm-lock.yaml',
+      'packages/core/src/theme/mermaid.min.js',
+      'packages/core/src/theme/mermaid-boot.js',
+    ],
   },
   eslint.configs.recommended,
   {

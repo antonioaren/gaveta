@@ -460,6 +460,28 @@ describe('normalizeNote security', () => {
   });
 });
 
+describe('normalizeNote mermaid', () => {
+  it('injects vendored scripts, meta flag, and normalizes fenced blocks', () => {
+    const messy = [
+      '<article>',
+      '<h1>Diagramas</h1>',
+      '<pre><code class="language-mermaid">graph LR\n  A-->B</code></pre>',
+      '<div class="mermaid">sequenceDiagram\n  A->>B: ping</div>',
+      '</article>',
+    ].join('');
+    const result = normalizeNote(shell(messy), { notePath: 'docs/diagramas.html' });
+    expect(result.ok).toBe(true);
+    const html = result.html ?? '';
+    expect(html).toContain('name="gaveta:mermaid" content="true"');
+    expect(html).toContain('data-gaveta="mermaid-lib"');
+    expect(html).toContain('data-gaveta="mermaid-boot"');
+    expect(html).toContain('src="../.gaveta/mermaid.min.js"');
+    expect(html).toContain('<pre class="mermaid">');
+    expect(html).not.toContain('language-mermaid');
+    expect(validateNote(html, { notePath: 'docs/diagramas.html' }).ok).toBe(true);
+  });
+});
+
 describe('normalizeNote fragments', () => {
   it('wraps a bare article in a document shell without inventing metadata', () => {
     const html = expectFixedPoint('<article><h1>Título</h1><p>Hola</p></article>');

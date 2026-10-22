@@ -9,6 +9,22 @@
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
 import {
+  MERMAID_BOOT_BASENAME,
+  MERMAID_BOOT_ROLE,
+  MERMAID_LIB_ROLE,
+  MERMAID_META,
+  MERMAID_MIN_BASENAME,
+  MERMAID_SCRIPT_ATTR,
+  mermaidAssetHref,
+} from './mermaid/assets.ts';
+import {
+  buildMermaidPre,
+  normalizeMermaidInTree,
+  readMermaidSourceFromDiv,
+  readMermaidSourceFromPre,
+  treeContainsMermaid,
+} from './mermaid/normalize.ts';
+import {
   DOCUMENT_SHELL,
   INLINE_STYLE_ATTRIBUTE,
   allocateSlug,
@@ -97,6 +113,7 @@ interface State {
   allowlist: readonly string[];
   type: NoteType | null;
   keptTheme: string | null;
+  hasMermaid: boolean;
 }
 
 interface BuiltNote {
@@ -105,6 +122,8 @@ interface BuiltNote {
   readonly meta: ReadonlyMap<string, string>;
   readonly theme: string;
   readonly body: readonly NormChild[];
+  readonly hasMermaid: boolean;
+  readonly notePath: string | null;
 }
 
 const THEME_FILE = DOCUMENT_SHELL.theme.path;
@@ -117,9 +136,10 @@ const META_ORDER = [
   'gaveta:created',
   'gaveta:updated',
   'gaveta:artifact-cdn',
+  MERMAID_META,
 ] as const;
 
-const HEAD_ORDER = ['charset', 'title', ...META_ORDER, 'theme'];
+const HEAD_ORDER = ['charset', 'title', ...META_ORDER, 'theme', 'mermaid-lib', 'mermaid-boot'];
 
 const VOID_TAGS: ReadonlySet<string> = new Set([
   'area',
@@ -278,6 +298,7 @@ function createState(options: NormalizeNoteOptions): State {
     allowlist: options.remoteAllowlist ?? [],
     type: null,
     keptTheme: null,
+    hasMermaid: false,
   };
   if (options.notePath === undefined) {
     return state;
@@ -348,16 +369,30 @@ function buildNote(document: ParseDocument, state: State): BuiltNote {
     state.contentRepair = true;
   }
   children = ensureStructure(children, state);
+  const mermaidPass = normalizeMermaidInTree(children);
+  if (mermaidPass.changed) {
+    children = mermaidPass.nodes;
+    state.contentRepair = true;
+  }
   repairTree(children, state);
   assignIds(children, state);
+  state.hasMermaid = treeContainsMermaid(children);
+  const meta = new Map(extracted.meta);
+  if (state.hasMermaid) {
+    meta.set(MERMAID_META, 'true');
+  } else {
+    meta.delete(MERMAID_META);
+  }
   const theme =
     state.notePath !== null ? themeHref(state.notePath) : (state.keptTheme ?? themeHref(null));
   return {
     lang: extracted.lang,
     title: extracted.title,
-    meta: extracted.meta,
+    meta,
     theme,
     body: children,
+    hasMermaid: state.hasMermaid,
+    notePath: state.notePath,
   };
 }
 
@@ -660,6 +695,16 @@ function convertElement(
 ): NormChild[] {
   const tag = element.tagName.toLowerCase();
   noteUnsafeAttributes(element, tag, state);
+  const mermaidSource =
+    tag === 'pre'
+      ? readMermaidSourceFromPre(element)
+      : tag === 'div'
+        ? readMermaidSourceFromDiv(element)
+        : null;
+  if (mermaidSource !== null) {
+    state.hasMermaid = true;
+    return [buildMermaidPre(mermaidSource)];
+  }
   if (isForbiddenTag(tag, state.type)) {
     state.unsafeCount += 1;
     state.contentRepair = true;
@@ -1206,6 +1251,14 @@ function serializeHead(note: BuiltNote): string[] {
     lines.push(`    <meta name="${name}" content="${escapeAttr(value)}" />`);
   }
   lines.push(`    <link rel="stylesheet" href="${escapeAttr(note.theme)}" />`);
+  if (note.hasMermaid && note.notePath !== null) {
+    lines.push(
+      `    <script defer ${MERMAID_SCRIPT_ATTR}="${MERMAID_LIB_ROLE}" src="${escapeAttr(mermaidAssetHref(note.notePath, MERMAID_MIN_BASENAME))}"></script>`,
+    );
+    lines.push(
+      `    <script defer ${MERMAID_SCRIPT_ATTR}="${MERMAID_BOOT_ROLE}" src="${escapeAttr(mermaidAssetHref(note.notePath, MERMAID_BOOT_BASENAME))}"></script>`,
+    );
+  }
   return lines;
 }
 

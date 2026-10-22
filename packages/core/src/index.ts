@@ -146,6 +146,17 @@ export {
 
 export { DEFAULT_THEME_CSS } from './theme/theme.ts';
 
+export {
+  DEFAULT_MERMAID_BOOT_JS,
+  DEFAULT_MERMAID_LICENSE,
+  DEFAULT_MERMAID_MIN_JS,
+  MERMAID_META,
+  MERMAID_VAULT_ASSETS,
+  mermaidAssetHref,
+} from './mermaid/assets.ts';
+
+export { isTrustedMermaidScript, sanitizeMermaidSource } from './mermaid/normalize.ts';
+
 export { doctorVault } from './doctor.ts';
 
 export type { DoctorFinding, DoctorFix, DoctorReport, DoctorVaultOptions } from './doctor.ts';

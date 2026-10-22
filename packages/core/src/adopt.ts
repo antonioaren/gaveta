@@ -185,7 +185,8 @@ function prepareNote(
   if (
     metadataComplete(normalized) &&
     sameIdentity(sourceModel, normalized) &&
-    validateNote(first.html, { notePath }).ok
+    validateNote(first.html, { notePath }).ok &&
+    !noteNeedsMermaidShell(first.html)
   ) {
     const type = normalized.type;
     const title = normalized.title;
@@ -414,6 +415,10 @@ function timestamp(options: AdoptOptions): string {
     throw new GavetaError('E_ARG_INVALID');
   }
   return value;
+}
+
+function noteNeedsMermaidShell(html: string): boolean {
+  return html.includes('class="mermaid"') && !html.includes('data-gaveta="mermaid-lib"');
 }
 
 function stylesheetHref(html: string, notePath: string): string {

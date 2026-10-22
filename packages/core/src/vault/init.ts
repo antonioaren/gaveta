@@ -2,6 +2,14 @@ import { lstat, mkdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { GavetaError } from '../errors.ts';
 import { openVaultIndex } from '../sqlite/store.ts';
+import {
+  DEFAULT_MERMAID_BOOT_JS,
+  DEFAULT_MERMAID_LICENSE,
+  DEFAULT_MERMAID_MIN_JS,
+  MERMAID_BOOT_RELATIVE,
+  MERMAID_LICENSE_RELATIVE,
+  MERMAID_MIN_RELATIVE,
+} from '../mermaid/assets.ts';
 import { DEFAULT_THEME_CSS } from '../theme/theme.ts';
 import {
   agentInstructionRelativePath,
@@ -19,7 +27,14 @@ import { isInsideVault, readVaultText, writeVaultText } from './paths.ts';
 const THEME_RELATIVE_PATH = `${GAVETA_DIRECTORY}/theme.css`;
 const INDEX_RELATIVE_PATH = `${GAVETA_DIRECTORY}/index.sqlite`;
 
-const VAULT_FILES = [VAULT_CONFIG_PATH, THEME_RELATIVE_PATH, INDEX_RELATIVE_PATH] as const;
+const VAULT_FILES = [
+  VAULT_CONFIG_PATH,
+  THEME_RELATIVE_PATH,
+  MERMAID_MIN_RELATIVE,
+  MERMAID_BOOT_RELATIVE,
+  MERMAID_LICENSE_RELATIVE,
+  INDEX_RELATIVE_PATH,
+] as const;
 
 export interface InitVaultOptions {
   readonly cwd: string;
@@ -210,6 +225,18 @@ async function writeMissing(root: string, relative: string): Promise<void> {
   }
   if (relative === THEME_RELATIVE_PATH) {
     await writeVaultText(root, relative, DEFAULT_THEME_CSS);
+    return;
+  }
+  if (relative === MERMAID_MIN_RELATIVE) {
+    await writeVaultText(root, relative, DEFAULT_MERMAID_MIN_JS);
+    return;
+  }
+  if (relative === MERMAID_BOOT_RELATIVE) {
+    await writeVaultText(root, relative, DEFAULT_MERMAID_BOOT_JS);
+    return;
+  }
+  if (relative === MERMAID_LICENSE_RELATIVE) {
+    await writeVaultText(root, relative, DEFAULT_MERMAID_LICENSE);
     return;
   }
   const index = await openVaultIndex(root);

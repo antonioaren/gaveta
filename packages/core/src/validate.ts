@@ -8,6 +8,7 @@
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
 import { ARTIFACT_SANDBOX, expectedArtifactCsp, srcdocContainsCsp } from './artifact.ts';
+import { isTrustedMermaidScript } from './mermaid/normalize.ts';
 import {
   DOCUMENT_SHELL,
   FORBIDDEN_ELEMENTS,
@@ -320,6 +321,13 @@ function visit(frame: Frame, tag: string, classes: readonly string[], report: Re
     validateArtifactIframe(element, location, report);
     return;
   }
+  if (tag === 'script') {
+    if (frame.parentTag !== 'head' || !isTrustedMermaidScript(element)) {
+      return;
+    }
+    validateMermaidScript(element, location, report);
+    return;
+  }
   if (Object.hasOwn(FORBIDDEN_ELEMENTS, tag)) {
     return;
   }
@@ -471,7 +479,23 @@ function validateShell(
   }
   if (tag === 'link') {
     validateStylesheet(element, location, report);
+    return;
   }
+  if (tag === 'script') {
+    validateMermaidScript(element, location, report);
+  }
+}
+
+function validateMermaidScript(
+  element: ParseElement,
+  location: SourceLocation | null,
+  report: Report,
+): void {
+  if (!isTrustedMermaidScript(element)) {
+    report.diagnostics.push(makeDiagnostic('E_UNSAFE_SCRIPT', location, { element: 'script' }));
+    return;
+  }
+  rejectExcept(element, new Set(['defer', 'src', 'data-gaveta']), 'script', location, report);
 }
 
 function validateMeta(
