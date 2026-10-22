@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Panel de ventas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .metric-card {
+        padding: 1rem;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Panel de ventas</h1>
+    <div class="metric-card kpi" data-label="Ingresos">€ 42.300</div>
+    <div class="metric-card kpi" data-label="Conversión">3,2%</div>
+    <canvas id="chart"></canvas>
+    <script>
+      const chart = { type: 'bar' };
+    </script>
+  </body>
+</html>

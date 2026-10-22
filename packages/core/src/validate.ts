@@ -7,6 +7,7 @@
  */
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
+import { ARTIFACT_SANDBOX, expectedArtifactCsp, srcdocContainsCsp } from './artifact.ts';
 import {
   DOCUMENT_SHELL,
   FORBIDDEN_ELEMENTS,
@@ -94,6 +95,7 @@ const META_NAMES: ReadonlySet<string> = new Set(
 interface Report {
   diagnostics: NoteDiagnostic[];
   readonly type: NoteType | null;
+  readonly sourceHtml: string;
   readonly basePath: string | null;
   readonly vocabulary: ReadonlySet<string>;
   readonly allowlist: ReadonlySet<string>;
@@ -103,6 +105,10 @@ interface Report {
   articleCount: number;
   slideCount: number;
   taskListCount: number;
+  dashboardArticleCount: number;
+  kpiCount: number;
+  frameCount: number;
+  iframeCount: number;
   readonly ids: Set<string>;
 }
 
@@ -129,6 +135,7 @@ export function validateNote(input: unknown, options: ValidateNoteOptions = {}):
   const report: Report = {
     diagnostics,
     type: parsed.note.type,
+    sourceHtml: input,
     basePath,
     vocabulary: new Set(options.relVocabulary ?? SUGGESTED_REL),
     allowlist: allowlistHosts(options.remoteAllowlist ?? []),
@@ -138,6 +145,10 @@ export function validateNote(input: unknown, options: ValidateNoteOptions = {}):
     articleCount: 0,
     slideCount: 0,
     taskListCount: 0,
+    dashboardArticleCount: 0,
+    kpiCount: 0,
+    frameCount: 0,
+    iframeCount: 0,
     ids: new Set(),
   };
 
@@ -305,6 +316,10 @@ function visit(frame: Frame, tag: string, classes: readonly string[], report: Re
   const id = readId(element, location, report);
   scanUrlsAndStyle(element, tag, location, report);
 
+  if (tag === 'iframe') {
+    validateArtifactIframe(element, location, report);
+    return;
+  }
   if (Object.hasOwn(FORBIDDEN_ELEMENTS, tag)) {
     return;
   }
@@ -337,6 +352,15 @@ function visit(frame: Frame, tag: string, classes: readonly string[], report: Re
 
   if (tag === 'article') {
     report.articleCount += 1;
+    if (classes.includes('g-dashboard')) {
+      report.dashboardArticleCount += 1;
+    }
+  }
+  if (tag === 'gaveta-kpi') {
+    report.kpiCount += 1;
+  }
+  if (tag === 'section' && classes.includes('g-frame')) {
+    report.frameCount += 1;
   }
   if (tag === 'section' && classes.includes('slide')) {
     report.slideCount += 1;
@@ -344,11 +368,17 @@ function visit(frame: Frame, tag: string, classes: readonly string[], report: Re
   if (tag === 'ul' && classes.includes('tasks')) {
     report.taskListCount += 1;
   }
-  if (tag === 'section' && report.type === 'doc' && id === null) {
+  const noteType = report.type;
+  if (
+    tag === 'section' &&
+    (noteType === 'doc' || noteType === 'artifact') &&
+    id === null &&
+    !classes.includes('slide')
+  ) {
     report.diagnostics.push(
       makeDiagnostic('E_TYPE_STRUCTURE', location, {
         reason: 'section-id',
-        type: 'doc',
+        type: noteType,
         element: 'section',
         className: '',
       }),
@@ -375,6 +405,9 @@ function visit(frame: Frame, tag: string, classes: readonly string[], report: Re
   }
   if (tag === 'gaveta-embed') {
     validateEmbed(element, location, report);
+  }
+  if (tag === 'gaveta-chart') {
+    validateChart(element, location, report);
   }
   if (tag === 'input' && !frame.inTask) {
     report.diagnostics.push(
@@ -650,6 +683,58 @@ function validateAside(
   }
 }
 
+const CHART_TYPES = new Set(['bar', 'line', 'pie']);
+
+function validateArtifactIframe(
+  element: ParseElement,
+  location: SourceLocation | null,
+  report: Report,
+): void {
+  report.iframeCount += 1;
+  if (report.type !== 'artifact') {
+    report.diagnostics.push(makeDiagnostic('E_UNSAFE_ELEMENT', location, { element: 'iframe' }));
+    return;
+  }
+  if (report.iframeCount > 1) {
+    report.diagnostics.push(makeDiagnostic('E_ARTIFACT_IFRAME', location, { reason: 'count' }));
+    return;
+  }
+  const sandbox = trimmed(attribute(element, 'sandbox'));
+  if (sandbox !== ARTIFACT_SANDBOX) {
+    report.diagnostics.push(
+      makeDiagnostic('E_ARTIFACT_SANDBOX', location, { sandbox: sandbox ?? '' }),
+    );
+  }
+  if (trimmed(attribute(element, 'src')) !== null) {
+    report.diagnostics.push(makeDiagnostic('E_ARTIFACT_IFRAME', location, { reason: 'src' }));
+  }
+  const srcdoc = attribute(element, 'srcdoc');
+  if (srcdoc === null || srcdoc.trim().length === 0) {
+    report.diagnostics.push(makeDiagnostic('E_ARTIFACT_IFRAME', location, { reason: 'srcdoc' }));
+    return;
+  }
+  if (srcdoc.toLowerCase().includes('</iframe')) {
+    report.diagnostics.push(makeDiagnostic('E_ARTIFACT_IFRAME', location, { reason: 'breakout' }));
+  }
+  const expected = expectedArtifactCsp(report.sourceHtml);
+  if (!srcdocContainsCsp(srcdoc, expected)) {
+    report.diagnostics.push(makeDiagnostic('E_ARTIFACT_CSP', location, { reason: 'mismatch' }));
+  }
+}
+
+function validateChart(
+  element: ParseElement,
+  location: SourceLocation | null,
+  report: Report,
+): void {
+  const chartType = trimmed(attribute(element, 'type'));
+  if (chartType === null || !CHART_TYPES.has(chartType)) {
+    report.diagnostics.push(
+      makeDiagnostic('E_HTML_INVALID', location, { reason: 'chart-type', element: 'gaveta-chart' }),
+    );
+  }
+}
+
 function validateEmbed(
   element: ParseElement,
   location: SourceLocation | null,
@@ -709,14 +794,26 @@ function appendStructure(report: Report): void {
 }
 
 function structureCount(report: Report, element: string, className: string | null): number {
-  if (element === 'article') {
-    return report.articleCount;
+  if (element === 'article' && className === 'g-dashboard') {
+    return report.dashboardArticleCount;
+  }
+  if (element === 'article' && className === null) {
+    return Math.max(0, report.articleCount - report.dashboardArticleCount);
   }
   if (element === 'section' && className === 'slide') {
     return report.slideCount;
   }
+  if (element === 'section' && className === 'g-frame') {
+    return report.frameCount;
+  }
   if (element === 'ul' && className === 'tasks') {
     return report.taskListCount;
+  }
+  if (element === 'gaveta-kpi') {
+    return report.kpiCount;
+  }
+  if (element === 'iframe') {
+    return report.iframeCount;
   }
   return 0;
 }

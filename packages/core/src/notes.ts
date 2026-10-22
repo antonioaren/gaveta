@@ -10,6 +10,7 @@ import { lstat, mkdir, readdir } from 'node:fs/promises';
 import type { Dirent } from 'node:fs';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
+import { ARTIFACT_CDN_META } from './artifact.ts';
 import { allocateSlug, isIso8601, isNoteType, isUlid, slugify, type NoteType } from './contract.ts';
 import {
   GavetaError,
@@ -65,6 +66,7 @@ const CREATE_KEYS = [
   'ifMatch',
   'now',
   'id',
+  'artifactCdn',
 ] as const;
 
 const READ_KEYS = ['vaultRoot', 'ref', 'as'] as const;
@@ -190,6 +192,7 @@ interface CreateInput {
   readonly ifMatch: string | undefined;
   readonly now: string;
   readonly id: string;
+  readonly artifactCdn: boolean;
 }
 
 type ReadAs = 'html' | 'text' | 'outline';
@@ -436,6 +439,9 @@ function composeDocument(input: CreateInput): string {
   }
   head.push(`<meta name="gaveta:created" content="${escapeAttr(input.now)}">`);
   head.push(`<meta name="gaveta:updated" content="${escapeAttr(input.now)}">`);
+  if (input.type === 'artifact' && input.artifactCdn) {
+    head.push(`<meta name="${ARTIFACT_CDN_META}" content="true">`);
+  }
   return `<!doctype html><html lang="es"><head>${head.join('')}</head><body>${body}</body></html>`;
 }
 
@@ -457,6 +463,15 @@ function defaultBody(title: string, type: NoteType): string {
   }
   if (type === 'todo') {
     return `<h1>${heading}</h1>`;
+  }
+  if (type === 'dashboard') {
+    return `<article class="g-dashboard"><h1>${heading}</h1></article>`;
+  }
+  if (type === 'design') {
+    return `<section class="g-frame" data-device="desktop" id="pantalla"><h2>${heading}</h2></section>`;
+  }
+  if (type === 'artifact') {
+    return `<article><h1>${heading}</h1><section id="descripcion"><p>${heading}</p></section><iframe sandbox="allow-scripts" title="${heading}" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &apos;none&apos;; script-src &apos;unsafe-inline&apos;; style-src &apos;unsafe-inline&apos;; connect-src &apos;none&apos;&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;p&gt;Vacío&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></article>`;
   }
   return `<article><h1>${heading}</h1></article>`;
 }
@@ -1030,6 +1045,7 @@ function readCreate(options: unknown): CreateInput {
     ifMatch,
     now,
     id,
+    artifactCdn: record.artifactCdn === true,
   };
 }
 

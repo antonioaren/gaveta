@@ -421,8 +421,8 @@ function extractHead(head: ParseElement | null, state: State): HeadExtract {
       }
       const tag = child.tagName.toLowerCase();
       noteUnsafeAttributes(child, tag, state);
-      if (isForbiddenTag(tag) || tag === 'style') {
-        if (isForbiddenTag(tag)) {
+      if (isForbiddenTag(tag, state.type) || tag === 'style') {
+        if (isForbiddenTag(tag, state.type)) {
           state.unsafeCount += 1;
         }
         if (tag === 'style') {
@@ -659,7 +659,7 @@ function convertElement(
 ): NormChild[] {
   const tag = element.tagName.toLowerCase();
   noteUnsafeAttributes(element, tag, state);
-  if (isForbiddenTag(tag)) {
+  if (isForbiddenTag(tag, state.type)) {
     state.unsafeCount += 1;
     state.contentRepair = true;
     noteResourceAttributes(element, tag, state);
@@ -1426,14 +1426,12 @@ function forEachUrl(name: string, value: string, visit: (url: string) => void): 
   }
 }
 
-function isForbiddenTag(tag: string): boolean {
+function isForbiddenTag(tag: string, type: NoteType | null): boolean {
+  if (tag === 'iframe') {
+    return type !== 'artifact';
+  }
   return (
-    tag === 'script' ||
-    tag === 'iframe' ||
-    tag === 'object' ||
-    tag === 'embed' ||
-    tag === 'form' ||
-    tag === 'base'
+    tag === 'script' || tag === 'object' || tag === 'embed' || tag === 'form' || tag === 'base'
   );
 }
 

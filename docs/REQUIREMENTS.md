@@ -30,6 +30,7 @@ El PRD dejaba seis preguntas abiertas, dos de ellas bloqueantes para la fase 1, 
 | DEC-06 | ¿Alias corto `gv`? | **Sí.** `gv` es un alias del mismo binario que `gaveta`. | Reduce tokens y escritura sin coste. | Aprobada |
 | DEC-07 | Librería de conversión entre Markdown y HTML | **unified**: `remark-parse` + `remark-gfm` + `remark-frontmatter` + `remark-rehype` para importar, y `rehype-parse` + `rehype-remark` + `remark-stringify` para exportar. Los wikilinks, los callouts y las tareas se resuelven con plugins propios. | Es el mismo AST (hast) en los dos sentidos, encaja con el normalizador del núcleo y tiene un ecosistema maduro. | Aprobada |
 | DEC-08 | ¿Qué significa "la CLI es la única vía de escritura"? | **Dos interfaces sobre un mismo núcleo.** La CLI es la interfaz de los agentes, al estilo de `obsidian-cli`: cualquier agente (Claude Code, Cursor, GitHub Copilot, Codex…) la usa a través de una skill de Gaveta. La app es la interfaz de la persona y permite crear, editar, mover, renombrar y borrar notas de forma nativa, sin pasar por el binario. Las dos llaman a las mismas operaciones de `@gaveta/core`, así que comparten validación, resolución de enlaces y protección contra enlaces rotos. | El agente necesita comandos deterministas y la persona necesita CRUD completo en la app. Ninguna de las dos interfaces puede escribir saltándose el núcleo. | Aprobada |
+| DEC-09 | ¿Cómo importar HTML de Claude (artifacts)? | **`gaveta adopt` y `gaveta new --source claude`** convierten HTML de Claude en notas nativas (`doc`, `slides`, `dashboard`, `design`) o en tipo **`artifact`** (iframe con `srcdoc` aislado). Los tipos declarativos eliminan scripts y estilos inline; lo omitido se reporta con `W_CLAUDE_DROPPED`. `artifact` usa `sandbox="allow-scripts"` sin `allow-same-origin`, CSP en el `srcdoc` y opción `--allow-cdn` para una allowlist de CDN. | Reutiliza el normalizador y el validador del núcleo; el índice extrae texto del `srcdoc` para FTS. |
 
 ### Enmiendas (2026-10-22)
 
@@ -109,6 +110,12 @@ Precisiones del propietario posteriores a DEC-01–DEC-08. La fila afectada de a
 | REQ-TYPE-05 | P0 | 1 | Componentes P0: callout (`<aside class="callout" data-kind="info\|warn">`), tabla, figura con imagen (`<figure><img><figcaption>`) y bloque de código (`<pre><code class="language-x">`). | Cada componente tiene un ejemplo en `gaveta guide` que pasa `validate`. |
 | REQ-TYPE-06 | P1 | 4 | Diagramas con `<pre class="mermaid">` renderizados por la app. | — |
 | REQ-TYPE-07 | P1 | 4 | Plantillas por tipo de nota en `.gaveta/templates/`. | — |
+| REQ-ART-01 | P0 | 1 | `gaveta adopt <ruta> --source claude` y `gaveta new … --from - --source claude` convierten HTML de Claude en notas `doc`, `slides`, `dashboard` o `design`, eliminando scripts y estilos inline y avisando con `W_CLAUDE_DROPPED`. | Fixtures en `fixtures/claude/` pasan `validate` tras adoptar. |
+| REQ-ART-02 | P0 | 1 | Tipo `dashboard`: `<article class="g-dashboard">` con `<gaveta-kpi>` y `<gaveta-chart type="bar\|line\|pie">` que envuelve una `<table>` como fuente de datos. | `validate` exige al menos un KPI y la tabla dentro del chart. |
+| REQ-ART-03 | P0 | 1 | Tipo `design`: pantallas `<section class="g-frame" data-device="desktop\|tablet\|mobile">` con anotaciones en HTML del contrato. | `validate` exige al menos un `g-frame`. |
+| REQ-ART-04 | P0 | 1 | Tipo `artifact`: un único `<iframe sandbox="allow-scripts" srcdoc="…">` con CSP en el `srcdoc`; scripts solo dentro del iframe. Metadato opcional `gaveta:artifact-cdn` y flag `--allow-cdn` para CDN allowlist. | Tests de seguridad en `artifact.security.test.ts`. |
+| REQ-ART-05 | P0 | 1 | `--as doc\|slides\|dashboard\|design\|artifact` fuerza el tipo; sin `--as`, se infiere (scripts React/JS → `artifact`). | E2E cubre doc y artifact. |
+| REQ-ART-06 | P0 | 1 | El índice FTS incluye texto plano extraído del `srcdoc` de notas `artifact`. | `parseNote` concatena el texto del `srcdoc` a `plainText`. |
 
 ### CLI para agentes
 
@@ -266,6 +273,9 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_ID_DUPLICATE` | Dos archivos comparten `gaveta:id` |
 | `E_HTML_INVALID` | HTML no parseable o elemento fuera del contrato |
 | `E_TYPE_STRUCTURE` | La estructura no corresponde al tipo de nota |
+| `E_ARTIFACT_SANDBOX` | El iframe de una nota `artifact` no usa el sandbox permitido |
+| `E_ARTIFACT_CSP` | La CSP del `srcdoc` no coincide con `gaveta:artifact-cdn` |
+| `E_ARTIFACT_IFRAME` | La nota `artifact` no tiene un único iframe con `srcdoc` válido |
 | `E_TASK_INVALID` | Tarea con atributos incorrectos |
 | `E_UNSAFE_SCRIPT`, `E_UNSAFE_HANDLER`, `E_UNSAFE_URL`, `E_UNSAFE_ELEMENT` | Contenido inseguro |
 | `E_PATH_OUTSIDE_VAULT` | La ruta sale del vault |
@@ -281,6 +291,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `W_REL_UNKNOWN` | `rel` fuera del vocabulario |
 | `W_REMOTE_RESOURCE` | Recurso remoto bloqueado |
 | `W_INLINE_STYLE_REMOVED` | Estilos inline eliminados por el normalizador |
+| `W_CLAUDE_DROPPED` | Contenido omitido al importar HTML de Claude |
 | `W_CLASS_REMOVED` | Clases fuera del contrato eliminadas por el normalizador |
 | `W_UNSAFE_REMOVED` | Contenido inseguro eliminado al guardar |
 | `E_IMPORT_PARSE` | Un `.md` no se puede parsear (por ejemplo, front matter YAML no válido) |

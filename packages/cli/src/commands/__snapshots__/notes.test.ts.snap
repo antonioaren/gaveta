@@ -10,7 +10,7 @@ exports[`new, read and edit > snapshots stable error envelopes for each command 
     "message": "El argumento falta o está fuera de rango.",
     "hint": "Consulta gaveta guide para ver los valores que admite el comando.",
     "details": {
-      "problem": "El tipo tiene que ser doc, slides o todo."
+      "problem": "El tipo tiene que ser doc, slides, todo, dashboard, design o artifact."
     }
   }
 }

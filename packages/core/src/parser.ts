@@ -5,6 +5,7 @@
  */
 import { html, parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
+import { plainTextFromSrcdoc, readArtifactSrcdoc } from './artifact.ts';
 import {
   BODY_ELEMENTS,
   DOCUMENT_SHELL,
@@ -278,7 +279,16 @@ export function parseNote(input: unknown): ParseResult {
           { depth: BODY_CHILD_DEPTH, sectionId: null, inCode: false },
           diagnostics,
         );
-  const plainText = body === null ? '' : renderPlain(body.childNodes, false, BODY_CHILD_DEPTH);
+  let plainText = body === null ? '' : renderPlain(body.childNodes, false, BODY_CHILD_DEPTH);
+  if (metadata.type === 'artifact' && typeof input === 'string' && input.length > 0) {
+    const srcdoc = readArtifactSrcdoc(input);
+    if (srcdoc !== null) {
+      const embedded = plainTextFromSrcdoc(srcdoc).trim();
+      if (embedded.length > 0) {
+        plainText = collapseWhitespace(`${plainText} ${embedded}`);
+      }
+    }
+  }
   const note: NoteModel = {
     metadata,
     title: metadata.title,
@@ -381,7 +391,8 @@ function inspectElement(
 ): void {
   const tag = element.tagName.toLowerCase();
   const location = elementLocation(element);
-  const forbidden = forbiddenDiagnostic(tag);
+  const noteType = meta.rawType.value;
+  const forbidden = forbiddenDiagnostic(tag, noteType);
   if (forbidden !== null) {
     unsafe.push(makeDiagnostic(forbidden, location, { element: tag }));
   }
@@ -872,12 +883,12 @@ function checkboxChecked(element: ParseElement): boolean {
   return false;
 }
 
-function forbiddenDiagnostic(tag: string): DiagnosticCode | null {
+function forbiddenDiagnostic(tag: string, noteType: string | null): DiagnosticCode | null {
   switch (tag) {
     case 'script':
       return FORBIDDEN_ELEMENTS.script;
     case 'iframe':
-      return FORBIDDEN_ELEMENTS.iframe;
+      return noteType === 'artifact' ? null : 'E_UNSAFE_ELEMENT';
     case 'object':
       return FORBIDDEN_ELEMENTS.object;
     case 'embed':

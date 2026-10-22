@@ -80,7 +80,28 @@ const expected = {
     exitCode: 2,
     escalatesToError: false,
     message: 'La estructura no corresponde al tipo de la nota.',
-    hint: 'Una nota slides necesita al menos un section.slide; una nota doc, un article; una nota todo, un ul.tasks.',
+    hint: 'Una nota slides necesita al menos un section.slide; una nota doc, un article; una nota todo, un ul.tasks; dashboard, design y artifact tienen reglas propias (gaveta guide).',
+  },
+  E_ARTIFACT_SANDBOX: {
+    severity: 'error',
+    exitCode: 2,
+    escalatesToError: false,
+    message: 'El iframe del artefacto no usa el sandbox permitido.',
+    hint: 'Solo se admite sandbox="allow-scripts", sin allow-same-origin ni otras banderas.',
+  },
+  E_ARTIFACT_CSP: {
+    severity: 'error',
+    exitCode: 2,
+    escalatesToError: false,
+    message: 'La política CSP del srcdoc del artefacto no coincide con la nota.',
+    hint: 'Vuelve a importar con --allow-cdn o quita los scripts remotos del HTML original.',
+  },
+  E_ARTIFACT_IFRAME: {
+    severity: 'error',
+    exitCode: 2,
+    escalatesToError: false,
+    message: 'La nota artifact debe tener un único iframe con srcdoc y sin src.',
+    hint: 'Los scripts van solo dentro del srcdoc; no añadas más iframes ni atributos distintos.',
   },
   E_TASK_INVALID: {
     severity: 'error',
@@ -207,6 +228,13 @@ const expected = {
     escalatesToError: false,
     message: 'Se han eliminado {count} estilos en línea.',
     hint: 'El aspecto lo pone el tema del vault, no el atributo style.',
+  },
+  W_CLAUDE_DROPPED: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'Se ha omitido contenido del HTML de Claude ({detail}).',
+    hint: 'Scripts, estilos en línea y etiquetas fuera del contrato no se conservan en tipos declarativos.',
   },
   W_CLASS_REMOVED: {
     severity: 'warning',

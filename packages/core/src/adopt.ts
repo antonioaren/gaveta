@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { lstat, realpath } from 'node:fs/promises';
 import path from 'node:path';
+import { ARTIFACT_CDN_META } from './artifact.ts';
+import { convertClaudeHtml, type ClaudeConvertWarning } from './convert/claude.ts';
 import { isIso8601, isUlid, type NoteType } from './contract.ts';
 import { GavetaError, isErrorCode, isWarningCode, type WarningCode } from './errors.ts';
 import { normalizeNote, type NormalizeNoteOptions } from './normalize.ts';
@@ -39,6 +41,9 @@ export interface AdoptOptions {
   readonly now?: () => string;
   readonly createId?: () => string;
   readonly strictRel?: boolean;
+  readonly source?: 'claude';
+  readonly as?: NoteType;
+  readonly allowCdn?: boolean;
 }
 
 interface PreparedNote {
@@ -68,7 +73,20 @@ export async function adoptNote(
   const config = await readVaultConfig(vaultRoot);
   const root = await realpath(vaultRoot);
   const located = await locateHtml(root, userPath);
-  const source = await readVaultText(root, located.relative);
+  let source = await readVaultText(root, located.relative);
+  const claudeWarnings: AdoptWarning[] = [];
+  let adoptOptions: AdoptOptions = options;
+  if (options.source === 'claude') {
+    const parsedSource = parseNote(source).note;
+    const converted = convertClaudeHtml(source, {
+      ...(options.as !== undefined ? { as: options.as } : {}),
+      allowCdn: options.allowCdn === true,
+      title: chooseTitle(parsedSource, parsedSource, located.relative),
+    });
+    source = wrapClaudeBody(converted.title, converted.body);
+    claudeWarnings.push(...converted.warnings.map(claudeWarningToAdopt));
+    adoptOptions = { ...options, allowCdn: options.allowCdn === true || converted.allowCdn };
+  }
   const normalizeOptions: NormalizeNoteOptions = {
     notePath: located.relative,
     remoteAllowlist: config.remoteAllowlist,
@@ -79,9 +97,13 @@ export async function adoptNote(
     relVocabulary: config.rel.vocabulary,
     strictRel: options.strictRel === true,
   };
-  const prepared = prepareNote(source, located.relative, normalizeOptions, options);
+  const prepared = prepareNote(source, located.relative, normalizeOptions, adoptOptions);
   const validated = validateNote(prepared.html, validateOptions);
-  const warnings = mergeWarnings([prepared.warnings, warningsFrom(validated.diagnostics)]);
+  const warnings = mergeWarnings([
+    claudeWarnings,
+    prepared.warnings,
+    warningsFrom(validated.diagnostics),
+  ]);
   if (!validated.ok) {
     const blocking = validated.diagnostics.filter((diagnostic) => diagnostic.severity === 'error');
     const error = blocking.find((diagnostic) => isErrorCode(diagnostic.code));
@@ -249,6 +271,7 @@ interface HeadFields {
   readonly aliases: string | null;
   readonly created: string;
   readonly updated: string | null;
+  readonly artifactCdn: boolean;
 }
 
 function fieldsFor(
@@ -261,15 +284,18 @@ function fieldsFor(
   const tags = joinList(source?.metadata.tags, normalized.metadata.tags);
   const aliases = joinList(source?.metadata.aliases, normalized.metadata.aliases);
   const updated = firstIso(source?.metadata.updated ?? null, normalized.metadata.updated);
+  const inferred = inferType(html, source, normalized);
+  const resolvedType = options.as ?? source?.type ?? normalized.type ?? inferred;
   return {
     title: chooseTitle(source, normalized, notePath),
     id: existingId(source) ?? existingId(normalized) ?? mintId(options),
-    type: source?.type ?? normalized.type ?? inferType(html, source, normalized),
+    type: resolvedType,
     tags,
     aliases,
     created:
       firstIso(source?.metadata.created ?? null, normalized.metadata.created) ?? timestamp(options),
     updated,
+    artifactCdn: options.allowCdn === true,
   };
 }
 
@@ -298,7 +324,11 @@ function firstIso(primary: string | null, fallback: string | null): string | nul
   return null;
 }
 
-function chooseTitle(source: NoteModel | null, normalized: NoteModel, notePath: string): string {
+function chooseTitle(
+  source: NoteModel | null,
+  normalized: NoteModel | null,
+  notePath: string,
+): string {
   const titled = titledText(source) ?? titledText(normalized);
   if (titled !== null) {
     return titled;
@@ -329,6 +359,17 @@ function headingText(model: NoteModel | null): string | null {
   return null;
 }
 
+function wrapClaudeBody(title: string, body: string): string {
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escapeText(title)}</title></head><body>${body}</body></html>`;
+}
+
+function claudeWarningToAdopt(warning: ClaudeConvertWarning): AdoptWarning {
+  if (warning.params === undefined) {
+    return { code: warning.code };
+  }
+  return { code: warning.code, params: warning.params };
+}
+
 function inferType(html: string, source: NoteModel | null, normalized: NoteModel): NoteType {
   const sections = [...(source?.sections ?? []), ...normalized.sections];
   if (
@@ -344,6 +385,15 @@ function inferType(html: string, source: NoteModel | null, normalized: NoteModel
     normalized.tasks.length > 0;
   if (hasTasks && !hasArticle) {
     return 'todo';
+  }
+  if (html.includes('g-dashboard') || html.includes('gaveta-kpi')) {
+    return 'dashboard';
+  }
+  if (html.includes('g-frame')) {
+    return 'design';
+  }
+  if (html.includes('<iframe') && html.includes('srcdoc')) {
+    return 'artifact';
   }
   return 'doc';
 }
@@ -400,6 +450,9 @@ function renderHead(fields: HeadFields, theme: string): string {
   lines.push(`    <meta name="gaveta:created" content="${escapeAttr(fields.created)}" />`);
   if (fields.updated !== null) {
     lines.push(`    <meta name="gaveta:updated" content="${escapeAttr(fields.updated)}" />`);
+  }
+  if (fields.type === 'artifact' && fields.artifactCdn) {
+    lines.push(`    <meta name="${ARTIFACT_CDN_META}" content="true" />`);
   }
   lines.push(`    <link rel="stylesheet" href="${escapeAttr(theme)}" />`);
   return lines.join('\n');
