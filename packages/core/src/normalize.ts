@@ -360,12 +360,17 @@ function buildNote(document: ParseDocument, state: State): BuiltNote {
   };
 }
 
+/** Stylesheet href for a note at `notePath`, relative to that note. */
+export function themeStylesheetHref(notePath: string): string {
+  const depth = notePath.split('/').length - 1;
+  return `${'../'.repeat(depth)}${THEME_FILE}`;
+}
+
 function themeHref(notePath: string | null): string {
   if (notePath === null) {
     return THEME_FILE;
   }
-  const depth = notePath.split('/').length - 1;
-  return `${'../'.repeat(depth)}${THEME_FILE}`;
+  return themeStylesheetHref(notePath);
 }
 
 function isThemeHref(value: string): boolean {

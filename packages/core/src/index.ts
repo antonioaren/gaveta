@@ -200,3 +200,9 @@ export type {
   ResolvedLink,
   ResolvedRef,
 } from './links/index.ts';
+
+export { GavetaOperationError } from './ops/error.ts';
+export { moveNote } from './ops/move.ts';
+export { removeNote } from './ops/remove.ts';
+
+export type { AffectedNote, MoveNoteResult, RemoveNoteResult } from './ops/types.ts';

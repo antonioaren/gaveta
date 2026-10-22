@@ -49,6 +49,26 @@ export function inspectVaultPath(value: string): VaultPathResult {
   return { ok: true, path: segments.join('/') };
 }
 
+/**
+ * Vault path a relative href points at from `fromPath`.
+ * Null for schemes, traversal out of the vault, and fragment-only hrefs.
+ */
+export function resolveVaultHref(fromPath: string, href: string): string | null {
+  if (!isProducedHref(href)) {
+    return null;
+  }
+  const from = inspectVaultPath(fromPath);
+  if (!from.ok) {
+    return null;
+  }
+  const hash = href.indexOf('#');
+  const pathOnly = hash === -1 ? href : href.slice(0, hash);
+  if (pathOnly.length === 0 || pathOnly.includes('?')) {
+    return null;
+  }
+  return resolveAgainst(from.path, pathOnly);
+}
+
 /** Relative href from one note path to another. Null when the result would be unsafe. */
 export function relativeNoteHref(fromPath: string, toPath: string): string | null {
   const from = inspectVaultPath(fromPath);
