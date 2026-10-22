@@ -82,7 +82,7 @@ flowchart TB
 - [ ] **T1.8 Resolutor de referencias y enlaces.** Resolver `ref` (id, ruta o título/alias, sin distinguir mayúsculas ni acentos), convertir `[[…]]` a canónico o a pendiente, sugerencias por similitud, reparar `href` desde `data-g-to` y política de `rel`. Cubre: REQ-LINK-01 a 05, REQ-CLI-08. Depende de: T1.7.
 - [ ] **T1.9 Promoción de pendientes.** Al crear una nota, convertir en canónicos los pendientes que coinciden con su título o alias. Cubre: REQ-LINK-02. Depende de: T1.8.
 - [ ] **T1.10 Operaciones transaccionales `mv` y `rm`.** Reescritura en bloque de los `href` entrantes con reversión si falla algo, ruta del tema recalculada y, con `--force`, conversión de los enlaces entrantes a pendientes. Cubre: REQ-LINK-09 y 10. Depende de: T1.8.
-- [ ] **T1.11 Consultas de grafo.** Grafo global y local (profundidad de 1 a 3), filtros, nodos fantasma y contexto de los backlinks. Cubre: REQ-GRAPH-01 a 03, REQ-LINK-06 y 07. Depende de: T1.7.
+- [x] **T1.11 Consultas de grafo.** Grafo global y local (profundidad de 1 a 3), filtros, nodos fantasma y contexto de los backlinks. Cubre: REQ-GRAPH-01 a 03, REQ-LINK-06 y 07. Depende de: T1.7.
 - [ ] **T1.12 Doctor.** Rotos, pendientes, huérfanas, duplicados y notas no válidas, más `--fix`. Cubre: REQ-LINK-11. Depende de: T1.8, T1.3.
 
 ### 1C. CLI
