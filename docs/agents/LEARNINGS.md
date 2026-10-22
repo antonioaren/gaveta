@@ -40,3 +40,4 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · fix · `runCli` resolves the vault before every command, and an explicit `--vault` or `GAVETA_VAULT` that does not exist yet turns into `E_VAULT_NOT_FOUND` even for `init`. · A command that creates the vault sets `skipsVaultDiscovery: true` on its `CommandSpec`.
 - 2026-10-22 · T1.28 · Passing `html: null` into `createNote` is not the same as omitting `html`: `optionalBody(null)` throws `E_ARG_INVALID` and the note can be created without resolving `[[…]]`. · Keep `undefined` when stdin is empty.
 - 2026-10-22 · T1.28 · `readCommandOptions` only accepts keys listed in `CommandSpec.options[].name`; Commander stores `--source` as `source`, so the spec name must be `source`, not a different internal alias.
+- 2026-10-22 · T1.28 · Artifact srcdoc CSP must be the first element in `<head>` (parse5 inject + strict `srcdocContainsCsp`); string `indexOf('<head')` matches `<header>`.
