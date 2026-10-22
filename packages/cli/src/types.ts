@@ -35,6 +35,7 @@ export interface CommandOption {
   readonly name: string;
   readonly flags: string;
   readonly description: string;
+  readonly choices?: readonly string[];
 }
 
 /**

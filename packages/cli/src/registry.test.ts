@@ -2,8 +2,8 @@ import { expect, it } from 'vitest';
 import { commands } from './registry.ts';
 import { renderHelp } from './help.ts';
 
-it('registers version and search', () => {
-  expect(commands.map((command) => command.name)).toEqual(['version', 'search']);
+it('registers version, init, adopt, and search', () => {
+  expect(commands.map((command) => command.name)).toEqual(['version', 'init', 'adopt', 'search']);
   const names = new Set(commands.map((command) => command.name));
   expect(names.size).toBe(commands.length);
 });
@@ -14,6 +14,18 @@ it('gives every command a summary and an example the guide can print', () => {
     expect(command.example).toContain(command.name);
     expect(command.example.startsWith('gaveta ')).toBe(true);
   }
+});
+
+it('documents init targets and the adopt path in Spanish help', () => {
+  const initHelp = renderHelp(commands, 'init');
+  expect(initHelp).toContain('--agent-instructions');
+  expect(initHelp).toContain('CLAUDE.md');
+  expect(initHelp).toContain('AGENTS.md');
+  expect(initHelp).toContain('claude');
+  expect(initHelp).toContain('agents');
+  expect(initHelp).not.toContain('Usage:');
+  expect(renderHelp(commands, 'adopt')).toContain('<ruta>');
+  expect(renderHelp(commands, 'adopt')).toContain('gaveta adopt nota.html');
 });
 
 it('lists every registered command and its example in the help text', () => {

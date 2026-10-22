@@ -115,6 +115,14 @@ export {
 
 export { DEFAULT_THEME_CSS } from './theme/theme.ts';
 
+export { adoptNote } from './adopt.ts';
+
+export type { AdoptOptions, AdoptResult, AdoptWarning } from './adopt.ts';
+
+export { initVault } from './vault/init.ts';
+
+export type { AgentInstructionResult, InitVaultOptions, InitVaultResult } from './vault/init.ts';
+
 export {
   INDEX_RELATIVE_PATH,
   INDEX_SCHEMA_VERSION,
