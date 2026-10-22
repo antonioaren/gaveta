@@ -86,6 +86,12 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm exec playwright install chromium
       - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: theme-showcase-screenshots
+          path: test-results/theme-showcase/
+          if-no-files-found: error
 
   unit-min-node:
     name: unit (node-min)

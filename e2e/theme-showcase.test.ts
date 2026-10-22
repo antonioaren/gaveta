@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const SHOWCASE_HTML = join(REPO_ROOT, 'fixtures', 'showcase', 'vitrina-doc.html');
-const ARTIFACT_DIR = join(REPO_ROOT, 'artifacts', 'theme-showcase');
+const SCREENSHOT_DIR = join(REPO_ROOT, 'test-results', 'theme-showcase');
 
 async function openNote(page: Page, colorScheme: 'light' | 'dark'): Promise<void> {
   await page.emulateMedia({ colorScheme });
@@ -27,7 +27,7 @@ describe('theme showcase (file://)', () => {
   let browser: Browser;
 
   beforeAll(async () => {
-    mkdirSync(ARTIFACT_DIR, { recursive: true });
+    mkdirSync(SCREENSHOT_DIR, { recursive: true });
     browser = await chromium.launch();
   }, 120_000);
 
@@ -52,7 +52,7 @@ describe('theme showcase (file://)', () => {
       .evaluate((node) => getComputedStyle(node).color);
     expect(pendingColor).toBe('rgb(124, 45, 18)');
 
-    await page.screenshot({ path: join(ARTIFACT_DIR, 'vitrina-light.png'), fullPage: true });
+    await page.screenshot({ path: join(SCREENSHOT_DIR, 'vitrina-light.png'), fullPage: true });
     await page.close();
   });
 
@@ -68,7 +68,7 @@ describe('theme showcase (file://)', () => {
       .evaluate((node) => getComputedStyle(node).color);
     expect(linkColor).toBe('rgb(147, 197, 253)');
 
-    await page.screenshot({ path: join(ARTIFACT_DIR, 'vitrina-dark.png'), fullPage: true });
+    await page.screenshot({ path: join(SCREENSHOT_DIR, 'vitrina-dark.png'), fullPage: true });
     await page.close();
   });
 
