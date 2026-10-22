@@ -4,5 +4,6 @@ export default defineConfig({
   test: {
     include: ['e2e/**/*.test.ts'],
     environment: 'node',
+    fileParallelism: false,
   },
 });

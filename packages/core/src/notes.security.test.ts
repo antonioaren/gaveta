@@ -59,10 +59,10 @@ async function tree(root: string): Promise<readonly string[]> {
 }
 
 function assertClean(html: string): void {
-  expect(html.includes('<script')).toBe(false);
-  expect(html.includes('onclick')).toBe(false);
-  expect(html.includes('javascript:')).toBe(false);
-  expect(html.includes('https://evil.example')).toBe(false);
+  expect(html.indexOf('<script')).toBe(-1);
+  expect(html.indexOf('onclick')).toBe(-1);
+  expect(html.indexOf('javascript:')).toBe(-1);
+  expect(html.indexOf('evil.example')).toBe(-1);
   expect(html.includes('texto seguro')).toBe(true);
 }
 
