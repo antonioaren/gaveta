@@ -6,6 +6,7 @@ export const initCommand: CommandSpec = {
   summary: 'Crea un vault, o lo completa, sin tocar los archivos que ya existen.',
   example: 'gaveta init --agent-instructions agents',
   requiresVault: false,
+  skipsVaultDiscovery: true,
   input: 'none',
   args: [
     {
