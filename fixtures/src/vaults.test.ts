@@ -263,7 +263,7 @@ salto]]</p>
 });
 
 describe('vault skeleton', () => {
-  it('shares one config and one placeholder theme, and stores no index', () => {
+  it('shares one config and one default theme, and stores no index', () => {
     const emptyFiles = walk(vaultPath('empty'));
     expect(emptyFiles).toEqual(['.gaveta/config.json', '.gaveta/theme.css']);
     const configBytes = readFileSync(join(vaultPath('empty'), '.gaveta/config.json'));

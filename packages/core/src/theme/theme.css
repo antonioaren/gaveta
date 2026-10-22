@@ -1,0 +1,542 @@
+/*
+ * Gaveta default theme.
+ * Notes link this file with a relative href and render with no server and no JavaScript.
+ * Light and dark follow prefers-color-scheme. Every color is a token.
+ */
+
+:root {
+  color-scheme: light;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', Menlo, Consolas, monospace;
+  --color-bg: #ffffff;
+  --color-surface: #f3efe4;
+  --color-text: #1a1a1a;
+  --color-muted: #4d4d4d;
+  --color-link: #0b3d91;
+  --color-pending: #8d3414;
+  --color-border: #767676;
+  --color-focus: #0b3d91;
+  --color-control: #1a1a1a;
+  --color-code-bg: #efeae2;
+  --color-kbd-bg: #e7e4de;
+  --color-info-bg: #d9e8f8;
+  --color-warn-bg: #f8e6c8;
+  --color-notes-bg: #efe6d4;
+  --color-header-bg: #e8e4dc;
+  --color-mark-bg: #f3d98a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-bg: #141413;
+    --color-surface: #262623;
+    --color-text: #f6f3ec;
+    --color-muted: #cfcabe;
+    --color-link: #c5d7ff;
+    --color-pending: #ffd0b0;
+    --color-border: #9b9b96;
+    --color-focus: #c5d7ff;
+    --color-control: #f6f3ec;
+    --color-code-bg: #2a2a26;
+    --color-kbd-bg: #33332e;
+    --color-info-bg: #1c3348;
+    --color-warn-bg: #3d2c18;
+    --color-notes-bg: #2c291f;
+    --color-header-bg: #32312c;
+    --color-mark-bg: #4a3e16;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+body {
+  margin: 2rem auto;
+  max-width: 42rem;
+  padding: 0 1.25rem 3rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, 'Segoe UI', sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+body:has(section.slide) {
+  max-width: 50rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-mark-bg);
+  color: var(--color-text);
+}
+
+article {
+  display: flow-root;
+  counter-reset: gaveta-slide;
+}
+
+section {
+  margin: 1.5rem 0;
+}
+
+section[id] {
+  scroll-margin-top: 1.5rem;
+}
+
+header {
+  margin: 0 0 1.25rem;
+}
+
+footer {
+  margin-top: 2.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+aside {
+  margin: 1rem 0;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 1rem 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-text);
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+h1 {
+  margin: 0 0 0.8rem;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  margin: 1.8rem 0 0.5rem;
+  font-size: 1.5rem;
+}
+
+h3 {
+  margin: 1.45rem 0 0.4rem;
+  font-size: 1.25rem;
+}
+
+h4 {
+  margin: 1.25rem 0 0.35rem;
+  font-size: 1.1rem;
+}
+
+h5 {
+  margin: 1.1rem 0 0.3rem;
+  font-size: 1rem;
+}
+
+h6 {
+  margin: 1rem 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+p {
+  margin: 0.75rem 0;
+}
+
+blockquote {
+  margin: 1rem 0;
+  padding-inline-start: 1rem;
+  border-inline-start: 3px solid var(--color-border);
+  color: var(--color-text);
+}
+
+ul,
+ol {
+  margin: 0.75rem 0;
+  padding-inline-start: 1.4rem;
+}
+
+ul > li::marker,
+ol > li::marker {
+  color: var(--color-muted);
+}
+
+li {
+  margin: 0.25rem 0;
+}
+
+dl {
+  margin: 1rem 0;
+}
+
+dt {
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
+
+dd {
+  margin: 0.2rem 0 0.2rem 1rem;
+}
+
+hr {
+  height: 0;
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+br {
+  line-height: inherit;
+}
+
+strong {
+  font-weight: 600;
+}
+
+em {
+  font-style: italic;
+}
+
+kbd {
+  padding: 0.05em 0.4em;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-kbd-bg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+mark {
+  padding: 0.05em 0.2em;
+  background: var(--color-mark-bg);
+  color: var(--color-text);
+}
+
+sub,
+sup {
+  position: relative;
+  font-size: 0.75em;
+  line-height: 0;
+  vertical-align: baseline;
+}
+
+sup {
+  top: -0.4em;
+}
+
+sub {
+  bottom: -0.2em;
+}
+
+small {
+  color: var(--color-muted);
+  font-size: 0.875em;
+}
+
+abbr {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+}
+
+time {
+  font-variant-numeric: tabular-nums;
+}
+
+span {
+  color: inherit;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+a[data-g-pending] {
+  color: var(--color-pending);
+  text-decoration-style: dashed;
+}
+
+table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+}
+
+caption {
+  padding-top: 0.45rem;
+  caption-side: bottom;
+  color: var(--color-muted);
+  text-align: start;
+}
+
+thead {
+  background: var(--color-header-bg);
+}
+
+tbody {
+  vertical-align: top;
+}
+
+tr {
+  border-color: inherit;
+}
+
+th,
+td {
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: start;
+  vertical-align: top;
+}
+
+th {
+  background: var(--color-header-bg);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+figure {
+  margin: 1.25rem 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+figcaption {
+  margin-top: 0.4rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+picture {
+  display: block;
+}
+
+source {
+  display: none;
+}
+
+pre {
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--color-code-bg);
+  color: var(--color-text);
+  line-height: 1.45;
+}
+
+pre.mermaid {
+  white-space: pre-wrap;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+:not(pre) > code {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--color-code-bg);
+  color: var(--color-text);
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  font-size: 1em;
+}
+
+input[type='checkbox'] {
+  flex: 0 0 auto;
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  margin: 0;
+  accent-color: var(--color-control);
+  vertical-align: -0.15em;
+}
+
+aside.callout {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem 0.85rem;
+  border-inline-start: 4px solid var(--color-link);
+  background: var(--color-info-bg);
+  color: var(--color-text);
+}
+
+aside.callout[data-kind='info'] {
+  border-inline-start-color: var(--color-link);
+  background: var(--color-info-bg);
+}
+
+aside.callout[data-kind='warn'] {
+  border-inline-start-color: var(--color-pending);
+  background: var(--color-warn-bg);
+}
+
+aside.callout[data-kind]::before {
+  content: attr(data-kind);
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+aside.callout > :first-child,
+aside.notes > :first-child {
+  margin-top: 0;
+}
+
+aside.callout > :last-child,
+aside.notes > :last-child {
+  margin-bottom: 0;
+}
+
+section.slide {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 14rem;
+  margin: 1.5rem 0;
+  padding: 2.4rem 2.1rem 1.8rem;
+  counter-increment: gaveta-slide;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+section.slide::before {
+  content: counter(gaveta-slide);
+  position: absolute;
+  inset-block-start: 0.8rem;
+  inset-inline-end: 1.1rem;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+section.slide > :first-child {
+  margin-top: 0;
+}
+
+section.slide > :last-child {
+  margin-bottom: 0;
+}
+
+aside.notes {
+  margin: 0.75rem 0 1.5rem;
+  padding: 0.8rem 1rem;
+  border-inline-start: 4px solid var(--color-border);
+  background: var(--color-notes-bg);
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+ul.tasks {
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+ul.tasks > li[data-g-task] {
+  display: flow-root;
+  margin: 0;
+  padding: 0.55rem 0.15rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+ul.tasks > li[data-g-task][data-g-due]::before {
+  content: attr(data-g-due);
+  margin-inline-end: 0.7rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+ul.tasks > li[data-g-task][data-g-priority]::after {
+  content: attr(data-g-priority);
+  float: inline-end;
+  margin-inline-start: 0.75rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+ul.tasks > li[data-g-task]:has(input:checked) {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+ul.tasks input[type='checkbox'] {
+  margin-inline-end: 0.55rem;
+}
+
+gaveta-embed {
+  display: block;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  overflow-wrap: anywhere;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+gaveta-embed::before {
+  content: attr(data-g-to);
+}
+
+@media print {
+  body {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  section.slide {
+    break-after: page;
+  }
+
+  aside.notes {
+    break-inside: avoid;
+  }
+}
