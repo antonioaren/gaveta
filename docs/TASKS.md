@@ -200,3 +200,7 @@ Se pueden trabajar en paralelo al camino crítico: T1.5 (tema), T1.11 (consultas
 - [x] `docs/TASKS.md`: este plan.
 - [x] T0.1: decisiones aprobadas.
 - [ ] Siguiente paso: T0.4 (vaults de prueba).
+
+## Mejoras
+
+- [x] **T1.28 Artefactos Claude.** Tipos `dashboard`, `design` y `artifact`; `gaveta adopt` / `gaveta new --source claude`; fixtures `fixtures/claude/`; estilos en `theme.css`; README y e2e. Cubre: DEC-09, REQ-ART-01 a 06.

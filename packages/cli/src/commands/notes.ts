@@ -1,10 +1,12 @@
 import {
   GavetaError,
+  convertClaudeHtml,
   createNote,
   editNote,
   exitCodeFor,
   isNoteType,
   readNote,
+  type NoteType,
   type CreateNoteResult,
   type EditNoteResult,
   type NoteOutline,
@@ -15,7 +17,7 @@ import {
 import { CliFailure } from '../failure.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
-const BAD_TYPE = 'El tipo tiene que ser doc, slides o todo.';
+const BAD_TYPE = 'El tipo tiene que ser doc, slides, todo, dashboard, design o artifact.';
 const MISSING_TYPE = 'Falta --type.';
 const MISSING_TITLE = 'Falta el título.';
 const MISSING_REF = 'Falta la referencia.';
@@ -39,7 +41,23 @@ export const newCommand: CommandSpec = {
   input: 'optional',
   args: [{ name: 'título', description: 'Título de la nota.', required: true }],
   options: [
-    { name: 'type', flags: '--type <tipo>', description: 'Tipo: doc, slides o todo.' },
+    {
+      name: 'type',
+      flags: '--type <tipo>',
+      description: 'Tipo: doc, slides, todo, dashboard, design o artifact.',
+    },
+    {
+      name: 'source',
+      flags: '--source <origen>',
+      description: 'Con --from -, convierte HTML de Claude antes de crear la nota.',
+      choices: ['claude'],
+    },
+    {
+      name: 'allowCdn',
+      flags: '--allow-cdn',
+      description: 'Permite CDN en notas artifact importadas desde Claude.',
+      kind: 'boolean',
+    },
     { name: 'in', flags: '--in <carpeta>', description: 'Carpeta dentro del vault.' },
     { name: 'tags', flags: '--tags <etiquetas>', description: 'Etiquetas separadas por comas.' },
     { name: 'aliases', flags: '--aliases <alias>', description: 'Alias separados por comas.' },
@@ -51,16 +69,19 @@ export const newCommand: CommandSpec = {
   ],
   async run(context): Promise<CommandResult> {
     const root = vaultRoot(context);
+    const title = readTitle(context);
+    const claude = materializeClaudeInput(context, title);
     const created = await createNote(
       withDefined({
         vaultRoot: root,
-        title: readTitle(context),
-        type: readType(context.options.type),
+        title,
+        type: claude.type,
         folder: context.options.in,
         tags: splitNames(context.options.tags, 'etiquetas'),
         aliases: splitNames(context.options.aliases, 'alias'),
-        html: context.input?.text,
+        html: claude.html,
         ifMatch: readIfMatch(context.options.ifMatch),
+        ...(claude.artifactCdn ? { artifactCdn: true } : {}),
       }),
     );
     if (!created.ok) {
@@ -69,7 +90,7 @@ export const newCommand: CommandSpec = {
     return {
       data: presentCreated(created),
       human: `Creada ${created.path}\n${created.id}\n${created.hash}\n`,
-      warnings: toCommandWarnings(created.warnings),
+      warnings: [...claude.warnings, ...toCommandWarnings(created.warnings)],
     };
   },
 };
@@ -177,7 +198,7 @@ function readRef(context: CommandContext): string {
   return ref.trim();
 }
 
-function readType(value: string | undefined): 'doc' | 'slides' | 'todo' {
+function readType(value: string | undefined): NoteType {
   if (value === undefined) {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: MISSING_TYPE });
   }
@@ -185,6 +206,58 @@ function readType(value: string | undefined): 'doc' | 'slides' | 'todo' {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: BAD_TYPE });
   }
   return value;
+}
+
+function readOptionalType(value: string): NoteType {
+  if (!isNoteType(value)) {
+    throw new CliFailure('E_ARG_INVALID', {}, { problem: BAD_TYPE });
+  }
+  return value;
+}
+
+function materializeClaudeInput(
+  context: CommandContext,
+  title: string,
+): {
+  readonly type: NoteType;
+  readonly html: string | undefined;
+  readonly warnings: readonly CommandWarning[];
+  readonly artifactCdn: boolean;
+} {
+  const typeOption = context.options.type;
+  if (context.options.source !== 'claude') {
+    return {
+      type: readType(typeOption),
+      html: context.input?.text,
+      warnings: [],
+      artifactCdn: false,
+    };
+  }
+  const html = context.input?.text;
+  if (html === undefined) {
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: 'Indica el HTML con --from - o --from <archivo>.' },
+    );
+  }
+  const explicitType = typeOption === undefined ? undefined : readOptionalType(typeOption);
+  const converted = convertClaudeHtml(html, {
+    ...(explicitType !== undefined ? { as: explicitType } : {}),
+    allowCdn: context.options.allowCdn === 'true',
+    title,
+  });
+  const warnings: CommandWarning[] = converted.warnings.map((warning) =>
+    warning.params === undefined
+      ? { code: warning.code }
+      : { code: warning.code, params: warning.params },
+  );
+  return {
+    type: explicitType ?? converted.type,
+    html: converted.body,
+    warnings,
+    artifactCdn: context.options.allowCdn === 'true' || converted.allowCdn,
+  };
 }
 
 function readAs(value: string | undefined): ReadAs {

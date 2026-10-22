@@ -63,6 +63,25 @@ pnpm exec gaveta version
 
 `gaveta` y `gv` son el mismo binario. `gaveta version` imprime la versión; `--json` escribe el sobre versionado, `--vault` localiza el vault y `--from` lee un archivo o stdin. El resto de comandos llega en la fase 1.
 
+### Importar desde Claude
+
+Convierte HTML generado por Claude (documentos, diapositivas, paneles o artefactos React) en notas Gaveta:
+
+```bash
+pnpm exec gaveta init mi-vault --json
+
+cp fixtures/claude/doc.html mi-vault/informe.html
+pnpm exec gaveta adopt informe.html --vault mi-vault --source claude --json
+
+cp fixtures/claude/react-app.html mi-vault/demo.html
+pnpm exec gaveta adopt demo.html --vault mi-vault --source claude --allow-cdn --json
+
+cat fixtures/claude/doc.html \
+  | pnpm exec gaveta new "Informe" --vault mi-vault --type doc --source claude --from - --json
+```
+
+Los scripts y estilos inline se eliminan en tipos declarativos (`doc`, `slides`, `dashboard`, `design`); el HTML interactivo se guarda como nota `artifact` dentro de un `iframe` aislado.
+
 | Paquete          | Ruta              | Estado                            |
 | ---------------- | ----------------- | --------------------------------- |
 | `@gaveta/core`   | `packages/core`   | vacío hasta la fase 1             |

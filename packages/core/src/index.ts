@@ -121,6 +121,27 @@ export type { DoctorFinding, DoctorFix, DoctorReport, DoctorVaultOptions } from 
 
 export { adoptNote } from './adopt.ts';
 
+export { convertClaudeHtml } from './convert/claude.ts';
+
+export type {
+  ClaudeConvertOptions,
+  ClaudeConvertResult,
+  ClaudeConvertWarning,
+} from './convert/claude.ts';
+
+export {
+  ARTIFACT_CDN_META,
+  ARTIFACT_CSP_CDN,
+  ARTIFACT_CSP_OFFLINE,
+  ARTIFACT_SANDBOX,
+  buildArtifactBody,
+  escapeSrcdoc,
+  expectedArtifactCsp,
+  plainTextFromSrcdoc,
+  readArtifactAllowCdn,
+  readArtifactSrcdoc,
+} from './artifact.ts';
+
 export type { AdoptOptions, AdoptResult, AdoptWarning } from './adopt.ts';
 
 export { initVault } from './vault/init.ts';

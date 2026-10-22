@@ -7,7 +7,7 @@ import type { DiagnosticCode } from './errors.ts';
 const TYPE_STRUCTURE_ERROR = 'E_TYPE_STRUCTURE' satisfies DiagnosticCode;
 const TASK_INVALID_ERROR = 'E_TASK_INVALID' satisfies DiagnosticCode;
 
-export const NOTE_TYPES = ['doc', 'slides', 'todo'] as const;
+export const NOTE_TYPES = ['doc', 'slides', 'todo', 'dashboard', 'design', 'artifact'] as const;
 export type NoteType = (typeof NOTE_TYPES)[number];
 
 export const TASK_PRIORITIES = ['low', 'medium', 'high'] as const;
@@ -35,7 +35,11 @@ export const ALLOWED_ATTRIBUTES = [
   'type',
   'rel',
   'data-kind',
+  'sandbox',
+  'srcdoc',
 ] as const;
+
+export const ARTIFACT_ONLY_ELEMENTS = ['iframe'] as const;
 
 export const DATA_ATTRIBUTE_PREFIX = 'data-g-';
 
@@ -45,7 +49,7 @@ export const INLINE_STYLE_ATTRIBUTE = 'style';
 export const DOCUMENT_SHELL = {
   elements: ['html', 'head', 'body', 'meta', 'title', 'link'],
   requiredMeta: ['gaveta:id', 'gaveta:type', 'gaveta:created'],
-  optionalMeta: ['gaveta:tags', 'gaveta:aliases', 'gaveta:updated'],
+  optionalMeta: ['gaveta:tags', 'gaveta:aliases', 'gaveta:updated', 'gaveta:artifact-cdn'],
   titleRequired: true,
   charset: 'utf-8',
   theme: { rel: 'stylesheet', path: '.gaveta/theme.css' },
@@ -53,7 +57,6 @@ export const DOCUMENT_SHELL = {
 
 export const FORBIDDEN_ELEMENTS = {
   script: 'E_UNSAFE_SCRIPT',
-  iframe: 'E_UNSAFE_ELEMENT',
   object: 'E_UNSAFE_ELEMENT',
   embed: 'E_UNSAFE_ELEMENT',
   form: 'E_UNSAFE_ELEMENT',
@@ -122,7 +125,7 @@ export interface NoteTypeStructure {
     readonly element: string;
     readonly className: string;
   } | null;
-  readonly tasksAllowed: true;
+  readonly tasksAllowed: boolean;
   readonly structureError: typeof TYPE_STRUCTURE_ERROR;
   readonly example: string;
 }
@@ -136,6 +139,7 @@ const KNOWN_DATA_ATTRIBUTES: ReadonlySet<string> = new Set([
   'data-g-task',
   'data-g-due',
   'data-g-priority',
+  'data-device',
 ]);
 
 const CALLOUT_KINDS = ['info', 'warn', 'warning', 'tip', 'note', 'danger', 'success'] as const;
@@ -212,6 +216,9 @@ export const BODY_ELEMENTS: readonly BodyElement[] = [
   defineElement('gaveta-embed', 'component', ['data-g-to', 'data-g-section'], {
     priority: 'P1',
   }),
+  defineElement('gaveta-kpi', 'component', ['data-label']),
+  defineElement('gaveta-chart', 'component', ['type']),
+  defineElement('iframe', 'component', ['sandbox', 'srcdoc'], { priority: 'P0' }),
 ];
 
 const ELEMENTS_BY_NAME: ReadonlyMap<string, BodyElement> = new Map(
@@ -227,6 +234,9 @@ export const CONTRACT_CLASSES: readonly ContractClass[] = [
   { name: 'note-header', elements: ['header'], priority: 'P0' },
   { name: 'toc', elements: ['nav'], priority: 'P0' },
   { name: 'mermaid', elements: ['pre'], priority: 'P1' },
+  { name: 'g-frame', elements: ['section'], priority: 'P0' },
+  { name: 'g-dashboard', elements: ['article'], priority: 'P0' },
+  { name: 'g-kpi', elements: ['gaveta-kpi'], priority: 'P0' },
 ];
 
 const CLASSES_BY_NAME: ReadonlyMap<string, ContractClass> = new Map(
@@ -278,6 +288,20 @@ export const COMPONENTS: readonly ContractComponent[] = [
     element: 'gaveta-embed',
     example:
       '<gaveta-embed data-g-to="01JB7Z3K9QX4T5M2N8V6R0WYHC" data-g-section="resumen"></gaveta-embed>',
+  },
+  {
+    id: 'kpi',
+    priority: 'P0',
+    element: 'gaveta-kpi',
+    className: 'g-kpi',
+    example: '<gaveta-kpi class="g-kpi" data-label="Usuarios activos">1.240</gaveta-kpi>',
+  },
+  {
+    id: 'chart',
+    priority: 'P0',
+    element: 'gaveta-chart',
+    example:
+      '<gaveta-chart type="bar">\n  <table>\n    <thead><tr><th>Mes</th><th>Ventas</th></tr></thead>\n    <tbody><tr><td>Ene</td><td>12</td></tr></tbody>\n  </table>\n</gaveta-chart>',
   },
 ];
 
@@ -336,6 +360,42 @@ export const NOTE_TYPE_STRUCTURES: Record<NoteType, NoteTypeStructure> = {
     structureError: TYPE_STRUCTURE_ERROR,
     example:
       '<ul class="tasks">\n  <li data-g-task id="revisar-contrato" data-g-due="2026-10-22" data-g-priority="high">\n    <input type="checkbox">\n    Revisar el contrato\n  </li>\n</ul>',
+  },
+  dashboard: {
+    required: [
+      { element: 'article', className: 'g-dashboard', min: 1 },
+      { element: 'gaveta-kpi', className: null, min: 1 },
+    ],
+    headings: HEADINGS,
+    sectionIds: { element: 'section', required: false, algorithm: 'slug' },
+    speakerNotes: null,
+    tasksAllowed: true,
+    structureError: TYPE_STRUCTURE_ERROR,
+    example:
+      '<article class="g-dashboard">\n  <h1>Panel</h1>\n  <gaveta-kpi class="g-kpi" data-label="KPI">42</gaveta-kpi>\n  <gaveta-chart type="line">\n    <table><tbody><tr><td>A</td><td>1</td></tr></tbody></table>\n  </gaveta-chart>\n</article>',
+  },
+  design: {
+    required: [{ element: 'section', className: 'g-frame', min: 1 }],
+    headings: HEADINGS,
+    sectionIds: null,
+    speakerNotes: null,
+    tasksAllowed: false,
+    structureError: TYPE_STRUCTURE_ERROR,
+    example:
+      '<section class="g-frame" data-device="desktop" id="inicio">\n  <h2>Inicio</h2>\n  <p>Mockup de la pantalla principal.</p>\n</section>',
+  },
+  artifact: {
+    required: [
+      { element: 'article', className: null, min: 1 },
+      { element: 'iframe', className: null, min: 1 },
+    ],
+    headings: HEADINGS,
+    sectionIds: { element: 'section', required: true, algorithm: 'slug' },
+    speakerNotes: null,
+    tasksAllowed: false,
+    structureError: TYPE_STRUCTURE_ERROR,
+    example:
+      '<article>\n  <h1>Demo interactiva</h1>\n  <section id="descripcion">\n    <p>Contenido importado desde Claude.</p>\n  </section>\n  <iframe sandbox="allow-scripts" title="Demo" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;p&gt;Hola&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>\n</article>',
   },
 };
 

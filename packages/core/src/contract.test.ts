@@ -85,6 +85,9 @@ const BODY_ELEMENT_NAMES = [
   'code',
   'input',
   'gaveta-embed',
+  'gaveta-kpi',
+  'gaveta-chart',
+  'iframe',
 ] as const;
 
 function bodyElement(name: string): BodyElement {
@@ -102,7 +105,7 @@ describe('authoring contract elements', () => {
     for (const name of BODY_ELEMENT_NAMES) {
       expect(isAllowedBodyElement(name)).toBe(true);
     }
-    for (const rejected of ['div', 'script', 'style', 'iframe', 'form', 'span ']) {
+    for (const rejected of ['div', 'script', 'style', 'form', 'span ']) {
       expect(isAllowedBodyElement(rejected)).toBe(false);
     }
   });
@@ -191,6 +194,8 @@ describe('authoring contract attributes and classes', () => {
       'type',
       'rel',
       'data-kind',
+      'sandbox',
+      'srcdoc',
     ]);
     expect(DATA_ATTRIBUTE_PREFIX).toBe('data-g-');
     expect(INLINE_STYLE_ATTRIBUTE).toBe('style');
@@ -249,6 +254,9 @@ describe('authoring contract attributes and classes', () => {
       { name: 'note-header', elements: ['header'], priority: 'P0' },
       { name: 'toc', elements: ['nav'], priority: 'P0' },
       { name: 'mermaid', elements: ['pre'], priority: 'P1' },
+      { name: 'g-frame', elements: ['section'], priority: 'P0' },
+      { name: 'g-dashboard', elements: ['article'], priority: 'P0' },
+      { name: 'g-kpi', elements: ['gaveta-kpi'], priority: 'P0' },
     ]);
     expect(isAllowedClass('aside', 'callout')).toBe(true);
     expect(isAllowedClass('aside', 'notes')).toBe(true);
@@ -274,7 +282,7 @@ describe('authoring contract attributes and classes', () => {
 
 describe('REQ-TYPE-01 to REQ-TYPE-05 structures and components', () => {
   it('describes doc, slides, and todo', () => {
-    expect(NOTE_TYPES).toEqual(['doc', 'slides', 'todo']);
+    expect(NOTE_TYPES).toEqual(['doc', 'slides', 'todo', 'dashboard', 'design', 'artifact']);
     expect(isNoteType('doc')).toBe(true);
     expect(isNoteType('slides')).toBe(true);
     expect(isNoteType('todo')).toBe(true);
@@ -361,6 +369,8 @@ describe('REQ-TYPE-01 to REQ-TYPE-05 structures and components', () => {
       'code',
       'mermaid',
       'embed',
+      'kpi',
+      'chart',
     ]);
     expect(COMPONENTS.map((component) => component.priority)).toEqual([
       'P0',
@@ -369,6 +379,8 @@ describe('REQ-TYPE-01 to REQ-TYPE-05 structures and components', () => {
       'P0',
       'P1',
       'P1',
+      'P0',
+      'P0',
     ]);
 
     const callout = componentById('callout');
@@ -442,6 +454,7 @@ describe('links, rel, and the document shell', () => {
       'gaveta:tags',
       'gaveta:aliases',
       'gaveta:updated',
+      'gaveta:artifact-cdn',
     ]);
     expect(DOCUMENT_SHELL.titleRequired).toBe(true);
     expect(DOCUMENT_SHELL.charset).toBe('utf-8');
@@ -453,7 +466,6 @@ describe('security boundaries in the contract', () => {
   it('classifies forbidden elements separately from unknown ones', () => {
     expect(FORBIDDEN_ELEMENTS).toEqual({
       script: 'E_UNSAFE_SCRIPT',
-      iframe: 'E_UNSAFE_ELEMENT',
       object: 'E_UNSAFE_ELEMENT',
       embed: 'E_UNSAFE_ELEMENT',
       form: 'E_UNSAFE_ELEMENT',
@@ -462,7 +474,7 @@ describe('security boundaries in the contract', () => {
     expect(classifyElement('article')).toBe('body');
     expect(classifyElement('meta')).toBe('shell');
     expect(classifyElement('script')).toBe('forbidden');
-    expect(classifyElement('iframe')).toBe('forbidden');
+    expect(classifyElement('iframe')).toBe('body');
     expect(classifyElement('div')).toBe('unknown');
     expect(classifyElement('SCRIPT')).toBe('unknown');
   });
