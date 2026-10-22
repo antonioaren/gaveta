@@ -98,7 +98,14 @@ it('prints a Spanish init envelope and leaves an existing note untouched', async
       command: 'init',
       data: {
         root: await realpath(root),
-        created: ['.gaveta/config.json', '.gaveta/theme.css', '.gaveta/index.sqlite'],
+        created: [
+          '.gaveta/config.json',
+          '.gaveta/theme.css',
+          '.gaveta/mermaid.min.js',
+          '.gaveta/mermaid-boot.js',
+          '.gaveta/MERMAID-LICENSE.txt',
+          '.gaveta/index.sqlite',
+        ],
         preserved: [],
         agentInstructions: [],
       },
@@ -114,7 +121,14 @@ it('prints a Spanish init envelope and leaves an existing note untouched', async
       command: 'init',
       data: {
         created: [],
-        preserved: ['.gaveta/config.json', '.gaveta/theme.css', '.gaveta/index.sqlite'],
+        preserved: [
+          '.gaveta/config.json',
+          '.gaveta/theme.css',
+          '.gaveta/mermaid.min.js',
+          '.gaveta/mermaid-boot.js',
+          '.gaveta/MERMAID-LICENSE.txt',
+          '.gaveta/index.sqlite',
+        ],
         agentInstructions: [],
       },
     });

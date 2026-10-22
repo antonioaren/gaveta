@@ -229,6 +229,13 @@ const expected = {
     message: 'La ruta del tema no corresponde a la profundidad de la nota.',
     hint: 'Ejecuta gaveta doctor --fix para apuntar al tema con la ruta relativa correcta.',
   },
+  W_MERMAID_ASSET_MISSING: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'Faltan los scripts de Mermaid en .gaveta/ del vault.',
+    hint: 'Ejecuta gaveta init en el vault o copia mermaid.min.js y mermaid-boot.js desde un vault nuevo.',
+  },
   W_REL_UNKNOWN: {
     severity: 'warning',
     exitCode: null,

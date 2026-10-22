@@ -416,6 +416,7 @@ function mermaidToMarkdown(element: ParseElement): string {
 }
 
 function genericHtmlToMarkdown(fragment: string, ctx: ConvertContext): string {
+  /* eslint-disable @typescript-eslint/no-unsafe-argument -- unified plugin typings */
   const processor = unified()
     .use(rehypeParse, { fragment: true })
     .use(rehypeExportLinks, ctx)
@@ -429,6 +430,7 @@ function genericHtmlToMarkdown(fragment: string, ctx: ConvertContext): string {
       rule: '-',
       setext: false,
     });
+  /* eslint-enable @typescript-eslint/no-unsafe-argument */
   const file = processor.processSync(fragment);
   return String(file).trim();
 }

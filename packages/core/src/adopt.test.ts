@@ -242,6 +242,31 @@ it('imports a Claude React artifact with CDN CSP metadata', async () => {
   });
 });
 
+it('adopts a Claude doc with Mermaid and drops CDN loaders', async () => {
+  await withTemp(async (parent) => {
+    const root = await makeVault(parent);
+    const source = readFileSync(
+      join(import.meta.dirname, '../../../fixtures/claude/mermaid-doc.html'),
+      'utf8',
+    );
+    await writeFile(join(root, 'arquitectura.html'), source);
+    const result = asAdopted(
+      await adoptNote(root, 'arquitectura.html', {
+        source: 'claude',
+        now: () => CREATED,
+        createId: () => NOTE_ID,
+      }),
+    );
+    expect(result.type).toBe('doc');
+    const html = await readFile(join(root, 'arquitectura.html'), 'utf8');
+    expect(html).toContain('data-gaveta="mermaid-lib"');
+    expect(html).not.toContain('cdn.jsdelivr.net');
+    expect(html).toContain('class="mermaid"');
+    expect(html).toContain('data-g-mermaid="');
+    expect(validateNote(html, { notePath: 'arquitectura.html' }).ok).toBe(true);
+  });
+});
+
 it('does not write when strict rel turns an unknown rel into an error', async () => {
   await withTemp(async (parent) => {
     const root = await makeVault(parent);

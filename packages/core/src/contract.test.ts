@@ -448,13 +448,22 @@ describe('links, rel, and the document shell', () => {
   });
 
   it('records the note shell and the metadata validate will require', () => {
-    expect(DOCUMENT_SHELL.elements).toEqual(['html', 'head', 'body', 'meta', 'title', 'link']);
+    expect(DOCUMENT_SHELL.elements).toEqual([
+      'html',
+      'head',
+      'body',
+      'meta',
+      'title',
+      'link',
+      'script',
+    ]);
     expect(DOCUMENT_SHELL.requiredMeta).toEqual(['gaveta:id', 'gaveta:type', 'gaveta:created']);
     expect(DOCUMENT_SHELL.optionalMeta).toEqual([
       'gaveta:tags',
       'gaveta:aliases',
       'gaveta:updated',
       'gaveta:artifact-cdn',
+      'gaveta:mermaid',
     ]);
     expect(DOCUMENT_SHELL.titleRequired).toBe(true);
     expect(DOCUMENT_SHELL.charset).toBe('utf-8');
@@ -473,7 +482,7 @@ describe('security boundaries in the contract', () => {
     });
     expect(classifyElement('article')).toBe('body');
     expect(classifyElement('meta')).toBe('shell');
-    expect(classifyElement('script')).toBe('forbidden');
+    expect(classifyElement('script')).toBe('shell');
     expect(classifyElement('iframe')).toBe('body');
     expect(classifyElement('div')).toBe('unknown');
     expect(classifyElement('SCRIPT')).toBe('unknown');

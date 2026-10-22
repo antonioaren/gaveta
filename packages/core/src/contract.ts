@@ -47,9 +47,15 @@ export const DATA_ATTRIBUTE_PREFIX = 'data-g-';
 export const INLINE_STYLE_ATTRIBUTE = 'style';
 
 export const DOCUMENT_SHELL = {
-  elements: ['html', 'head', 'body', 'meta', 'title', 'link'],
+  elements: ['html', 'head', 'body', 'meta', 'title', 'link', 'script'],
   requiredMeta: ['gaveta:id', 'gaveta:type', 'gaveta:created'],
-  optionalMeta: ['gaveta:tags', 'gaveta:aliases', 'gaveta:updated', 'gaveta:artifact-cdn'],
+  optionalMeta: [
+    'gaveta:tags',
+    'gaveta:aliases',
+    'gaveta:updated',
+    'gaveta:artifact-cdn',
+    'gaveta:mermaid',
+  ],
   titleRequired: true,
   charset: 'utf-8',
   theme: { rel: 'stylesheet', path: '.gaveta/theme.css' },

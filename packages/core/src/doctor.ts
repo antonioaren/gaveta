@@ -2,10 +2,12 @@
  * Vault health scan: broken and pending links, orphans, duplicate ids, invalid notes,
  * stale canonical hrefs, and wrong theme paths. `--fix` repairs href and theme only.
  */
-import { realpath } from 'node:fs/promises';
+import { access, realpath } from 'node:fs/promises';
+import path from 'node:path';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
 import { formatDiagnostic, GavetaError, isErrorCode, type DiagnosticCode } from './errors.ts';
+import { MERMAID_BOOT_RELATIVE, MERMAID_META, MERMAID_MIN_RELATIVE } from './mermaid/assets.ts';
 import { appendFragment, fragmentOf, relativeNoteHref } from './links/path.ts';
 import { resolveNoteLinks } from './links/index.ts';
 import { normalizeNote } from './normalize.ts';
@@ -134,8 +136,49 @@ async function collectFindings(
   findings.push(...linkFindings(catalog));
   findings.push(...duplicateFindings(index));
   findings.push(...orphanFindings(catalog));
+  findings.push(...(await mermaidVaultFindings(root, catalog)));
   findings.push(...(await noteFindings(root, catalog, validateOptions)));
   return sortFindings(findings);
+}
+
+async function mermaidVaultFindings(root: string, catalog: Catalog): Promise<DoctorFinding[]> {
+  let usesMermaid = false;
+  for (const note of catalog.notes) {
+    const html = await readVaultText(root, note.path);
+    if (
+      html.includes('class="mermaid"') ||
+      html.includes(`name="${MERMAID_META}"`) ||
+      html.includes(`name='${MERMAID_META}'`)
+    ) {
+      usesMermaid = true;
+      break;
+    }
+  }
+  if (!usesMermaid) {
+    return [];
+  }
+  const missing: string[] = [];
+  for (const relative of [MERMAID_MIN_RELATIVE, MERMAID_BOOT_RELATIVE]) {
+    const absolute = path.join(root, ...relative.split('/'));
+    try {
+      await access(absolute);
+    } catch {
+      missing.push(relative);
+    }
+  }
+  if (missing.length === 0) {
+    return [];
+  }
+  const text = formatDiagnostic('W_MERMAID_ASSET_MISSING');
+  return [
+    {
+      code: 'W_MERMAID_ASSET_MISSING',
+      message: text.message,
+      hint: text.hint,
+      path: '.gaveta',
+      details: { missing: missing.join(',') },
+    },
+  ];
 }
 
 function linkFindings(catalog: Catalog): DoctorFinding[] {

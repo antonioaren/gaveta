@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 import { createDefaultVaultConfig, parseVaultConfig, writeVaultConfig } from './config.ts';
 import { withTemp } from './fixture.ts';
 import { initVault } from './init.ts';
+import { DEFAULT_MERMAID_BOOT_JS, DEFAULT_MERMAID_MIN_JS } from '../mermaid/assets.ts';
 import { DEFAULT_THEME_CSS } from '../theme/theme.ts';
 import { INDEX_SCHEMA_VERSION, openVaultIndex } from '../sqlite/store.ts';
 import { AGENT_BLOCK_END, AGENT_BLOCK_START } from './agent-block.ts';
@@ -35,6 +36,9 @@ it('creates config, theme, and an empty index without touching existing html', a
     expect(created.created).toEqual([
       '.gaveta/config.json',
       '.gaveta/theme.css',
+      '.gaveta/mermaid.min.js',
+      '.gaveta/mermaid-boot.js',
+      '.gaveta/MERMAID-LICENSE.txt',
       '.gaveta/index.sqlite',
     ]);
     expect(created.preserved).toEqual([]);
@@ -43,6 +47,12 @@ it('creates config, theme, and an empty index without touching existing html', a
       parseVaultConfig(JSON.parse(await readFile(join(root, '.gaveta/config.json'), 'utf8'))),
     ).toEqual(createDefaultVaultConfig());
     expect(await readFile(join(root, '.gaveta/theme.css'), 'utf8')).toBe(DEFAULT_THEME_CSS);
+    expect(await readFile(join(root, '.gaveta/mermaid.min.js'), 'utf8')).toBe(
+      DEFAULT_MERMAID_MIN_JS,
+    );
+    expect(await readFile(join(root, '.gaveta/mermaid-boot.js'), 'utf8')).toBe(
+      DEFAULT_MERMAID_BOOT_JS,
+    );
     expect(await readFile(join(root, 'keep.html'), 'utf8')).toBe(html);
     expect(await readFile(join(root, 'notes/nested.html'), 'utf8')).toBe(html);
 
@@ -62,6 +72,9 @@ it('creates config, theme, and an empty index without touching existing html', a
     expect(again.preserved).toEqual([
       '.gaveta/config.json',
       '.gaveta/theme.css',
+      '.gaveta/mermaid.min.js',
+      '.gaveta/mermaid-boot.js',
+      '.gaveta/MERMAID-LICENSE.txt',
       '.gaveta/index.sqlite',
     ]);
     expect(await readFile(join(root, '.gaveta/config.json'))).toEqual(configBytes);
@@ -83,7 +96,13 @@ it('fills only the vault files that are missing and keeps a custom config', asyn
     const before = await readFile(join(root, '.gaveta/config.json'));
 
     const result = await initVault({ cwd: root });
-    expect(result.created).toEqual(['.gaveta/theme.css', '.gaveta/index.sqlite']);
+    expect(result.created).toEqual([
+      '.gaveta/theme.css',
+      '.gaveta/mermaid.min.js',
+      '.gaveta/mermaid-boot.js',
+      '.gaveta/MERMAID-LICENSE.txt',
+      '.gaveta/index.sqlite',
+    ]);
     expect(result.preserved).toEqual(['.gaveta/config.json']);
     expect(await readFile(join(root, '.gaveta/config.json'))).toEqual(before);
     expect(await readFile(join(root, '.gaveta/theme.css'), 'utf8')).toBe(DEFAULT_THEME_CSS);
@@ -99,7 +118,11 @@ it('leaves an existing index byte-for-byte, even when it is not a database', asy
     await writeFile(join(root, '.gaveta/index.sqlite'), 'not-a-database');
 
     const result = await initVault({ cwd: root });
-    expect(result.created).toEqual([]);
+    expect(result.created).toEqual([
+      '.gaveta/mermaid.min.js',
+      '.gaveta/mermaid-boot.js',
+      '.gaveta/MERMAID-LICENSE.txt',
+    ]);
     expect(result.preserved).toEqual([
       '.gaveta/config.json',
       '.gaveta/theme.css',

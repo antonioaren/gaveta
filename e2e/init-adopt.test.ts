@@ -91,7 +91,14 @@ it('initializes a vault from the binary and stays idempotent', () => {
       command: 'init',
       data: {
         root: realpathSync(directory),
-        created: ['.gaveta/config.json', '.gaveta/theme.css', '.gaveta/index.sqlite'],
+        created: [
+          '.gaveta/config.json',
+          '.gaveta/theme.css',
+          '.gaveta/mermaid.min.js',
+          '.gaveta/mermaid-boot.js',
+          '.gaveta/MERMAID-LICENSE.txt',
+          '.gaveta/index.sqlite',
+        ],
         preserved: [],
         agentInstructions: [],
       },
@@ -111,7 +118,14 @@ it('initializes a vault from the binary and stays idempotent', () => {
     expect(JSON.parse(again.stdout)).toMatchObject({
       data: {
         created: [],
-        preserved: ['.gaveta/config.json', '.gaveta/theme.css', '.gaveta/index.sqlite'],
+        preserved: [
+          '.gaveta/config.json',
+          '.gaveta/theme.css',
+          '.gaveta/mermaid.min.js',
+          '.gaveta/mermaid-boot.js',
+          '.gaveta/MERMAID-LICENSE.txt',
+          '.gaveta/index.sqlite',
+        ],
       },
     });
     expect(readFileSync(join(directory, '.gaveta/config.json'))).toEqual(bytes);

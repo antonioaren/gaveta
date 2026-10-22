@@ -5,3 +5,4 @@ pnpm-lock.yaml
 docs
 .atl/
 test-results/
+packages/core/src/theme/mermaid.min.js

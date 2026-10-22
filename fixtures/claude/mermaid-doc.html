@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Arquitectura con diagramas</title>
+    <meta name="description" content="Nota de ejemplo con Mermaid generada por Claude Code." />
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({ startOnLoad: true });
+    </script>
+  </head>
+  <body>
+    <article>
+      <h1>Arquitectura con diagramas</h1>
+      <section id="flujo">
+        <h2>Flujo principal</h2>
+        <pre class="mermaid">
+graph LR
+  Usuario --> API
+  API --> Vault
+        </pre>
+      </section>
+      <section id="secuencia">
+        <h2>Secuencia de lectura</h2>
+        <div class="mermaid">
+          sequenceDiagram participant U as Usuario participant G as Gaveta U->>G: abrir nota G-->>U:
+          HTML seguro
+        </div>
+      </section>
+    </article>
+  </body>
+</html>

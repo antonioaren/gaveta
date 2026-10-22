@@ -257,6 +257,10 @@ function convertNode(node: ParseChild, type: NoteType, warnings: ClaudeConvertWa
       return mapped;
     }
   }
+  if (tag === 'div' && classList(node).includes('mermaid')) {
+    const text = preText(node.childNodes).replace(/^\n+|\n+$/g, '');
+    return `<pre class="mermaid">${escapeText(text)}</pre>`;
+  }
   if (type === 'doc' && (tag === 'h1' || tag === 'h2' || tag === 'h3')) {
     return convertHeadingSection(node, tag, warnings);
   }
@@ -362,7 +366,12 @@ function isAllowedClassName(tag: string, className: string): boolean {
   if (tag === 'pre' && className.startsWith('language-')) {
     return true;
   }
-  return className === 'callout' || className === 'notes' || className === 'tasks';
+  return (
+    className === 'callout' ||
+    className === 'notes' ||
+    className === 'tasks' ||
+    className === 'mermaid'
+  );
 }
 
 function readTitle(source: string): string | null {
@@ -595,6 +604,20 @@ function guessDevice(classes: readonly string[]): string {
     return 'tablet';
   }
   return 'desktop';
+}
+
+function preText(nodes: readonly ParseChild[]): string {
+  let text = '';
+  for (const node of nodes) {
+    if (isTextNode(node)) {
+      text += node.value;
+      continue;
+    }
+    if (isElement(node)) {
+      text += preText(node.childNodes);
+    }
+  }
+  return text;
 }
 
 function isElement(node: ParseChild): node is ParseElement {
