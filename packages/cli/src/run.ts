@@ -237,7 +237,7 @@ async function execute(
       io.writers.stderr(renderHumanWarnings(warnings.warnings));
     }
   }
-  return EXIT_CODES.ok;
+  return result.exitCode ?? EXIT_CODES.ok;
 }
 
 function reportCaught(

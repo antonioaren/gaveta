@@ -274,6 +274,68 @@ export class VaultIndex {
     return this.recovered;
   }
 
+  /**
+   * Incremental reindex: upsert changed notes, drop missing paths, keep the rest.
+   * Scan problems are stored like `rebuild`.
+   */
+  async sync(): Promise<ReindexReport> {
+    this.assertOpen();
+    const scanned = await scanNoteFiles(this.root);
+    const onDisk = new Map(scanned.files.map((file) => [file.relativePath, file]));
+    const stale = this.notes()
+      .map((note) => note.path)
+      .filter((notePath) => !onDisk.has(notePath));
+    const updates: LoadedNote[] = [];
+    for (const file of scanned.files) {
+      const existing = this.note(file.relativePath);
+      if (
+        existing !== null &&
+        existing.mtimeMs === file.mtimeMs &&
+        existing.sizeBytes === file.sizeBytes
+      ) {
+        continue;
+      }
+      const loaded = await this.loadPath(file.relativePath, file);
+      if (
+        existing !== null &&
+        existing.contentHash === loaded.hash &&
+        existing.mtimeMs === loaded.mtimeMs &&
+        existing.sizeBytes === loaded.sizeBytes
+      ) {
+        continue;
+      }
+      updates.push(loaded);
+    }
+    let written = 0;
+    let removed = 0;
+    this.transaction(() => {
+      for (const notePath of stale) {
+        if (this.deletePath(notePath)) {
+          removed += 1;
+        }
+      }
+      const seen = new Set<string>();
+      for (const loaded of updates) {
+        written += this.writeLoaded(loaded, true);
+        seen.add(loaded.path);
+      }
+      for (const problem of scanned.problems) {
+        if (seen.has(problem.path) || onDisk.has(problem.path)) {
+          continue;
+        }
+        this.statements.insertProblem.run(
+          problem.path,
+          0,
+          problem.code,
+          problem.message,
+          problem.hint,
+          encodeDetails(problem.details),
+        );
+      }
+    });
+    return this.report(written, removed);
+  }
+
   async rebuild(): Promise<ReindexReport> {
     this.assertOpen();
     const scanned = await scanNoteFiles(this.root);
