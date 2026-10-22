@@ -77,11 +77,8 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(SUGGESTION_LIMIT).toBe(5);
   expect(typeof initVault).toBe('function');
   expect(typeof adoptNote).toBe('function');
-<<<<<<< HEAD
+  expect(typeof doctorVault).toBe('function');
   expect(typeof moveNote).toBe('function');
   expect(typeof removeNote).toBe('function');
   expect(GavetaOperationError.prototype).toBeInstanceOf(GavetaError);
-=======
-  expect(typeof doctorVault).toBe('function');
->>>>>>> 4790197 (T1.12: add core doctorVault scan and --fix for href and theme)
 });
