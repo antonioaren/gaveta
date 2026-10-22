@@ -112,7 +112,8 @@ describe('addTaskToNote', () => {
         html: buildArtifactBody({
           title: 'Demo',
           description: 'Demo',
-          originalHtml: '<ul class="tasks"><li data-g-task="" id="embebida"><input type="checkbox" />Embebida</li></ul>',
+          originalHtml:
+            '<ul class="tasks"><li data-g-task="" id="embebida"><input type="checkbox" />Embebida</li></ul>',
           allowCdn: false,
         }),
         now: NOW,

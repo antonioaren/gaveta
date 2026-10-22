@@ -313,10 +313,7 @@ type TaskListLookup =
   | { readonly kind: 'missing-section' };
 
 function primaryArticle(document: ParseDocument): ParseElement | null {
-  const articles = collectElements(
-    document,
-    (element) => elementName(element) === 'article',
-  );
+  const articles = collectElements(document, (element) => elementName(element) === 'article');
   return articles[0] ?? null;
 }
 
