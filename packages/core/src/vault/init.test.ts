@@ -2,8 +2,14 @@ import { mkdir, readFile, readdir, realpath, writeFile } from 'node:fs/promises'
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { readWorkspaceVersion } from '../workspace-version.ts';
-import { createDefaultVaultConfig, parseVaultConfig, writeVaultConfig } from './config.ts';
+import {
+  createDefaultVaultConfig,
+  parseVaultConfig,
+  readVaultConfig,
+  writeVaultConfig,
+} from './config.ts';
 import { withTemp } from './fixture.ts';
+import { bundledVaultAssetHashes } from './assets.ts';
 import { initVault } from './init.ts';
 import { DEFAULT_MERMAID_BOOT_JS, DEFAULT_MERMAID_MIN_JS } from '../mermaid/assets.ts';
 import { DEFAULT_THEME_CSS } from '../theme/theme.ts';
@@ -46,7 +52,11 @@ it('creates config, theme, and an empty index without touching existing html', a
     expect(created.agentInstructions).toEqual([]);
     expect(
       parseVaultConfig(JSON.parse(await readFile(join(root, '.gaveta/config.json'), 'utf8'))),
-    ).toEqual(createDefaultVaultConfig(readWorkspaceVersion()));
+    ).toEqual({
+      ...createDefaultVaultConfig(readWorkspaceVersion()),
+      assetsVersion: readWorkspaceVersion(),
+      assets: bundledVaultAssetHashes(),
+    });
     expect(await readFile(join(root, '.gaveta/theme.css'), 'utf8')).toBe(DEFAULT_THEME_CSS);
     expect(await readFile(join(root, '.gaveta/mermaid.min.js'), 'utf8')).toBe(
       DEFAULT_MERMAID_MIN_JS,
@@ -105,7 +115,12 @@ it('fills only the vault files that are missing and keeps a custom config', asyn
       '.gaveta/index.sqlite',
     ]);
     expect(result.preserved).toEqual(['.gaveta/config.json']);
-    expect(await readFile(join(root, '.gaveta/config.json'))).toEqual(before);
+    const after = await readVaultConfig(root);
+    expect(after.rel).toEqual(custom.rel);
+    expect(after.remoteAllowlist).toEqual(custom.remoteAllowlist);
+    expect(after.assetsVersion).toBe(readWorkspaceVersion());
+    expect(after.assets).toEqual(bundledVaultAssetHashes());
+    expect(await readFile(join(root, '.gaveta/config.json'))).not.toEqual(before);
     expect(await readFile(join(root, '.gaveta/theme.css'), 'utf8')).toBe(DEFAULT_THEME_CSS);
   });
 });

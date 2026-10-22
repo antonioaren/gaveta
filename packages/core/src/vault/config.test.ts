@@ -47,11 +47,11 @@ it('rejects shapes that are not the vault config', () => {
   expectInvalid('{}', 'la raíz tiene que ser un objeto');
   expectInvalid(
     { rel: defaultConfig.rel },
-    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion es opcional)',
+    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion y assets son opcionales)',
   );
   expectInvalid(
     { ...defaultConfig, extra: true },
-    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion es opcional)',
+    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion y assets son opcionales)',
   );
   expectInvalid({ rel: null, remoteAllowlist: [] }, 'rel tiene que ser un objeto');
   expectInvalid(

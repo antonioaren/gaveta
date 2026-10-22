@@ -36,6 +36,16 @@ export async function createBareGitFixture(parent: string): Promise<GitFixture> 
   return { bareRoot, worktree };
 }
 
+export async function pushMainCommitWithoutVersionBump(
+  worktree: string,
+  relativePath: string,
+  content: string,
+): Promise<void> {
+  await writeFile(join(worktree, relativePath), content);
+  runGit(worktree, ['add', relativePath]);
+  runGit(worktree, ['commit', '-m', 'chore: sin bump de versión']);
+}
+
 export async function pushVersionBump(
   worktree: string,
   version: string,

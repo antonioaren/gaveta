@@ -1,9 +1,13 @@
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { expect, it } from 'vitest';
 import { defaultProcessRunner } from '../process-runner.ts';
 import { withTemp } from '../vault/fixture.ts';
-import { createBareGitFixture, pushVersionBump } from './git-fixture.ts';
+import {
+  createBareGitFixture,
+  pushMainCommitWithoutVersionBump,
+  pushVersionBump,
+} from './git-fixture.ts';
 import { applyGitUpdate, checkGitUpdate, resolveInstallInfo } from './git.ts';
 import { isAllowedGavetaRemote } from './remote.ts';
 
@@ -17,7 +21,7 @@ function runGit(cwd: string, args: string[]): void {
 it('accepts official Gaveta git remotes', () => {
   expect(isAllowedGavetaRemote('https://github.com/antonioaren/gaveta.git')).toBe(true);
   expect(isAllowedGavetaRemote('git@github.com:antonioaren/gaveta.git')).toBe(true);
-  expect(isAllowedGavetaRemote('https://evil.example/gaveta.git')).toBe(false);
+  expect(isAllowedGavetaRemote('https://evil.example/antonioaren/gaveta')).toBe(false);
 });
 
 it('refuses dirty trees', async () => {
@@ -37,6 +41,31 @@ it('refuses checkouts that are not on main', async () => {
     expect(() =>
       checkGitUpdate({ repoRoot: worktree, channel: 'stable', checkOnly: true }),
     ).toThrow(expect.objectContaining({ code: 'E_UPDATE_BRANCH' }));
+  });
+});
+
+it('reports available main-channel updates when only commits change', async () => {
+  await withTemp(async (parent) => {
+    const { worktree } = await createBareGitFixture(parent);
+    await pushMainCommitWithoutVersionBump(worktree, 'notes.txt', 'nuevo\n');
+    runGit(worktree, ['push', 'origin', 'main']);
+    runGit(worktree, ['reset', '--hard', 'HEAD~1']);
+    const check = checkGitUpdate({
+      repoRoot: worktree,
+      channel: 'main',
+      checkOnly: true,
+    });
+    expect(check.upToDate).toBe(false);
+    expect(check.currentVersion).toBe('0.1.0');
+    expect(check.target?.version).toBe('0.1.0');
+    expect(check.target?.commitCount).toBe(1);
+    const applied = await applyGitUpdate({
+      repoRoot: worktree,
+      channel: 'main',
+      checkOnly: false,
+    });
+    expect(applied.applied).toBe(true);
+    expect(applied.currentVersion).toBe('0.1.0');
   });
 });
 
@@ -86,4 +115,27 @@ it('detects git installs from the CLI entry path', async () => {
   expect(info.method).toBe('git');
   expect(info.packageVersion).toBe('0.1.0');
   expect(typeof info.git?.dirty).toBe('boolean');
+});
+
+it('resolveInstallInfo does not require a trusted origin remote', async () => {
+  await withTemp(async (parent) => {
+    const { worktree } = await createBareGitFixture(parent);
+    runGit(worktree, ['remote', 'set-url', 'origin', 'https://evil.example/antonioaren/gaveta']);
+    const cliShim = join(worktree, 'packages/cli/bin/gaveta.js');
+    await mkdir(dirname(cliShim), { recursive: true });
+    await writeFile(cliShim, '// shim\n');
+    const info = await resolveInstallInfo(cliShim);
+    expect(info.method).toBe('git');
+    expect(info.repoRoot).toBe(worktree);
+  });
+});
+
+it('update still rejects untrusted remotes', async () => {
+  await withTemp(async (parent) => {
+    const { worktree } = await createBareGitFixture(parent);
+    runGit(worktree, ['remote', 'set-url', 'origin', 'https://evil.example/antonioaren/gaveta']);
+    expect(() => checkGitUpdate({ repoRoot: worktree, channel: 'main', checkOnly: true })).toThrow(
+      expect.objectContaining({ code: 'E_UPDATE_REMOTE' }),
+    );
+  });
 });

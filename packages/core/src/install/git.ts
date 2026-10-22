@@ -5,7 +5,7 @@ import { changelogEntriesBetween } from '../changelog.ts';
 import { type ProcessRunner, defaultProcessRunner } from '../process-runner.ts';
 import { compareCliVersions } from '../skill-install.ts';
 import { readWorkspaceVersion } from '../workspace-version.ts';
-import { isAllowedGavetaRemote } from './remote.ts';
+import { isAllowedGavetaRemote, normalizeRemoteUrl } from './remote.ts';
 
 export type InstallMethod = 'git' | 'unknown';
 export type UpdateChannel = 'stable' | 'main';
@@ -28,11 +28,16 @@ export interface InstallInfo {
 export interface GitUpdateTarget {
   readonly ref: string;
   readonly version: string;
+  readonly commit: string;
+  readonly shortCommit: string;
+  readonly commitCount: number;
   readonly changelogEntries: readonly { readonly version: string; readonly body: string }[];
 }
 
 export interface GitUpdateCheckResult {
   readonly currentVersion: string;
+  readonly currentCommit: string;
+  readonly currentShortCommit: string;
   readonly target: GitUpdateTarget | null;
   readonly upToDate: boolean;
 }
@@ -92,7 +97,6 @@ export async function resolveInstallInfo(cliEntryPath: string): Promise<InstallI
     };
   }
   const runner = defaultProcessRunner;
-  assertTrustedOrigin(repoRoot, runner);
   const git = readGitCheckoutInfo(repoRoot, runner);
   return {
     method: 'git',
@@ -105,15 +109,56 @@ export async function resolveInstallInfo(cliEntryPath: string): Promise<InstallI
 
 export function checkGitUpdate(options: GitUpdateOptions): GitUpdateCheckResult {
   const runner = runnerOf(options);
-  assertTrustedOrigin(options.repoRoot, runner);
+  assertTrustedUpdateOrigin(options.repoRoot, runner);
   assertCleanAndOnMain(options.repoRoot, runner);
+  const head = readCommitAtRef(options.repoRoot, 'HEAD', runner);
   const currentVersion = readPackageVersionAtRef(options.repoRoot, 'HEAD', runner);
-  const target = resolveUpdateTarget(options, runner, currentVersion);
-  if (target === null || compareCliVersions(target.version, currentVersion) <= 0) {
-    return { currentVersion, target, upToDate: true };
+  const target = resolveUpdateTarget(options, runner, currentVersion, head.commit);
+  if (target === null) {
+    return {
+      currentVersion,
+      currentCommit: head.commit,
+      currentShortCommit: head.shortCommit,
+      target: null,
+      upToDate: true,
+    };
+  }
+  if (target.commit === head.commit) {
+    return {
+      currentVersion,
+      currentCommit: head.commit,
+      currentShortCommit: head.shortCommit,
+      target,
+      upToDate: true,
+    };
+  }
+  if (usesCommitBasedUpdate(options, runner)) {
+    assertFastForwardPossible(options.repoRoot, target.ref, runner);
+    return {
+      currentVersion,
+      currentCommit: head.commit,
+      currentShortCommit: head.shortCommit,
+      target,
+      upToDate: false,
+    };
+  }
+  if (compareCliVersions(target.version, currentVersion) <= 0) {
+    return {
+      currentVersion,
+      currentCommit: head.commit,
+      currentShortCommit: head.shortCommit,
+      target,
+      upToDate: true,
+    };
   }
   assertFastForwardPossible(options.repoRoot, target.ref, runner);
-  return { currentVersion, target, upToDate: false };
+  return {
+    currentVersion,
+    currentCommit: head.commit,
+    currentShortCommit: head.shortCommit,
+    target,
+    upToDate: false,
+  };
 }
 
 export async function applyGitUpdate(options: GitUpdateOptions): Promise<GitUpdateApplyResult> {
@@ -127,7 +172,7 @@ export async function applyGitUpdate(options: GitUpdateOptions): Promise<GitUpda
       pnpmInstallRan: false,
     };
   }
-  if (check.upToDate || check.target === null) {
+  if (check.upToDate || check.target === null || check.target.commit === check.currentCommit) {
     return {
       ...check,
       previousVersion: check.currentVersion,
@@ -157,10 +202,29 @@ export async function applyGitUpdate(options: GitUpdateOptions): Promise<GitUpda
       pnpmInstallRan = true;
     }
   }
+  const head = readCommitAtRef(options.repoRoot, 'HEAD', runner);
   const currentVersion = readPackageVersionAtRef(options.repoRoot, 'HEAD', runner);
+  const changelogEntries = changelogForUpdate(
+    options,
+    runner,
+    options.repoRoot,
+    check.currentVersion,
+    currentVersion,
+    'HEAD',
+  );
+  const target: GitUpdateTarget = {
+    ...check.target,
+    version: currentVersion,
+    commit: head.commit,
+    shortCommit: head.shortCommit,
+    commitCount: 0,
+    changelogEntries,
+  };
   return {
     currentVersion,
-    target: check.target,
+    currentCommit: head.commit,
+    currentShortCommit: head.shortCommit,
+    target,
     upToDate: true,
     previousVersion: check.currentVersion,
     applied: true,
@@ -169,48 +233,145 @@ export async function applyGitUpdate(options: GitUpdateOptions): Promise<GitUpda
   };
 }
 
+export function readChangelogMarkdownAtRef(
+  repoRoot: string,
+  ref: string,
+  runner: ProcessRunner = defaultProcessRunner,
+): string | null {
+  const shown = runGit(runner, repoRoot, ['show', `${ref}:CHANGELOG.md`]);
+  if (!shown.ok) {
+    return null;
+  }
+  return shown.stdout;
+}
+
+function usesCommitBasedUpdate(options: GitUpdateOptions, runner: ProcessRunner): boolean {
+  if (options.channel === 'main') {
+    return true;
+  }
+  return latestStableTag(options.repoRoot, runner) === null;
+}
+
 function resolveUpdateTarget(
   options: GitUpdateOptions,
   runner: ProcessRunner,
   currentVersion: string,
+  headCommit: string,
 ): GitUpdateTarget | null {
   const fetch = runGit(runner, options.repoRoot, ['fetch', 'origin', '--tags']);
   if (!fetch.ok) {
     throw new GavetaError('E_UPDATE_FAILED');
   }
   if (options.channel === 'main') {
-    const mainFetch = runGit(runner, options.repoRoot, ['fetch', 'origin', 'main']);
-    if (!mainFetch.ok) {
-      throw new GavetaError('E_UPDATE_FAILED');
-    }
-    const remoteVersion = readPackageVersionAtRef(options.repoRoot, 'origin/main', runner);
-    const changelog = changelogForUpdate(options, currentVersion, remoteVersion);
-    return { ref: 'origin/main', version: remoteVersion, changelogEntries: changelog };
+    return resolveMainChannelTarget(options, runner, currentVersion, headCommit);
   }
   const tag = latestStableTag(options.repoRoot, runner);
   if (tag === null) {
-    const mainFetch = runGit(runner, options.repoRoot, ['fetch', 'origin', 'main']);
-    if (!mainFetch.ok) {
-      throw new GavetaError('E_UPDATE_FAILED');
-    }
-    const remoteVersion = readPackageVersionAtRef(options.repoRoot, 'origin/main', runner);
-    const changelog = changelogForUpdate(options, currentVersion, remoteVersion);
-    return { ref: 'origin/main', version: remoteVersion, changelogEntries: changelog };
+    return resolveMainChannelTarget(options, runner, currentVersion, headCommit);
   }
   const remoteVersion = readPackageVersionAtRef(options.repoRoot, tag, runner);
-  const changelog = changelogForUpdate(options, currentVersion, remoteVersion);
-  return { ref: tag, version: remoteVersion, changelogEntries: changelog };
+  const remoteCommit = readCommitAtRef(options.repoRoot, tag, runner);
+  const changelog = changelogForUpdate(
+    options,
+    runner,
+    options.repoRoot,
+    currentVersion,
+    remoteVersion,
+    tag,
+  );
+  return {
+    ref: tag,
+    version: remoteVersion,
+    commit: remoteCommit.commit,
+    shortCommit: remoteCommit.shortCommit,
+    commitCount: 0,
+    changelogEntries: changelog,
+  };
+}
+
+function resolveMainChannelTarget(
+  options: GitUpdateOptions,
+  runner: ProcessRunner,
+  currentVersion: string,
+  headCommit: string,
+): GitUpdateTarget | null {
+  const mainFetch = runGit(runner, options.repoRoot, ['fetch', 'origin', 'main']);
+  if (!mainFetch.ok) {
+    throw new GavetaError('E_UPDATE_FAILED');
+  }
+  const remote = readCommitAtRef(options.repoRoot, 'origin/main', runner);
+  const remoteVersion = readPackageVersionAtRef(options.repoRoot, 'origin/main', runner);
+  if (remote.commit === headCommit) {
+    return null;
+  }
+  const remoteBehindHead = runGit(runner, options.repoRoot, [
+    'merge-base',
+    '--is-ancestor',
+    remote.commit,
+    headCommit,
+  ]);
+  if (remoteBehindHead.ok) {
+    return null;
+  }
+  const headBehindRemote = runGit(runner, options.repoRoot, [
+    'merge-base',
+    '--is-ancestor',
+    headCommit,
+    remote.commit,
+  ]);
+  if (!headBehindRemote.ok) {
+    throw new GavetaError('E_UPDATE_NOT_FAST_FORWARD');
+  }
+  const count = countCommitsBetween(options.repoRoot, headCommit, remote.commit, runner);
+  const changelog = changelogForUpdate(
+    options,
+    runner,
+    options.repoRoot,
+    currentVersion,
+    remoteVersion,
+    'origin/main',
+  );
+  return {
+    ref: 'origin/main',
+    version: remoteVersion,
+    commit: remote.commit,
+    shortCommit: remote.shortCommit,
+    commitCount: count,
+    changelogEntries: changelog,
+  };
+}
+
+function countCommitsBetween(
+  repoRoot: string,
+  fromCommit: string,
+  toCommit: string,
+  runner: ProcessRunner,
+): number {
+  const listed = runGit(runner, repoRoot, ['rev-list', '--count', `${fromCommit}..${toCommit}`]);
+  if (!listed.ok) {
+    throw new GavetaError('E_UPDATE_FAILED');
+  }
+  const parsed = Number.parseInt(listed.stdout, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new GavetaError('E_UPDATE_FAILED');
+  }
+  return parsed;
 }
 
 function changelogForUpdate(
   options: GitUpdateOptions,
+  runner: ProcessRunner,
+  repoRoot: string,
   fromVersion: string,
   toVersion: string,
+  targetRef: string,
 ): readonly { readonly version: string; readonly body: string }[] {
-  if (options.changelogMarkdown === undefined) {
+  const markdown =
+    options.changelogMarkdown ?? readChangelogMarkdownAtRef(repoRoot, targetRef, runner);
+  if (markdown === null || markdown.length === 0) {
     return [];
   }
-  return changelogEntriesBetween(options.changelogMarkdown, fromVersion, toVersion);
+  return changelogEntriesBetween(markdown, fromVersion, toVersion);
 }
 
 function latestStableTag(repoRoot: string, runner: ProcessRunner): string | null {
@@ -240,21 +401,33 @@ export function defaultUpdateChannel(
 }
 
 function readGitCheckoutInfo(repoRoot: string, runner: ProcessRunner): GitCheckoutInfo {
-  const commit = runGit(runner, repoRoot, ['rev-parse', 'HEAD']);
-  const shortCommit = runGit(runner, repoRoot, ['rev-parse', '--short', 'HEAD']);
+  const commit = readCommitAtRef(repoRoot, 'HEAD', runner);
   const branch = runGit(runner, repoRoot, ['rev-parse', '--abbrev-ref', 'HEAD']);
   const status = runGit(runner, repoRoot, ['status', '--porcelain']);
-  if (!commit.ok || !shortCommit.ok || !branch.ok || !status.ok) {
+  if (!branch.ok || !status.ok) {
     throw new GavetaError('E_UPDATE_FAILED');
   }
   const dirty = status.stdout.length > 0;
   const branchName = branch.stdout === 'HEAD' ? null : branch.stdout;
   return {
-    commit: commit.stdout,
-    shortCommit: shortCommit.stdout,
+    commit: commit.commit,
+    shortCommit: commit.shortCommit,
     dirty,
     branch: branchName,
   };
+}
+
+function readCommitAtRef(
+  repoRoot: string,
+  ref: string,
+  runner: ProcessRunner,
+): { commit: string; shortCommit: string } {
+  const commit = runGit(runner, repoRoot, ['rev-parse', ref]);
+  const shortCommit = runGit(runner, repoRoot, ['rev-parse', '--short', ref]);
+  if (!commit.ok || !shortCommit.ok) {
+    throw new GavetaError('E_UPDATE_FAILED');
+  }
+  return { commit: commit.stdout, shortCommit: shortCommit.stdout };
 }
 
 function assertCleanAndOnMain(repoRoot: string, runner: ProcessRunner): void {
@@ -278,9 +451,18 @@ function assertFastForwardPossible(
   }
 }
 
-function assertTrustedOrigin(repoRoot: string, runner: ProcessRunner): void {
+function assertTrustedUpdateOrigin(repoRoot: string, runner: ProcessRunner): void {
   const remote = runGit(runner, repoRoot, ['config', '--get', 'remote.origin.url']);
-  if (!remote.ok || !isAllowedGavetaRemote(remote.stdout)) {
+  if (!remote.ok) {
+    throw new GavetaError('E_UPDATE_REMOTE');
+  }
+  const override = process.env.GAVETA_UPDATE_REMOTE;
+  if (override !== undefined && override.trim().length > 0) {
+    if (normalizeRemoteUrl(remote.stdout) === normalizeRemoteUrl(override)) {
+      return;
+    }
+  }
+  if (!isAllowedGavetaRemote(remote.stdout)) {
     throw new GavetaError('E_UPDATE_REMOTE');
   }
 }

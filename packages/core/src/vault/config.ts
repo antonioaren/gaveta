@@ -13,6 +13,8 @@ export interface VaultConfig {
   };
   remoteAllowlist: string[];
   assetsVersion?: string;
+  /** sha256 hex of last gaveta-written content per vault asset path */
+  assets?: Record<string, string>;
 }
 
 export function createDefaultVaultConfig(assetsVersion?: string): VaultConfig {
@@ -33,8 +35,8 @@ export function parseVaultConfig(value: unknown): VaultConfig {
   assertAllowedKeys(
     value,
     ['rel', 'remoteAllowlist'],
-    ['assetsVersion'],
-    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion es opcional)',
+    ['assetsVersion', 'assets'],
+    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion y assets son opcionales)',
   );
   const rel = value.rel;
   if (!isRecord(rel)) {
@@ -55,6 +57,10 @@ export function parseVaultConfig(value: unknown): VaultConfig {
     }
     assetsVersion = value.assetsVersion;
   }
+  let assets: Record<string, string> | undefined;
+  if ('assets' in value) {
+    assets = parseAssetHashes(value.assets);
+  }
   const parsed: VaultConfig = {
     rel: {
       strict: rel.strict,
@@ -72,10 +78,37 @@ export function parseVaultConfig(value: unknown): VaultConfig {
       'remoteAllowlist tiene duplicados',
     ),
   };
+  if (assetsVersion !== undefined && assets !== undefined) {
+    return { ...parsed, assetsVersion, assets };
+  }
   if (assetsVersion !== undefined) {
     return { ...parsed, assetsVersion };
   }
+  if (assets !== undefined) {
+    return { ...parsed, assets };
+  }
   return parsed;
+}
+
+function parseAssetHashes(value: unknown): Record<string, string> {
+  if (!isRecord(value)) {
+    throw configInvalid('assets tiene que ser un objeto');
+  }
+  const entries = Object.entries(value);
+  const assets: Record<string, string> = {};
+  for (const [path, hash] of entries) {
+    if (path.trim() === '' || path.includes('\0')) {
+      throw configInvalid('assets admite solo rutas relativas dentro del vault');
+    }
+    if (typeof hash !== 'string' || !/^[a-f0-9]{64}$/.test(hash)) {
+      throw configInvalid('assets tiene que mapear rutas a hashes sha256 en hex');
+    }
+    if (assets[path] !== undefined) {
+      throw configInvalid('assets tiene claves duplicadas');
+    }
+    assets[path] = hash;
+  }
+  return assets;
 }
 
 export async function readVaultConfig(vaultRoot: string): Promise<VaultConfig> {
@@ -121,6 +154,9 @@ function serializeVaultConfig(config: VaultConfig): string {
   };
   if (config.assetsVersion !== undefined) {
     body.assetsVersion = config.assetsVersion;
+  }
+  if (config.assets !== undefined && Object.keys(config.assets).length > 0) {
+    body.assets = config.assets;
   }
   return `${JSON.stringify(body, null, 2)}\n`;
 }

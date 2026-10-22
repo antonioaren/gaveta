@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { realpathSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -7,7 +8,6 @@ import {
   defaultUpdateChannel,
   resolveInstallInfo,
   upgradeVaultAssets,
-  workspaceRootFromModuleUrl,
 } from '@gaveta/core';
 import type { CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 import { cliVersion } from './version.ts';
@@ -29,6 +29,12 @@ export const updateCommand: CommandSpec = {
       kind: 'boolean',
     },
     {
+      name: 'assetsOnly',
+      flags: '--assets-only',
+      description: 'Solo actualiza los assets del vault (sin git pull).',
+      kind: 'boolean',
+    },
+    {
       name: 'channel',
       flags: '--channel <canal>',
       description: 'Canal stable (último tag v*) o main (rama main).',
@@ -36,33 +42,60 @@ export const updateCommand: CommandSpec = {
     },
   ],
   async run(context): Promise<CommandResult> {
+    const assetsOnly = context.options.assetsOnly === 'true';
+    if (assetsOnly) {
+      if (context.vault === null) {
+        return {
+          human: 'Indica un vault con --vault para actualizar assets.\n',
+          data: { error: 'missing_vault' },
+          exitCode: 1,
+        };
+      }
+      const vaultAssets = await upgradeVaultAssets(context.vault.root, cliVersion());
+      const warnings: CommandWarning[] = vaultAssets.warnings.map((warning) => ({
+        code: warning.code,
+        params: { path: warning.path },
+      }));
+      const lines: string[] = [];
+      if (vaultAssets.upgraded.length > 0) {
+        lines.push(`Assets del vault actualizados: ${vaultAssets.upgraded.join(', ')}`);
+      } else {
+        lines.push('Los assets del vault ya están al día.');
+      }
+      return {
+        human: `${lines.join('\n')}\n`,
+        data: { assetsOnly: true, vaultAssets },
+        ...(warnings.length > 0 ? { warnings } : {}),
+      };
+    }
+
     const install = await resolveInstallInfo(CLI_ENTRY);
-    if (install.method !== 'git' || install.repoRoot === null) {
+    const updateRepoRoot = resolveUpdateRepoRoot(install.repoRoot);
+    if (install.method !== 'git' || updateRepoRoot === null) {
       return manualUpdateResult(install.method);
     }
     const checkOnly = context.options.check === 'true';
     const channel =
       typeof context.options.channel === 'string'
         ? context.options.channel
-        : defaultUpdateChannel(install.repoRoot);
-    const changelogMarkdown = readChangelog();
+        : defaultUpdateChannel(updateRepoRoot);
     const options = {
-      repoRoot: install.repoRoot,
+      repoRoot: updateRepoRoot,
       channel: channel as 'stable' | 'main',
       checkOnly,
-      changelogMarkdown,
     };
     const check = checkGitUpdate(options);
     if (checkOnly) {
-      const human = check.upToDate
-        ? `Gaveta ${check.currentVersion} está al día (${channel}).\n`
-        : `Hay una actualización disponible: ${check.currentVersion} → ${check.target?.version ?? '?'}\n`;
+      const human = formatCheckHuman(check, channel);
       const result: CommandResult = {
         human,
         data: {
           upToDate: check.upToDate,
           currentVersion: check.currentVersion,
+          currentCommit: check.currentShortCommit,
           targetVersion: check.target?.version ?? null,
+          targetCommit: check.target?.shortCommit ?? null,
+          newCommits: check.target?.commitCount ?? 0,
           channel,
         },
         exitCode: check.upToDate ? 0 : 1,
@@ -73,14 +106,22 @@ export const updateCommand: CommandSpec = {
     const warnings: CommandWarning[] = [];
     let vaultAssets: Awaited<ReturnType<typeof upgradeVaultAssets>> | null = null;
     if (applied.applied && context.vault !== null) {
-      vaultAssets = await upgradeVaultAssets(context.vault.root, cliVersion());
+      vaultAssets = await reexecVaultAssetUpgrade(
+        install.repoRoot ?? updateRepoRoot,
+        context.vault.root,
+      );
       for (const warning of vaultAssets.warnings) {
         warnings.push({ code: warning.code, params: { path: warning.path } });
       }
     }
     const lines: string[] = [];
     if (applied.applied && applied.target !== null) {
-      lines.push(`Actualizado: ${applied.previousVersion} → ${applied.currentVersion}`);
+      lines.push(
+        `Actualizado: ${applied.previousVersion} (${check.currentShortCommit}) → ${applied.currentVersion} (${applied.currentShortCommit})`,
+      );
+      if (applied.target.commitCount > 0) {
+        lines.push(`${String(applied.target.commitCount)} commit(s) nuevos en origin/main.`);
+      }
       for (const entry of applied.target.changelogEntries) {
         lines.push(`\n## ${entry.version}\n${entry.body}`);
       }
@@ -88,7 +129,9 @@ export const updateCommand: CommandSpec = {
         lines.push('\nDependencias actualizadas con pnpm install --frozen-lockfile.');
       }
     } else if (check.upToDate) {
-      lines.push(`Gaveta ${check.currentVersion} ya está al día (${channel}).`);
+      lines.push(
+        `Gaveta ${check.currentVersion} (${check.currentShortCommit}) ya está al día (${channel}).`,
+      );
     }
     if (vaultAssets !== null && vaultAssets.upgraded.length > 0) {
       lines.push(`Assets del vault actualizados: ${vaultAssets.upgraded.join(', ')}`);
@@ -105,9 +148,56 @@ export const updateCommand: CommandSpec = {
   },
 };
 
-function readChangelog(): string {
-  const root = workspaceRootFromModuleUrl(import.meta.url);
-  return readFileSync(join(root, 'CHANGELOG.md'), 'utf8');
+function formatCheckHuman(check: ReturnType<typeof checkGitUpdate>, channel: string): string {
+  if (check.upToDate) {
+    return `Gaveta ${check.currentVersion} (${check.currentShortCommit}) está al día (${channel}).\n`;
+  }
+  const target = check.target;
+  if (target === null) {
+    return `Hay una actualización disponible.\n`;
+  }
+  const commits = target.commitCount > 0 ? `, ${String(target.commitCount)} commit(s) nuevos` : '';
+  return `Hay una actualización disponible: ${check.currentVersion} (${check.currentShortCommit}) → ${target.version} (${target.shortCommit})${commits}.\n`;
+}
+
+function resolveUpdateRepoRoot(detectedRepoRoot: string | null): string | null {
+  const override = process.env.GAVETA_UPDATE_REPO_ROOT?.trim();
+  if (override !== undefined && override.length > 0) {
+    try {
+      return realpathSync(override);
+    } catch {
+      return null;
+    }
+  }
+  return detectedRepoRoot;
+}
+
+async function reexecVaultAssetUpgrade(
+  repoRoot: string,
+  vaultRoot: string,
+): Promise<Awaited<ReturnType<typeof upgradeVaultAssets>>> {
+  const cli = join(repoRoot, 'packages', 'cli', 'bin', 'gaveta.js');
+  const result = spawnSync(
+    process.execPath,
+    [cli, 'update', '--assets-only', '--json', '--vault', vaultRoot],
+    { cwd: repoRoot, encoding: 'utf8' },
+  );
+  if (result.status !== 0) {
+    throw new Error(
+      `gaveta update --assets-only failed: ${result.stderr || result.stdout || 'unknown'}`,
+    );
+  }
+  try {
+    const payload = JSON.parse(result.stdout) as {
+      data?: { vaultAssets?: Awaited<ReturnType<typeof upgradeVaultAssets>> };
+    };
+    if (payload.data?.vaultAssets !== undefined) {
+      return payload.data.vaultAssets;
+    }
+  } catch {
+    // fall through
+  }
+  return await upgradeVaultAssets(vaultRoot, cliVersion());
 }
 
 function manualUpdateResult(method: string): CommandResult {

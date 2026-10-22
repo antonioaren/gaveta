@@ -19,6 +19,7 @@ import {
   type AgentInstructionTarget,
 } from './agent-instructions.ts';
 import { readWorkspaceVersion } from '../workspace-version.ts';
+import { upgradeVaultAssets } from './assets.ts';
 import { createDefaultVaultConfig, writeVaultConfig } from './config.ts';
 import { GAVETA_DIRECTORY, VAULT_CONFIG_PATH } from './constants.ts';
 import { pathOutsideVault } from './errors.ts';
@@ -83,7 +84,19 @@ export async function initVault(options: InitVaultOptions): Promise<InitVaultRes
   }
   const agentInstructions =
     target === null ? [] : await writeAgentFiles(root, expandAgentInstructionTargets(target));
+  await maybeUpgradeVaultAssets(root);
   return { root, created, preserved, agentInstructions };
+}
+
+async function maybeUpgradeVaultAssets(root: string): Promise<void> {
+  try {
+    await upgradeVaultAssets(root, readWorkspaceVersion());
+  } catch (error) {
+    if (error instanceof GavetaError && error.code === 'E_CONFIG_INVALID') {
+      return;
+    }
+    throw error;
+  }
 }
 
 function readAgentTarget(value: string | undefined): AgentInstructionTarget | null {
