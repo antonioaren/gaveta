@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, realpath, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { expect, it } from 'vitest';
 import { defaultProcessRunner } from '../process-runner.ts';
@@ -126,7 +126,7 @@ it('resolveInstallInfo does not require a trusted origin remote', async () => {
     await writeFile(cliShim, '// shim\n');
     const info = await resolveInstallInfo(cliShim);
     expect(info.method).toBe('git');
-    expect(info.repoRoot).toBe(worktree);
+    expect(info.repoRoot).toBe(await realpath(worktree));
   });
 });
 
