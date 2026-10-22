@@ -8,7 +8,8 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "moduleDetection": "force",
-    "types": ["node"]
+    "types": ["node"],
+    "allowImportingTsExtensions": true
   },
-  "include": ["vitest.config.ts"]
+  "include": ["vitest.config.ts", "vitest.e2e.config.ts", "tests/**/*.ts", "e2e/**/*.ts"]
 }

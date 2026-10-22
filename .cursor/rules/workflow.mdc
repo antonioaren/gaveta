@@ -1,0 +1,15 @@
+---
+description: One task per PR, TDD, and a green local check before pushing
+alwaysApply: true
+---
+
+# Workflow
+
+- Read `docs/agents/LEARNINGS.md`, then pick exactly one task id from `docs/TASKS.md`.
+- Read that task's REQ ids in `docs/REQUIREMENTS.md` before writing code.
+- TDD: add failing tests, make them pass, then refactor. Do not start with the implementation.
+- Keep the pull request scoped to that task. Tick only your own line in `docs/TASKS.md`.
+- Run `pnpm check` before pushing. If CI fails, fix it on the same branch until it is green.
+- Never skip or disable a test or lint rule to get green. Never lower a coverage threshold. Never commit secrets.
+- Code, comments, and commit messages are English. User-facing CLI messages are Spanish. Error codes stay stable identifiers (`E_…`, `W_…`).
+- Append a dated line to `docs/agents/LEARNINGS.md` when you hit a new pitfall.

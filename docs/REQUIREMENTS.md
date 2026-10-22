@@ -22,7 +22,7 @@ El PRD dejaba seis preguntas abiertas, dos de ellas bloqueantes para la fase 1, 
 
 | Id | Pregunta | Decisión | Motivo | Estado |
 | --- | --- | --- | --- | --- |
-| DEC-01 | ¿CLI en Go o en TypeScript? | **TypeScript** (Node ≥ 20) en un monorepo. El núcleo (`@gaveta/core`) se comparte entre la CLI, el servidor y la app. | Un único validador y un único resolutor de enlaces garantizan que la CLI y la app acepten exactamente el mismo HTML (principio 3). El binario único se puede generar más adelante con `bun build --compile` o con Node SEA. | Aprobada |
+| DEC-01 | ¿CLI en Go o en TypeScript? | **TypeScript** (Node ≥ 22) en un monorepo. El núcleo (`@gaveta/core`) se comparte entre la CLI, el servidor y la app. El índice SQLite usa `node:sqlite` (FTS5). | Un único validador y un único resolutor de enlaces garantizan que la CLI y la app acepten exactamente el mismo HTML (principio 3). El binario único se puede generar más adelante con `bun build --compile` o con Node SEA. | Aprobada |
 | DEC-02 | Base del editor visual | **TipTap (ProseMirror)** para el modo visual, con un esquema que mapea 1:1 los elementos del contrato. Cualquier nodo desconocido se convierte en un nodo atómico `htmlBlock`. **CodeMirror 6** para el modo código. | ProseMirror permite un esquema cerrado (no degrada lo que no entiende) y serializar de vuelta a HTML de forma determinista. | Aprobada |
 | DEC-03 | ¿Vocabulario de `rel` cerrado o abierto? | **Abierto por vault**, con el vocabulario sugerido como valor por defecto en `.gaveta/config.json`. Un `rel` fuera de la lista produce un aviso (`W_REL_UNKNOWN`), no un error. Con `"rel": { "strict": true }` pasa a ser un error. | Permite evolucionar sin romper notas y mantiene los filtros del grafo predecibles. | Aprobada |
 | DEC-04 | ¿HTML completo o solo `<article>` + metadatos? | **Archivo HTML completo**, con formateo canónico al guardar. | Es lo que exige el principio 1 y el criterio "una nota abierta en el navegador se ve con el tema". El ruido en los diffs se mitiga con el formateo canónico (REQ-FMT-01). | Aprobada |
@@ -30,6 +30,17 @@ El PRD dejaba seis preguntas abiertas, dos de ellas bloqueantes para la fase 1, 
 | DEC-06 | ¿Alias corto `gv`? | **Sí.** `gv` es un alias del mismo binario que `gaveta`. | Reduce tokens y escritura sin coste. | Aprobada |
 | DEC-07 | Librería de conversión entre Markdown y HTML | **unified**: `remark-parse` + `remark-gfm` + `remark-frontmatter` + `remark-rehype` para importar, y `rehype-parse` + `rehype-remark` + `remark-stringify` para exportar. Los wikilinks, los callouts y las tareas se resuelven con plugins propios. | Es el mismo AST (hast) en los dos sentidos, encaja con el normalizador del núcleo y tiene un ecosistema maduro. | Aprobada |
 | DEC-08 | ¿Qué significa "la CLI es la única vía de escritura"? | **Dos interfaces sobre un mismo núcleo.** La CLI es la interfaz de los agentes, al estilo de `obsidian-cli`: cualquier agente (Claude Code, Cursor, GitHub Copilot, Codex…) la usa a través de una skill de Gaveta. La app es la interfaz de la persona y permite crear, editar, mover, renombrar y borrar notas de forma nativa, sin pasar por el binario. Las dos llaman a las mismas operaciones de `@gaveta/core`, así que comparten validación, resolución de enlaces y protección contra enlaces rotos. | El agente necesita comandos deterministas y la persona necesita CRUD completo en la app. Ninguna de las dos interfaces puede escribir saltándose el núcleo. | Aprobada |
+
+### Enmiendas (2026-10-22)
+
+Precisiones del propietario posteriores a DEC-01–DEC-08. La fila afectada de arriba ya dice el texto vigente.
+
+| Fecha | Afecta | Enmienda |
+| --- | --- | --- |
+| 2026-10-22 | DEC-01 | La versión mínima de Node.js pasa de 20 a **≥ 22**. El índice con FTS5 usa el módulo integrado `node:sqlite`, no `better-sqlite3`. |
+| 2026-10-22 | Slugs y nombres de archivo | Minúsculas. Se quitan los acentos con NFD y eliminando los diacríticos. Cualquier carácter que no sea `a-z` o `0-9` pasa a guion. Los guiones seguidos se colapsan en uno y se recortan los de los extremos. Si hay colisión se añade `-2`, `-3`, … al slug base (no se encadenan sufijos). Los ids de sección usan la misma regla. La colisión de un archivo se resuelve en el directorio de destino; la de un id de sección, dentro de la nota. |
+| 2026-10-22 | REQ-NFR-05 | La CI cubre Linux y macOS. Windows se aplaza al final del proyecto (T4.8). El producto sigue teniendo que funcionar en Windows. |
+| 2026-10-22 | Idioma | El código, los comentarios y los mensajes de commit van en inglés. Los mensajes de la CLI que ve quien la usa (incluido el `message` y el `hint` del JSON) van en español. Los códigos de error no se traducen. |
 
 ## Glosario
 
@@ -91,7 +102,7 @@ El PRD dejaba seis preguntas abiertas, dos de ellas bloqueantes para la fase 1, 
 
 | Id | Prioridad | Fase | Requisito | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
-| REQ-TYPE-01 | P0 | 1 | Tipo `doc`: `<article>` con `h1`–`h3` y secciones con `id` estable. La CLI genera los `id` que falten (slug del encabezado, único en la nota). | `gaveta read --as outline` devuelve el árbol de secciones con sus ids. |
+| REQ-TYPE-01 | P0 | 1 | Tipo `doc`: `<article>` con `h1`–`h3` y secciones con `id` estable. La CLI genera los `id` que falten con la regla de slugs del 2026-10-22 (ver [Decisiones](#decisiones)), únicos en la nota. | `gaveta read --as outline` devuelve el árbol de secciones con sus ids. |
 | REQ-TYPE-02 | P0 | 1 | Tipo `slides`: un `<section class="slide">` por diapositiva y notas del ponente en `<aside class="notes">`. | `validate` falla si una nota `slides` no tiene ninguna `section.slide`. |
 | REQ-TYPE-03 | P0 | 1 | Tipo `todo`: `<ul class="tasks">` con `<li data-g-task id="…">` e `<input type="checkbox">`. `data-g-due` (ISO 8601) y `data-g-priority` (`low\|medium\|high`) son opcionales. | `validate` falla con `E_TASK_INVALID` si `data-g-due` no es una fecha válida. |
 | REQ-TYPE-04 | P0 | 1 | `gaveta todo add\|check\|uncheck\|list` gestiona tareas de cualquier nota, también las que están dentro de un `doc`. | `check` añade el atributo `checked` al checkbox y solo cambia esa línea en el diff. |
@@ -281,7 +292,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | REQ-NFR-02 | Rendimiento CLI | Comandos de lectura (`read`, `links`, `backlinks`, `search`) < 300 ms en un vault de 1000 notas con índice caliente. |
 | REQ-NFR-03 | Reindexado | `gaveta reindex` de 5000 notas < 15 s. El watcher reindexa de forma incremental, solo el archivo cambiado. |
 | REQ-NFR-04 | Determinismo | La misma entrada produce el mismo archivo y la misma salida JSON (salvo ids y fechas nuevas). Las listas siempre se devuelven ordenadas. |
-| REQ-NFR-05 | Portabilidad | macOS, Linux y Windows. Rutas guardadas siempre con `/`. Archivos en UTF-8 con LF. |
+| REQ-NFR-05 | Portabilidad | macOS, Linux y Windows. Rutas guardadas siempre con `/`. Archivos en UTF-8 con LF. Enmienda 2026-10-22: la CI cubre Linux y macOS; Windows se aplaza al final del proyecto (T4.8). |
 | REQ-NFR-06 | Offline y privacidad | Todo funciona sin red y no hay telemetría. |
 | REQ-NFR-07 | Robustez | Un archivo corrupto o no parseable no rompe el índice: se reporta y el resto del vault sigue disponible. |
 | REQ-NFR-08 | Compatibilidad git | Las escrituras parciales solo cambian las líneas afectadas (formateo canónico estable). |

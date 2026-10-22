@@ -13,6 +13,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm test:e2e && pnpm audit --audit-level=high",
     "dev": "pnpm --filter @gaveta/web dev",
     "build:web": "pnpm --filter @gaveta/web build"
   },
@@ -27,6 +30,7 @@
     "prettier": "3.9.10",
     "typescript": "catalog:",
     "typescript-eslint": "8.72.0",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@vitest/coverage-v8": "catalog:"
   }
 }

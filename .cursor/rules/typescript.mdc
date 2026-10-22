@@ -1,0 +1,14 @@
+---
+description: TypeScript style for the Gaveta monorepo
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript
+
+- `strict` stays on, including `noUncheckedIndexedAccess` in the base config. Do not weaken `tsconfig`.
+- Node packages use `NodeNext`. Relative imports include the `.ts` extension. The web app uses Vite's bundler resolution.
+- No `any`. Narrow `unknown` at boundaries. Prefer `import type` for type-only imports (`verbatimModuleSyntax`).
+- Do not leave unused locals, unused parameters, or implicit `any`.
+- Comments and identifiers are English. Do not add a comment that only repeats the line.
+- Match the existing format: single quotes, semicolons, trailing commas, print width 100 (`pnpm format`).
