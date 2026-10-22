@@ -1,5 +1,6 @@
 import { adoptCommand } from './commands/adopt.ts';
 import { initCommand } from './commands/init.ts';
+import { editCommand, newCommand, readCommand } from './commands/notes.ts';
 import { searchCommand } from './commands/search.ts';
 import { versionCommand } from './commands/version.ts';
 import type { CommandSpec } from './types.ts';
@@ -10,4 +11,7 @@ export const commands: readonly CommandSpec[] = [
   initCommand,
   adoptCommand,
   searchCommand,
+  newCommand,
+  readCommand,
+  editCommand,
 ];

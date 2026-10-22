@@ -206,3 +206,18 @@ export { moveNote } from './ops/move.ts';
 export { removeNote } from './ops/remove.ts';
 
 export type { AffectedNote, MoveNoteResult, RemoveNoteResult } from './ops/types.ts';
+
+export { createNote, editNote, noteContentHash, readNote } from './notes.ts';
+
+export type {
+  CreateNoteResult,
+  EditNoteResult,
+  NoteOutline,
+  NoteWarning,
+  NoteWriteFailure,
+  OutlineLink,
+  OutlineSection,
+  OutlineTask,
+  ReadNoteResult,
+  SavedLink,
+} from './notes.ts';

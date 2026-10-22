@@ -29,6 +29,10 @@ import {
   resolveTitle,
   promotePendingAnchors,
   promotePendingLinks,
+  createNote,
+  editNote,
+  noteContentHash,
+  readNote,
   resolveNoteLinks,
   suggestNotes,
   relativeNoteHref,
@@ -68,6 +72,12 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(typeof resolveTitle).toBe('function');
   expect(typeof promotePendingAnchors).toBe('function');
   expect(typeof promotePendingLinks).toBe('function');
+  expect(typeof createNote).toBe('function');
+  expect(typeof readNote).toBe('function');
+  expect(typeof editNote).toBe('function');
+  expect(noteContentHash('hola')).toBe(
+    'sha256:b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79',
+  );
   expect(typeof resolveNoteLinks).toBe('function');
   expect(typeof suggestNotes).toBe('function');
   expect(typeof relativeNoteHref).toBe('function');

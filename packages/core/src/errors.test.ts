@@ -145,6 +145,13 @@ const expected = {
     message: 'La nota ha cambiado desde la última lectura.',
     hint: 'Hay que volver a leer la nota y reintentar con el hash actual en --if-match.',
   },
+  E_SECTION_NOT_FOUND: {
+    severity: 'error',
+    exitCode: 4,
+    escalatesToError: false,
+    message: 'No hay ninguna sección con ese id.',
+    hint: 'Usa gaveta read --as outline para ver los ids de sección.',
+  },
   W_LINK_PENDING: {
     severity: 'warning',
     exitCode: null,
