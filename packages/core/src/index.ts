@@ -174,6 +174,10 @@ export {
   openVaultIndex,
 } from './sqlite/store.ts';
 
+export { scanNoteFiles } from './sqlite/scan.ts';
+
+export type { ScannedFile, ScannedVault, ScanProblem } from './sqlite/scan.ts';
+
 export type {
   DuplicateId,
   IndexProblem,

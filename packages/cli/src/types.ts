@@ -19,6 +19,8 @@ export interface CommandResult {
   readonly data: unknown;
   readonly human: string;
   readonly warnings?: readonly CommandWarning[];
+  /** When set, overrides the default success exit code (0). */
+  readonly exitCode?: number;
 }
 
 export type CommandInputMode = 'none' | 'optional' | 'required';

@@ -211,6 +211,39 @@ it('indexes notes, sections, links, tasks, and FTS from a vault', async () => {
   });
 });
 
+it('syncs incrementally without rewriting unchanged notes', async () => {
+  await withTemp(async (parent) => {
+    const root = await makeVault(parent);
+    await writeNote(root, 'a.html', noteHtml({ title: 'Alfa', id: NOTE_A, body: 'alfa sqlite' }));
+    await writeNote(
+      root,
+      'b.html',
+      noteHtml({ title: 'Beta', id: NOTE_B, body: 'beta', extra: '' }),
+    );
+    await withIndex(root, async (index) => {
+      await index.rebuild();
+      const betaHash = index.note('b.html')?.contentHash;
+      await writeNote(
+        root,
+        'a.html',
+        noteHtml({ title: 'Alfa nueva', id: NOTE_A, body: 'alfa sqlite editada' }),
+      );
+      const updated = await index.sync();
+      expect(updated.written).toBe(1);
+      expect(updated.removed).toBe(0);
+      expect(index.note('a.html')?.title).toBe('Alfa nueva');
+      expect(index.note('b.html')?.contentHash).toBe(betaHash);
+      const noop = await index.sync();
+      expect(noop.written).toBe(0);
+      expect(noop.removed).toBe(0);
+      await rm(join(root, 'b.html'));
+      const removed = await index.sync();
+      expect(removed.removed).toBe(1);
+      expect(index.note('b.html')).toBeNull();
+    });
+  });
+});
+
 it('updates and removes one note without rewriting the others', async () => {
   await withTemp(async (parent) => {
     const root = await makeVault(parent);

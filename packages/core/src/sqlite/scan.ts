@@ -11,6 +11,7 @@ export interface ScannedFile {
   readonly absolutePath: string;
   readonly symlink: boolean;
   readonly mtimeMs: number;
+  readonly sizeBytes: number;
 }
 
 export interface ScanProblem {
@@ -131,6 +132,7 @@ async function visitEntry(
       absolutePath,
       symlink: false,
       mtimeMs: Math.round(listed.mtimeMs),
+      sizeBytes: listed.size,
     });
   }
 }
@@ -171,6 +173,7 @@ async function visitSymlink(
       absolutePath,
       symlink: true,
       mtimeMs: Math.round(targetStat.mtimeMs),
+      sizeBytes: targetStat.size,
     });
   }
 }
