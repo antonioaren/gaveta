@@ -1,0 +1,25 @@
+{
+  "name": "@gaveta/cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "gaveta / gv binary. Commands land in phase 1.",
+  "type": "module",
+  "bin": {
+    "gaveta": "./bin/gaveta.js",
+    "gv": "./bin/gaveta.js"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@gaveta/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

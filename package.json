@@ -1,0 +1,32 @@
+{
+  "name": "gaveta",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit && pnpm -r --if-present typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "dev": "pnpm --filter @gaveta/web dev",
+    "build:web": "pnpm --filter @gaveta/web build"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@gaveta/cli": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "10.13.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "prettier": "3.9.10",
+    "typescript": "catalog:",
+    "typescript-eslint": "8.72.0",
+    "vitest": "catalog:"
+  }
+}
