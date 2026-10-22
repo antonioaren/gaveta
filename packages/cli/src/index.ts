@@ -10,7 +10,14 @@ export { INTERNAL_ERROR_CODE, SCHEMA_VERSION } from './envelope.ts';
 export type { FailureEnvelope, JsonErrorBody, JsonWarning, SuccessEnvelope } from './envelope.ts';
 
 export { commands } from './registry.ts';
-export type { CommandContext, CommandResult, CommandSpec, ResolvedInput } from './types.ts';
+export type {
+  CommandArgument,
+  CommandContext,
+  CommandOption,
+  CommandResult,
+  CommandSpec,
+  ResolvedInput,
+} from './types.ts';
 
 export { runCli } from './run.ts';
 export type { CliIo } from './run.ts';

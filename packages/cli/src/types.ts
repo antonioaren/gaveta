@@ -23,6 +23,20 @@ export interface CommandResult {
 
 export type CommandInputMode = 'none' | 'optional' | 'required';
 
+/** A positional argument that is not note content. */
+export interface CommandArgument {
+  readonly name: string;
+  readonly description: string;
+  readonly required: boolean;
+}
+
+/** A command-specific option. `name` is the key Commander stores. */
+export interface CommandOption {
+  readonly name: string;
+  readonly flags: string;
+  readonly description: string;
+}
+
 /**
  * One CLI command. `guide` (T1.21) is generated from this registry:
  * every command needs a summary and an example.
@@ -38,6 +52,8 @@ export interface CommandSpec {
     readonly description: string;
     readonly required: boolean;
   };
+  readonly args?: readonly CommandArgument[];
+  readonly options?: readonly CommandOption[];
   run(context: CommandContext): CommandResult | Promise<CommandResult>;
 }
 
@@ -49,4 +65,5 @@ export interface CommandContext {
   readonly strictRel: boolean;
   readonly input: ResolvedInput | null;
   readonly positionals: readonly string[];
+  readonly options: Readonly<Record<string, string>>;
 }
