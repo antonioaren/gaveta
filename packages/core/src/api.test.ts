@@ -35,6 +35,9 @@ import {
   assessRel,
   GavetaRefError,
   SUGGESTION_LIMIT,
+  GavetaOperationError,
+  moveNote,
+  removeNote,
 } from './index.ts';
 
 it('exports vault I/O and the shared slug helper from the package entry', () => {
@@ -73,4 +76,7 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(SUGGESTION_LIMIT).toBe(5);
   expect(typeof initVault).toBe('function');
   expect(typeof adoptNote).toBe('function');
+  expect(typeof moveNote).toBe('function');
+  expect(typeof removeNote).toBe('function');
+  expect(GavetaOperationError.prototype).toBeInstanceOf(GavetaError);
 });
