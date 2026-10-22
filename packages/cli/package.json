@@ -2,7 +2,7 @@
   "name": "@gaveta/cli",
   "version": "0.0.0",
   "private": true,
-  "description": "gaveta / gv binary. Commands land in phase 1.",
+  "description": "gaveta / gv binary. Command registry, versioned JSON envelope, and global options.",
   "type": "module",
   "bin": {
     "gaveta": "./bin/gaveta.js",
@@ -15,7 +15,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@gaveta/core": "workspace:*"
+    "@gaveta/core": "workspace:*",
+    "commander": "14.0.3"
   },
   "devDependencies": {
     "@types/node": "catalog:",

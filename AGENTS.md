@@ -40,7 +40,7 @@ pnpm check
 | `pnpm test:e2e`      | CLI e2e (`vitest.e2e.config.ts`)                                 |
 | `pnpm check`         | The full local gate                                              |
 | `pnpm dev`           | Web dev server on `127.0.0.1:5173`                               |
-| `pnpm exec gaveta`   | Current binary (prints the version until phase 1 commands land)  |
+| `pnpm exec gaveta`   | Current binary (`gaveta version`, `--json`, `--vault`, `--from`) |
 
 ## Decisions (2026-10-22)
 
