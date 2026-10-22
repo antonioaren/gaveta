@@ -1,4 +1,10 @@
 import { adoptCommand } from './commands/adopt.ts';
+import {
+  backlinksCommand,
+  graphCommand,
+  linkCommand,
+  linksCommand,
+} from './commands/connections.ts';
 import { initCommand } from './commands/init.ts';
 import { mvCommand, rmCommand } from './commands/move-remove.ts';
 import { editCommand, newCommand, readCommand } from './commands/notes.ts';
@@ -17,4 +23,8 @@ export const commands: readonly CommandSpec[] = [
   editCommand,
   mvCommand,
   rmCommand,
+  linksCommand,
+  backlinksCommand,
+  linkCommand,
+  graphCommand,
 ];

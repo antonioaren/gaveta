@@ -20,7 +20,7 @@ import {
   type ErrorCode,
   type WarningCode,
 } from './errors.ts';
-import { escapeAttr, escapeText, inspectVaultPath } from './links/path.ts';
+import { escapeAttr, escapeText, inspectVaultPath, relativeNoteHref } from './links/path.ts';
 import { GavetaRefError, notesForId, resolveRef } from './links/ref.ts';
 import { resolveNoteLinks } from './links/rewrite.ts';
 import {
@@ -71,6 +71,10 @@ const CREATE_KEYS = [
 
 const READ_KEYS = ['vaultRoot', 'ref', 'as'] as const;
 const EDIT_KEYS = ['vaultRoot', 'ref', 'html', 'section', 'mode', 'ifMatch'] as const;
+const LINK_KEYS = ['vaultRoot', 'from', 'to', 'rel', 'text', 'section', 'ifMatch'] as const;
+
+const RELATED_SECTION_ID = 'relacionado';
+const RELATED_SECTION_TITLE = 'Relacionado';
 
 export interface NoteWarning {
   readonly code: WarningCode;
@@ -150,6 +154,14 @@ export interface EditNoteSuccess extends SavedNote {
 }
 
 export type EditNoteResult = EditNoteSuccess | NoteWriteFailure;
+
+export interface LinkNoteSuccess extends SavedNote {
+  readonly ok: true;
+  readonly section: string;
+  readonly added: boolean;
+}
+
+export type LinkNoteResult = LinkNoteSuccess | NoteWriteFailure;
 
 export type ReadNoteResult = {
   readonly id: string | null;
@@ -297,6 +309,63 @@ export async function readNote(options: unknown): Promise<ReadNoteResult> {
       return { ...base, as: 'text', text: parsed.note.plainText };
     }
     return { ...base, as: 'outline', outline: toOutline(parsed.note) };
+  });
+}
+
+export async function linkNote(options: unknown): Promise<LinkNoteResult> {
+  const input = readLink(options);
+  return withSession(input.vaultRoot, async (session) => {
+    const source = resolveRef(session.index, input.from);
+    const target = resolveRef(session.index, input.to);
+    if (target.id === null) {
+      throw new GavetaError('E_META_MISSING');
+    }
+    const original = await readVaultText(session.root, source.path);
+    assertMatch(noteContentHash(original), input.ifMatch);
+    const parsed = parseNote(original);
+    if (!parsed.ok || parsed.note === null) {
+      throw new GavetaError('E_HTML_INVALID');
+    }
+    const sectionId = input.section ?? RELATED_SECTION_ID;
+    const linkText = input.text ?? target.title;
+    if (hasMatchingLink(parsed.note, target.id, sectionId, linkText, input.rel)) {
+      return presentLinkNote(session, source, parsed.note, original, sectionId, false);
+    }
+    const anchor = buildCanonicalAnchor(source.path, target.path, target.id, linkText, input.rel);
+    const spliced = insertCanonicalLink(original, sectionId, input.section !== undefined, anchor);
+    const resolved = resolveFor(session, spliced, source.path);
+    const resolveGate = gate(resolved.errors);
+    if (!resolveGate.ok) {
+      return failure(session, resolveGate);
+    }
+    const validated = validateNote(resolved.html, validateOptions(session, source.path));
+    const validateGate = gate(asLikes(validated.diagnostics));
+    if (!validateGate.ok) {
+      return failure(session, validateGate);
+    }
+    const saved = validated.note;
+    if (saved === null) {
+      throw new GavetaError('E_META_MISSING');
+    }
+    if (saved.id === null || saved.type === null) {
+      throw new GavetaError('E_META_MISSING');
+    }
+    if (resolved.html !== original) {
+      await writeVaultText(session.root, source.path, resolved.html);
+      await session.index.upsert(source.path);
+    }
+    return {
+      ok: true,
+      id: saved.id,
+      path: source.path,
+      hash: noteContentHash(resolved.html),
+      title: saved.title ?? source.title,
+      type: saved.type,
+      section: sectionId,
+      added: true,
+      links: savedLinks(resolved.links, resolved.warnings, session.index),
+      warnings: [...session.warnings, ...warningList(resolved.warnings)],
+    };
   });
 }
 
@@ -535,8 +604,15 @@ function spliceNote(
     }
     return html.slice(0, spans.startTag.startOffset) + article + html.slice(spans.endTag.endOffset);
   }
-  const matches = collectElements(
+  const articleElement = collectElements(
     document,
+    (element) => elementName(element) === 'article',
+  )[0];
+  if (articleElement === undefined) {
+    throw new GavetaError('E_SECTION_NOT_FOUND');
+  }
+  const matches = collectElements(
+    articleElement,
     (element) => elementName(element) === 'section' && attr(element, 'id') === section,
   );
   if (matches.length === 0) {
@@ -560,6 +636,166 @@ function spliceNote(
     return html.slice(0, spans.startTag.endOffset) + inner + html.slice(spans.startTag.endOffset);
   }
   return html.slice(0, spans.endTag.startOffset) + inner + html.slice(spans.endTag.startOffset);
+}
+
+function hasMatchingLink(
+  note: NoteModel,
+  targetId: string,
+  sectionId: string,
+  text: string,
+  rel: string | null,
+): boolean {
+  for (const link of note.links) {
+    if (link.kind !== 'canonical' || link.targetId !== targetId) {
+      continue;
+    }
+    if (link.sectionId !== sectionId || link.text !== text || link.rel !== rel) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+function buildCanonicalAnchor(
+  fromPath: string,
+  toPath: string,
+  toId: string,
+  text: string,
+  rel: string | null,
+): string {
+  const href = relativeNoteHref(fromPath, toPath);
+  if (href === null) {
+    throw new GavetaError('E_PATH_OUTSIDE_VAULT');
+  }
+  const attrs = [`href="${escapeAttr(href)}"`, `data-g-to="${escapeAttr(toId)}"`];
+  if (rel !== null) {
+    attrs.push(`rel="${escapeAttr(rel)}"`);
+  }
+  return `<p><a ${attrs.join(' ')}>${escapeText(text)}</a></p>\n`;
+}
+
+function insertCanonicalLink(
+  html: string,
+  sectionId: string,
+  explicitSection: boolean,
+  anchor: string,
+): string {
+  if (sectionExists(html, sectionId)) {
+    return spliceNote(html, 'append', sectionId, wrapPiece(anchor), '');
+  }
+  if (explicitSection) {
+    throw new GavetaError('E_SECTION_NOT_FOUND');
+  }
+  const spans = articleSpans(html);
+  const block = `\n<section id="${RELATED_SECTION_ID}"><h2>${escapeText(RELATED_SECTION_TITLE)}</h2>\n${anchor.trim()}\n</section>\n`;
+  return html.slice(0, spans.endTag.startOffset) + block + html.slice(spans.endTag.startOffset);
+}
+
+function sectionExists(html: string, sectionId: string): boolean {
+  const article = primaryArticle(html);
+  if (article === null) {
+    return false;
+  }
+  const matches = collectElements(
+    article,
+    (element) => elementName(element) === 'section' && attr(element, 'id') === sectionId,
+  );
+  return matches.length > 0;
+}
+
+function primaryArticle(html: string): ParseElement | null {
+  const document = parseDocument(html);
+  const articles = collectElements(document, (element) => elementName(element) === 'article');
+  return articles[0] ?? null;
+}
+
+function presentLinkNote(
+  session: Session,
+  source: { readonly path: string; readonly title: string },
+  note: NoteModel,
+  original: string,
+  section: string,
+  added: boolean,
+): LinkNoteSuccess {
+  const resolved = resolveFor(session, original, source.path);
+  if (note.id === null || note.type === null) {
+    throw new GavetaError('E_META_MISSING');
+  }
+  return {
+    ok: true,
+    id: note.id,
+    path: source.path,
+    hash: noteContentHash(original),
+    title: note.title ?? source.title,
+    type: note.type,
+    section,
+    added,
+    links: savedLinks(resolved.links, resolved.warnings, session.index),
+    warnings: [...session.warnings, ...warningList(resolved.warnings)],
+  };
+}
+
+function readLink(options: unknown): {
+  readonly vaultRoot: string;
+  readonly from: string;
+  readonly to: string;
+  readonly rel: string | null;
+  readonly text: string | undefined;
+  readonly section: string | undefined;
+  readonly ifMatch: string | undefined;
+} {
+  const record = readRecord(options, LINK_KEYS);
+  const rel = optionalRel(record.rel);
+  const text = optionalLinkText(record.text);
+  const section = optionalLinkSection(record.section);
+  const ifMatch = optionalString(record.ifMatch);
+  if (ifMatch !== undefined && !CONTENT_HASH.test(ifMatch)) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return {
+    vaultRoot: requiredString(record.vaultRoot),
+    from: requiredString(record.from),
+    to: requiredString(record.to),
+    rel,
+    text,
+    section,
+    ifMatch,
+  };
+}
+
+function optionalRel(value: unknown): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (typeof value !== 'string' || value.includes('\0')) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return trimmed;
+}
+
+function optionalLinkText(value: unknown): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== 'string' || value.trim().length === 0 || value.includes('\0')) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return value;
+}
+
+function optionalLinkSection(value: unknown): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== 'string' || value.trim().length === 0 || value.includes('\0')) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return value;
 }
 
 function bodyInner(html: string): string {

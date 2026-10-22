@@ -90,7 +90,7 @@ flowchart TB
 - [x] **T1.13 Esqueleto de la CLI.** `commander`, alias `gv`, sobre `--json` versionado, códigos de salida, entrada por `--from` y stdin, y salida legible por defecto. Cubre: REQ-CLI-01 a 03, DEC-06. Depende de: T1.6.
 - [x] **T1.14 `init` y `adopt`.** `init [--agent-instructions claude|agents]` con un bloque delimitado e idempotente, y `adopt <ruta>`. Cubre: REQ-VAULT-01, 02 y 08. Depende de: T1.13, T1.4.
 - [x] **T1.15 `new`, `read` y `edit`.** Creación completa (normalizar, resolver, validar y escribir), `read --as html|text|outline` con `hash`, edición parcial por sección y `--if-match` en todas las escrituras. Cubre: REQ-CLI-04 a 07. Depende de: T1.13, T1.4, T1.8, T1.9.
-- [ ] **T1.16 Comandos de conexiones.** `links`, `backlinks`, `link` (idempotente) y `graph`. Cubre: REQ-LINK-06 a 08, REQ-GRAPH-01 a 03. Depende de: T1.15, T1.11.
+- [x] **T1.16 Comandos de conexiones.** `links`, `backlinks`, `link` (idempotente) y `graph`. Cubre: REQ-LINK-06 a 08, REQ-GRAPH-01 a 03. Depende de: T1.15, T1.11.
 - [x] **T1.17 `mv` y `rm`.** Cubre: REQ-LINK-09 y 10. Depende de: T1.15, T1.10.
 - [ ] **T1.18 `todo`.** `add`, `check`, `uncheck` y `list` sobre cualquier nota, con diff mínimo. Cubre: REQ-TYPE-04. Depende de: T1.15.
 - [x] **T1.19 `search`.** FTS5 con fragmentos resaltados y filtros. Cubre: REQ-CLI-10. Depende de: T1.7, T1.13.
