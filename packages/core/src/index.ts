@@ -49,6 +49,26 @@ export {
   type GuideTopic,
 } from './guide.ts';
 
+export { AGENT_VAULT_BULLETS, AGENT_WORKFLOW_BULLETS } from './agent-workflow.ts';
+
+export {
+  SKILL_CLI_VERSION_FIELD,
+  SKILL_NAME,
+  SKILL_REFERENCE_PATHS,
+  buildSkill,
+  type SkillBuildOptions,
+  type SkillBundle,
+  type SkillFile,
+} from './skill.ts';
+
+export {
+  findInvalidSkillMentions,
+  type SkillCliCatalog,
+  type SkillMentionIssue,
+} from './skill-mentions.ts';
+
+export { tokensFromGavetaExample, tokenizeShellLine } from './shell-tokens.ts';
+
 export type {
   BodyElement,
   ContractClass,

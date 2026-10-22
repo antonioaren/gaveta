@@ -47,6 +47,7 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · T1.25 · `gaveta validate` on the whole vault fails on non-note HTML left by `init` (for example `legacy.html`). · Keep preservation checks in a dedicated REQ-VAULT-01 test; only assert full-vault validate on notes the workflow created.
 - 2026-10-22 · T2.12 · Scanning for `[[…]]` also matches `![[…]]` image and transclusion embeds. · Skip a wikilink when the character before `[[` is `!`.
 - 2026-10-22 · T2.12 · A CI job can show every step green yet stay `in_progress` on the check (ubuntu `typecheck`); `pnpm typecheck` locally finishes in seconds and `fixtures/tsconfig` only includes `src`. · Rebase and push to re-run; keep `exclude: ["markdown"]` on the fixtures package so `.md` trees never join `tsc`.
+- 2026-10-22 · T1.22 · `buildSkill` bytes rarely match committed `skills/gaveta/*.md` because Prettier reflows prose and inserts a blank line after YAML front matter. · Fingerprint the bundle after `prettier.format` in `tests/skill.test.ts`, or regenerate and run `pnpm format` before committing.
 <<<<<<< HEAD
 - 2026-10-22 · T1.21 · `guide` must not import `commands` from `registry.ts` (circular load). · Register with `createGuideCommand(peerCommands)` so the guide lists peers plus itself without importing the full registry.
 - 2026-10-22 · T1.21 · If only GitGuardian appears on a PR, check for merge conflicts first. · Rebase on `main` until `mergeable_state` is clean; GitHub skips the CI workflow on conflicting PRs.
