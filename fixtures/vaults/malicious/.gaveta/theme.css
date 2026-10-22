@@ -1,0 +1,14 @@
+/* Placeholder theme until T1.5. Contrast is body text #1a1a1a on #ffffff. */
+:root {
+  color-scheme: light;
+  --text: #1a1a1a;
+  --bg: #ffffff;
+}
+body {
+  margin: 2rem auto;
+  max-width: 42rem;
+  color: var(--text);
+  background: var(--bg);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}

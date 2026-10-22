@@ -1,0 +1,18 @@
+{
+  "name": "@gaveta/fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hand-written vault fixtures and a deterministic generator for performance tests.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
