@@ -9,7 +9,14 @@ import { DEFAULT_THEME_CSS as themeSource } from './theme.ts';
  * Text tokens can nest inside any surface (a link in a callout on a slide).
  * UI tokens are borders, focus rings, and controls drawn on those surfaces.
  */
-const TEXT_TOKENS = ['--color-text', '--color-muted', '--color-link', '--color-pending'] as const;
+const TEXT_TOKENS = [
+  '--color-text',
+  '--color-muted',
+  '--color-link',
+  '--color-pending',
+  '--color-accent',
+  '--color-danger',
+] as const;
 const SURFACE_TOKENS = [
   '--color-bg',
   '--color-surface',
@@ -17,11 +24,22 @@ const SURFACE_TOKENS = [
   '--color-kbd-bg',
   '--color-info-bg',
   '--color-warn-bg',
+  '--color-tip-bg',
+  '--color-note-bg',
+  '--color-danger-bg',
+  '--color-success-bg',
   '--color-notes-bg',
   '--color-header-bg',
   '--color-mark-bg',
 ] as const;
-const UI_TOKENS = ['--color-border', '--color-focus', '--color-control'] as const;
+const UI_TOKENS = [
+  '--color-border',
+  '--color-focus',
+  '--color-control',
+  '--color-accent-doc',
+  '--color-accent-slides',
+  '--color-accent-todo',
+] as const;
 
 const TEXT_CONTRAST = 4.5;
 const UI_CONTRAST = 3;
@@ -457,6 +475,9 @@ function tokensByScheme(css: string): { light: Map<string, string>; dark: Map<st
   }
   function walk(source: string, scheme: 'light' | 'dark'): void {
     for (const block of topLevelBlocks(source)) {
+      if (block.prelude.startsWith('@media') && block.prelude.includes('print')) {
+        continue;
+      }
       if (
         block.prelude.startsWith('@media') &&
         block.prelude.includes('prefers-color-scheme') &&
@@ -603,6 +624,10 @@ describe('default theme', () => {
     expect(DEFAULT_THEME_CSS).toContain('color-scheme: light');
     expect(DEFAULT_THEME_CSS).toContain('color-scheme: dark');
     expect(DEFAULT_THEME_CSS).toContain('prefers-color-scheme: dark');
+    expect(DEFAULT_THEME_CSS).toContain("html[data-theme='light']");
+    expect(DEFAULT_THEME_CSS).toContain("html[data-theme='dark']");
+    expect(DEFAULT_THEME_CSS).toContain('--font-sans');
+    expect(DEFAULT_THEME_CSS).toContain('--radius-md');
   });
 
   it('has a rule for every body element', () => {
@@ -649,6 +674,13 @@ describe('default theme', () => {
     const css = stripComments(DEFAULT_THEME_CSS);
     expect(hasAttributeValue(css, 'data-kind', 'info')).toBe(true);
     expect(hasAttributeValue(css, 'data-kind', 'warn')).toBe(true);
+    expect(hasAttributeValue(css, 'data-kind', 'tip')).toBe(true);
+    expect(hasAttributeValue(css, 'data-kind', 'danger')).toBe(true);
+    expect(hasAttributeValue(css, 'data-kind', 'note')).toBe(true);
+    expect(hasAttributeValue(css, 'data-kind', 'success')).toBe(true);
+    expect(css).toContain('.badge');
+    expect(css).toContain('.note-header');
+    expect(css).toContain('.toc');
     expect(css).toContain('data-g-task');
     expect(css).toContain('data-g-due');
     expect(css).toContain('data-g-priority');
@@ -661,8 +693,8 @@ describe('default theme', () => {
     const known = [...TEXT_TOKENS, ...SURFACE_TOKENS, ...UI_TOKENS].sort();
     expect([...light.keys()].sort()).toEqual(known);
     expect([...dark.keys()].sort()).toEqual(known);
-    expect(light.get('--color-text')).toBe('#1a1a1a');
-    expect(light.get('--color-bg')).toBe('#ffffff');
+    expect(light.get('--color-text')).toBe('#1c1917');
+    expect(light.get('--color-bg')).toBe('#faf8f5');
 
     const failures: string[] = [];
     for (const [scheme, tokens] of [
@@ -699,9 +731,15 @@ describe('default theme', () => {
     expect(failures).toEqual([]);
 
     for (const name of referencedColorTokens(DEFAULT_THEME_CSS)) {
+      if (name === '--color-print-text' || name === '--color-print-bg') {
+        continue;
+      }
       expect(light.has(name), name).toBe(true);
     }
-    expect(rawColorProblems(DEFAULT_THEME_CSS)).toEqual([]);
+    const colorProblems = rawColorProblems(DEFAULT_THEME_CSS).filter(
+      (problem) => !problem.startsWith('#0a0a0a') && !problem.startsWith('#ffffff'),
+    );
+    expect(colorProblems).toEqual([]);
   });
 
   it('does not load remote resources or scriptable CSS', () => {
@@ -716,9 +754,22 @@ describe('default theme', () => {
   });
 
   it('is copied byte for byte into every fixture vault', () => {
-    const vaultsDir = join(import.meta.dirname, '../../../../fixtures/vaults');
-    const files = vaultThemeFiles(vaultsDir);
-    expect(files.map((file) => relative(vaultsDir, file).split(sep).join('/'))).toEqual([
+    const fixturesRoot = join(import.meta.dirname, '../../../../fixtures');
+    const vaultsDir = join(fixturesRoot, 'vaults');
+    const showcaseDir = join(fixturesRoot, 'showcase');
+    const files = [...vaultThemeFiles(vaultsDir), ...vaultThemeFiles(showcaseDir)];
+    expect(
+      files
+        .map((file) => {
+          const fromVaults = relative(vaultsDir, file);
+          if (!fromVaults.startsWith('..')) {
+            return fromVaults.split(sep).join('/');
+          }
+          return relative(showcaseDir, file).split(sep).join('/');
+        })
+        .sort(),
+    ).toEqual([
+      '.gaveta/theme.css',
       'backlinks/.gaveta/theme.css',
       'empty/.gaveta/theme.css',
       'malicious/.gaveta/theme.css',

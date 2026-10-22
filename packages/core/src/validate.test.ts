@@ -338,7 +338,7 @@ describe('validateNote contract rules', () => {
         details: { reason: 'kind', element: 'aside' },
       }),
     );
-    const badKind = validateNote(doc('<aside class="callout" data-kind="note"><p>x</p></aside>'));
+    const badKind = validateNote(doc('<aside class="callout" data-kind="bogus"><p>x</p></aside>'));
     expect(codes(badKind)).toContain('E_HTML_INVALID');
     const kindOnPlain = validateNote(doc('<aside data-kind="info"><p>x</p></aside>'));
     expect(kindOnPlain.diagnostics).toContainEqual(

@@ -105,6 +105,10 @@ flowchart TB
 - [ ] **T1.24 Prueba de la puerta 1.** Una sesión guionizada con Claude Code (con la skill instalada) sobre un vault vacío que genera al menos 20 notas (documentos, una presentación y listas de tareas) y registra la tasa de éxito a la primera, los enlaces por nota y el resultado de `doctor` tras varios `mv` y `rm`. Los resultados se guardan en `docs/gates/fase-1.md`. Depende de: T1.23.
 - [ ] **T1.25 Tests E2E de la fase 1.** Un test por cada criterio de aceptación P0 de la fase 1, incluido el de `file://` con Playwright (REQ-VAULT-05). Depende de: T1.21.
 
+## Mejoras
+
+- [x] **T1.27 Refresco visual del tema.** Paleta más rica (acento, acentos por tipo `doc`/`slides`/`todo`, semánticos info/tip/warning/danger/success), tipografía y espaciado, modo oscuro automático y override `data-theme`, componentes pulidos (callouts Obsidian, tablas, código, blockquotes, badges, tareas, enlaces pendientes, cabecera de nota, índice, diapositivas), contrato ampliado en `contract.ts`, contraste AA con test automatizado, vitrina en `fixtures/showcase/` y E2E Playwright en claro/oscuro. Cubre: REQ-VAULT-05, REQ-NFR-10. Depende de: T1.5.
+
 ## Fase 2 — Visor de solo lectura e importación y exportación de Markdown
 
 ### 2A. Visor
