@@ -25,6 +25,17 @@ export {
 export type { GeneratedFile, GenerateVaultOptions, NfrNoteCount } from './generate.ts';
 export { inspectNote, metaContents } from './inspect.ts';
 export type { InspectedAnchor, InspectedNote } from './inspect.ts';
+export {
+  loadMarkdownManifest,
+  markdownManifestPath,
+  markdownVaultPath,
+  MARKDOWN_VAULT_DIR,
+} from './markdown.ts';
+export type {
+  MarkdownBrokenLink,
+  MarkdownFixtureFeature,
+  MarkdownFixtureManifest,
+} from './markdown.ts';
 export { VAULT_NAMES, resolveInsideVault, themeHrefFor, vaultPath } from './paths.ts';
 export type { VaultName } from './paths.ts';
 export { slugify } from './slug.ts';
