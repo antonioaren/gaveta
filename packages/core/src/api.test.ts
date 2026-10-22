@@ -25,6 +25,8 @@ import {
   outgoingLinks,
   resolveRef,
   resolveTitle,
+  promotePendingAnchors,
+  promotePendingLinks,
   resolveNoteLinks,
   suggestNotes,
   relativeNoteHref,
@@ -59,6 +61,8 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(BACKLINK_CONTEXT_LIMIT).toBe(200);
   expect(typeof resolveRef).toBe('function');
   expect(typeof resolveTitle).toBe('function');
+  expect(typeof promotePendingAnchors).toBe('function');
+  expect(typeof promotePendingLinks).toBe('function');
   expect(typeof resolveNoteLinks).toBe('function');
   expect(typeof suggestNotes).toBe('function');
   expect(typeof relativeNoteHref).toBe('function');
