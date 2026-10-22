@@ -56,10 +56,48 @@ function attributes(tag: string): Map<string, string> {
 }
 
 function visibleText(fragment: string): string {
-  return fragment
-    .replace(/<[^>]+>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  let text = '';
+  let index = 0;
+  while (index < fragment.length) {
+    const open = fragment.indexOf('<', index);
+    if (open === -1) {
+      text += fragment.slice(index);
+      break;
+    }
+    text += fragment.slice(index, open);
+    const close = fragment.indexOf('>', open + 1);
+    if (close === -1) {
+      break;
+    }
+    index = close + 1;
+  }
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+function findWikilinks(html: string): string[] {
+  const found: string[] = [];
+  let index = 0;
+  while (index < html.length) {
+    const start = html.indexOf('[[', index);
+    if (start === -1) {
+      break;
+    }
+    let cursor = start + 2;
+    while (cursor < html.length) {
+      const char = html.charAt(cursor);
+      if (char === ']' || char === '\n' || char === '\r') {
+        break;
+      }
+      cursor += 1;
+    }
+    if (cursor > start + 2 && html.charAt(cursor) === ']' && html.charAt(cursor + 1) === ']') {
+      found.push(html.slice(start, cursor + 2));
+      index = cursor + 2;
+    } else {
+      index = start + 2;
+    }
+  }
+  return found;
 }
 
 function optionalAttribute(map: Map<string, string>, name: string): string | null {
@@ -149,7 +187,7 @@ export function inspectNote(html: string): InspectedNote {
     stylesheetHrefs,
     anchors,
     images,
-    wikilinks: [...html.matchAll(/\[\[[^\]\r\n]+\]\]/g)].map((match) => match[0]),
+    wikilinks: findWikilinks(html),
     dues,
     priorities,
     hasArticle: /<article\b[^>]*>/i.test(html),

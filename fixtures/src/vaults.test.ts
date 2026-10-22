@@ -240,6 +240,26 @@ describe('note inspector', () => {
     expect(note.dues).toEqual(['2026-10-22']);
     expect(note.priorities).toEqual(['medium']);
   });
+
+  it('drops tags from anchor text and keeps only closed wikilinks', () => {
+    const note = inspectNote(`<!doctype html>
+<html lang="es">
+  <body>
+    <p><a href="nota.html" data-g-to="${NOTE_X.id}">Nota <em>X</em> <script</a></p>
+    <p>[[Destino enlace]] [[Destino enlace|texto]] [[[Sección]]</p>
+    <p>[[sin cierre</p>
+    <p>[[con
+salto]]</p>
+  </body>
+</html>
+`);
+    expect(note.anchors[0]?.text).toBe('Nota X');
+    expect(note.wikilinks).toEqual([
+      '[[Destino enlace]]',
+      '[[Destino enlace|texto]]',
+      '[[[Sección]]',
+    ]);
+  });
 });
 
 describe('vault skeleton', () => {
