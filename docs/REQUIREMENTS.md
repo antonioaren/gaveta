@@ -281,6 +281,8 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_PATH_OUTSIDE_VAULT` | La ruta sale del vault |
 | `E_CONFIG_INVALID` | `.gaveta/config.json` no existe, no es JSON o no cumple el esquema |
 | `E_PATH_EXISTS` | El destino de `new` o `mv` ya existe |
+| `E_SKILL_PATH` | La ruta de instalación de la skill no es válida (traversal o enlace simbólico) |
+| `E_SKILL_MODIFIED` | La skill instalada fue editada a mano y no se sobrescribe sin `--force` |
 | `E_HAS_BACKLINKS` | `rm` sin `--force` de una nota con backlinks |
 | `E_CONFLICT` | `--if-match` no coincide |
 | `E_SECTION_NOT_FOUND` | El id de sección no existe en la nota |
@@ -303,6 +305,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_RUNTIME_UNSUPPORTED` | Node o SQLite del sistema no cumplen el mínimo (por ejemplo, falta FTS5) |
 | `E_INDEX_CORRUPT` | El índice SQLite está dañado y no se ha podido rehacer |
 | `W_INDEX_RECOVERED` | El índice estaba dañado o era de una versión incompatible y se ha creado de nuevo |
+| `W_SKILL_OUTDATED` | La copia instalada de la skill es más antigua que la CLI actual |
 
 **Localización del vault:** `--vault <dir>`, después la variable de entorno `GAVETA_VAULT` y, por último, una búsqueda ascendente de `.gaveta/` desde el directorio actual.
 

@@ -168,6 +168,20 @@ export const DIAGNOSTICS = {
     message: 'El destino ya existe.',
     hint: 'Hay que elegir otra ruta.',
   },
+  E_SKILL_PATH: {
+    severity: 'error',
+    exitCode: 1,
+    escalatesToError: false,
+    message: 'La ruta de instalación de la skill no es válida.',
+    hint: 'No uses .. ni enlaces simbólicos que salgan del directorio del proyecto o del usuario.',
+  },
+  E_SKILL_MODIFIED: {
+    severity: 'error',
+    exitCode: 1,
+    escalatesToError: false,
+    message: 'La skill instalada fue modificada manualmente.',
+    hint: 'Vuelve a instalar con --force si quieres sobrescribirla.',
+  },
   E_HAS_BACKLINKS: {
     severity: 'error',
     exitCode: 2,
@@ -322,6 +336,13 @@ export const DIAGNOSTICS = {
     escalatesToError: false,
     message: 'El índice estaba dañado o era incompatible y se ha creado de nuevo.',
     hint: 'Los archivos no se han modificado. gaveta reindex lo vuelve a llenar.',
+  },
+  W_SKILL_OUTDATED: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'La skill instalada es más antigua que esta versión de la CLI.',
+    hint: 'Ejecuta gaveta skill install para actualizarla.',
   },
 } as const satisfies Record<string, DiagnosticSpec>;
 

@@ -100,7 +100,7 @@ it('prints a Spanish init envelope and leaves an existing note untouched', async
         root: await realpath(root),
         created: ['.gaveta/config.json', '.gaveta/theme.css', '.gaveta/index.sqlite'],
         preserved: [],
-        agentInstructions: null,
+        agentInstructions: [],
       },
       warnings: [],
     });
@@ -115,7 +115,7 @@ it('prints a Spanish init envelope and leaves an existing note untouched', async
       data: {
         created: [],
         preserved: ['.gaveta/config.json', '.gaveta/theme.css', '.gaveta/index.sqlite'],
-        agentInstructions: null,
+        agentInstructions: [],
       },
     });
 
@@ -138,7 +138,9 @@ it('writes one idempotent agent block and rejects later targets', async () => {
       EXIT_CODES.ok,
     );
     expect(JSON.parse(first.stdout())).toMatchObject({
-      data: { agentInstructions: { target: 'agents', path: 'AGENTS.md', changed: true } },
+      data: {
+        agentInstructions: [{ target: 'agents', path: 'AGENTS.md', changed: true }],
+      },
     });
     const text = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect(text).toContain('# Proyecto');
@@ -151,21 +153,17 @@ it('writes one idempotent agent block and rejects later targets', async () => {
       EXIT_CODES.ok,
     );
     expect(JSON.parse(second.stdout())).toMatchObject({
-      data: { agentInstructions: { changed: false } },
+      data: { agentInstructions: [{ changed: false }] },
     });
     expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toBe(text);
 
-    const rejected = capture({ cwd: root, env: {} });
-    expect(
-      await runCli(argv('--json', 'init', '--agent-instructions', 'cursor'), rejected.io),
-    ).toBe(EXIT_CODES.usage);
-    expect(JSON.parse(rejected.stdout())).toMatchObject({
-      ok: false,
-      schemaVersion: 1,
-      command: 'init',
-      error: { code: 'E_ARG_INVALID' },
+    const cursor = capture({ cwd: root, env: {} });
+    expect(await runCli(argv('init', '--agent-instructions', 'cursor', '--json'), cursor.io)).toBe(
+      EXIT_CODES.ok,
+    );
+    expect(JSON.parse(cursor.stdout())).toMatchObject({
+      data: { agentInstructions: [{ target: 'cursor', path: '.cursor/rules/gaveta.mdc' }] },
     });
-    expect(rejected.stderr()).toBe('');
   });
 });
 

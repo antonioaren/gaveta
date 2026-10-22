@@ -1,0 +1,39 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`snapshots cursor and copilot instruction files > copilot-instructions 1`] = `
+"# Repo
+
+<!-- gaveta:start -->
+## Gaveta
+
+Este directorio es un vault de Gaveta. Las notas son archivos HTML y los enlaces entre ellas son el producto.
+
+- Busca antes de crear (\`gaveta search\`).
+- Lee el contexto con \`gaveta backlinks\` y \`gaveta graph --depth 1\`.
+- Escribe con \`gaveta new\` o \`gaveta edit --from -\` y enlaza con \`[[Título]]\`.
+- Comprueba con \`gaveta validate\` antes de dar por cerrado un lote de cambios.
+- Usa \`--json\` y \`--if-match\` al escribir.
+- El contrato completo está en \`gaveta guide\`. No lo copies en las notas ni en el chat.
+<!-- gaveta:end -->
+"
+`;
+
+exports[`snapshots cursor and copilot instruction files > cursor-rule 1`] = `
+"---
+description: Instrucciones de Gaveta para agentes en este vault
+alwaysApply: true
+---
+<!-- gaveta:start -->
+## Gaveta
+
+Este directorio es un vault de Gaveta. Las notas son archivos HTML y los enlaces entre ellas son el producto.
+
+- Busca antes de crear (\`gaveta search\`).
+- Lee el contexto con \`gaveta backlinks\` y \`gaveta graph --depth 1\`.
+- Escribe con \`gaveta new\` o \`gaveta edit --from -\` y enlaza con \`[[Título]]\`.
+- Comprueba con \`gaveta validate\` antes de dar por cerrado un lote de cambios.
+- Usa \`--json\` y \`--if-match\` al escribir.
+- El contrato completo está en \`gaveta guide\`. No lo copies en las notas ni en el chat.
+<!-- gaveta:end -->
+"
+`;

@@ -83,7 +83,7 @@ it('initializes a vault from the binary and stays idempotent', () => {
       ok: boolean;
       schemaVersion: number;
       command: string;
-      data: { root: string; created: string[]; preserved: string[]; agentInstructions: null };
+      data: { root: string; created: string[]; preserved: string[]; agentInstructions: [] };
     };
     expect(body).toMatchObject({
       ok: true,
@@ -93,7 +93,7 @@ it('initializes a vault from the binary and stays idempotent', () => {
         root: realpathSync(directory),
         created: ['.gaveta/config.json', '.gaveta/theme.css', '.gaveta/index.sqlite'],
         preserved: [],
-        agentInstructions: null,
+        agentInstructions: [],
       },
     });
     expect(readFileSync(join(directory, 'keep.html'), 'utf8')).toBe(html);
@@ -154,13 +154,11 @@ it('writes one agent block and adopts hostile HTML into the index', () => {
     expect(repeat.status).toBe(0);
     expect(readFileSync(join(directory, 'CLAUDE.md'), 'utf8')).toBe(claude);
 
-    const rejected = run(['init', '--agent-instructions', 'all', '--json'], { cwd: directory });
-    expect(rejected.status).toBe(1);
-    expect(JSON.parse(rejected.stdout)).toMatchObject({
-      ok: false,
-      schemaVersion: 1,
-      error: { code: 'E_ARG_INVALID' },
-    });
+    const all = run(['init', '--agent-instructions', 'all', '--json'], { cwd: directory });
+    expect(all.status).toBe(0);
+    expect(readFileSync(join(directory, '.github/copilot-instructions.md'), 'utf8')).toContain(
+      '<!-- gaveta:start -->',
+    );
 
     const adopted = run(['adopt', 'nota.html', '--json'], { cwd: directory });
     expect(adopted.status).toBe(0);

@@ -38,7 +38,7 @@ it('creates config, theme, and an empty index without touching existing html', a
       '.gaveta/index.sqlite',
     ]);
     expect(created.preserved).toEqual([]);
-    expect(created.agentInstructions).toBeNull();
+    expect(created.agentInstructions).toEqual([]);
     expect(
       parseVaultConfig(JSON.parse(await readFile(join(root, '.gaveta/config.json'), 'utf8'))),
     ).toEqual(createDefaultVaultConfig());
@@ -120,11 +120,9 @@ it('creates the target directory and writes agent instructions only inside it', 
     });
     const root = join(parent, 'nuevo', 'vault');
     expect(result.root).toBe(await realpath(root));
-    expect(result.agentInstructions).toEqual({
-      target: 'agents',
-      path: 'AGENTS.md',
-      changed: true,
-    });
+    expect(result.agentInstructions).toEqual([
+      { target: 'agents', path: 'AGENTS.md', changed: true },
+    ]);
     const text = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect(countOf(text, AGENT_BLOCK_START)).toBe(1);
     expect(countOf(text, AGENT_BLOCK_END)).toBe(1);
@@ -138,11 +136,9 @@ it('creates the target directory and writes agent instructions only inside it', 
       directory: 'nuevo/vault',
       agentInstructions: 'agents',
     });
-    expect(again.agentInstructions).toEqual({
-      target: 'agents',
-      path: 'AGENTS.md',
-      changed: false,
-    });
+    expect(again.agentInstructions).toEqual([
+      { target: 'agents', path: 'AGENTS.md', changed: false },
+    ]);
     expect(await readFile(join(root, 'AGENTS.md'))).toEqual(bytes);
     expect(countOf(await readFile(join(root, 'AGENTS.md'), 'utf8'), AGENT_BLOCK_START)).toBe(1);
   });
@@ -189,15 +185,27 @@ it('does not create instruction files unless asked', async () => {
   });
 });
 
-it('rejects agent targets that belong to a later task', async () => {
+it('rejects unknown agent instruction targets', async () => {
   await withTemp(async (parent) => {
     const root = join(parent, 'vault');
     await mkdir(root);
-    for (const target of ['cursor', 'copilot', 'all', '']) {
-      await expect(initVault({ cwd: root, agentInstructions: target })).rejects.toMatchObject({
-        code: 'E_ARG_INVALID',
-      });
-    }
+    await expect(initVault({ cwd: root, agentInstructions: '' })).rejects.toMatchObject({
+      code: 'E_ARG_INVALID',
+    });
     expect(await readdir(root)).toEqual([]);
+  });
+});
+
+it('writes all agent instruction files when asked for all', async () => {
+  await withTemp(async (parent) => {
+    const root = join(parent, 'vault');
+    await mkdir(root);
+    const result = await initVault({ cwd: root, agentInstructions: 'all' });
+    expect(result.agentInstructions.map((entry) => entry.path).sort()).toEqual([
+      '.cursor/rules/gaveta.mdc',
+      '.github/copilot-instructions.md',
+      'AGENTS.md',
+      'CLAUDE.md',
+    ]);
   });
 });

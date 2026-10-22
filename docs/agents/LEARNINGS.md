@@ -48,7 +48,10 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · T2.12 · Scanning for `[[…]]` also matches `![[…]]` image and transclusion embeds. · Skip a wikilink when the character before `[[` is `!`.
 - 2026-10-22 · T2.12 · A CI job can show every step green yet stay `in_progress` on the check (ubuntu `typecheck`); `pnpm typecheck` locally finishes in seconds and `fixtures/tsconfig` only includes `src`. · Rebase and push to re-run; keep `exclude: ["markdown"]` on the fixtures package so `.md` trees never join `tsc`.
 - 2026-10-22 · T1.22 · `buildSkill` bytes rarely match committed `skills/gaveta/*.md` because Prettier reflows prose and inserts a blank line after YAML front matter. · Fingerprint the bundle after `prettier.format` in `tests/skill.test.ts`, or regenerate and run `pnpm format` before committing.
+<<<<<<< HEAD
 - 2026-10-22 · T2.15 · parse5 `serialize(element)` drops the outer tag; feeding that fragment to rehype turns `<h1>` into plain text. · Wrap with `serializeOuter` before `rehype-parse`. Dashboard, design `g-frame`, artifact `iframe`, and custom components export as embedded HTML with `W_EXPORT_LOSSY`; link `rel` and task `data-g-priority` go under `gaveta:` in front matter. GFM table alignment and import-only task date formats (✅/⏳/`[completion::]`) are lossy on md→html→md.
+=======
+>>>>>>> 1a9fd22 (feat(cli): install Gaveta agent skill and extend init instructions (T1.23))
 - 2026-10-22 · T1.21 · `guide` must not import `commands` from `registry.ts` (circular load). · Register with `createGuideCommand(peerCommands)` so the guide lists peers plus itself without importing the full registry.
 - 2026-10-22 · T1.21 · If only GitGuardian appears on a PR, check for merge conflicts first. · Rebase on `main` until `mergeable_state` is clean; GitHub skips the CI workflow on conflicting PRs.
 - 2026-10-22 · T2.13 · ESLint `no-misleading-character-class` rejects calendar emojis inside `[…]` in task-date regexes. · Match `\u{1F4C5}` / `\u{1F5D3}` explicitly instead of literal emoji in a class.

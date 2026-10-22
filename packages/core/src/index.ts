@@ -200,6 +200,37 @@ export { initVault } from './vault/init.ts';
 
 export type { AgentInstructionResult, InitVaultOptions, InitVaultResult } from './vault/init.ts';
 
+export {
+  AGENT_INSTRUCTION_TARGETS,
+  agentInstructionRelativePath,
+  expandAgentInstructionTargets,
+  isAgentInstructionTarget,
+  mergeAgentInstructionFile,
+  type AgentInstructionTarget,
+} from './vault/agent-instructions.ts';
+
+export {
+  SKILL_SCOPES,
+  SKILL_TARGETS,
+  compareCliVersions,
+  expandSkillTargets,
+  isSkillScope,
+  isSkillTarget,
+  parseInstalledSkillVersion,
+  resolveInsideAnchor,
+  skillDirectoryRelative,
+  skillInstall,
+  skillStatus,
+  type SkillInstallOptions,
+  type SkillInstallResult,
+  type SkillInstallState,
+  type SkillLocationReport,
+  type SkillScope,
+  type SkillStatusOptions,
+  type SkillStatusResult,
+  type SkillTarget,
+} from './skill-install.ts';
+
 export { resolveInitDirectory } from './vault/init-target.ts';
 
 export type { ResolveInitDirectoryOptions } from './vault/init-target.ts';

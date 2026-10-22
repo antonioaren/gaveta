@@ -137,6 +137,7 @@ it('runs registry command examples against a prepared vault', () => {
       'mv',
       'rm',
       'guide',
+      'skill',
       'todo',
       'validate',
       'link',
