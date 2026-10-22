@@ -103,7 +103,7 @@ flowchart TB
 - [ ] **T1.23 Instalación de la skill por agente.** `gaveta skill install --target claude|cursor|codex|copilot|all [--scope project|user]` y `gaveta skill status`. Además, `init --agent-instructions` con un bloque corto en `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/gaveta.mdc` y `.github/copilot-instructions.md`. Cubre: REQ-AGENT-02 a 04, REQ-VAULT-02. Depende de: T1.22, T1.14.
 - [ ] **T1.26 Prueba de la skill en varios agentes.** La misma tarea de documentación ("documenta este repo en Gaveta, conectando las notas") ejecutada con Claude Code, Cursor, Codex y GitHub Copilot usando solo la skill instalada. Se registra qué agentes la cargan, la tasa de éxito a la primera y los fallos de cada uno, en `docs/gates/fase-1-agentes.md`. Depende de: T1.23.
 - [ ] **T1.24 Prueba de la puerta 1.** Una sesión guionizada con Claude Code (con la skill instalada) sobre un vault vacío que genera al menos 20 notas (documentos, una presentación y listas de tareas) y registra la tasa de éxito a la primera, los enlaces por nota y el resultado de `doctor` tras varios `mv` y `rm`. Los resultados se guardan en `docs/gates/fase-1.md`. Depende de: T1.23.
-- [ ] **T1.25 Tests E2E de la fase 1.** Un test por cada criterio de aceptación P0 de la fase 1, incluido el de `file://` con Playwright (REQ-VAULT-05). Depende de: T1.21.
+- [x] **T1.25 Tests E2E de la fase 1.** Un test por cada criterio de aceptación P0 de la fase 1, incluido el de `file://` con Playwright (REQ-VAULT-05). Depende de: T1.21.
 
 ## Mejoras
 
