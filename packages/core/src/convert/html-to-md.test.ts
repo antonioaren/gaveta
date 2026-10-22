@@ -242,6 +242,16 @@ describe('convertHtmlToMarkdown', () => {
     expect(exported.markdown).toContain('<gaveta-kpi');
   });
 
+  it('round-trips mermaid fences through md → html → md', () => {
+    expectRoundTrip('contenido/mermaid.md');
+    const exported = convertHtmlToMarkdown(fixtureHtml('contenido/mermaid.md'), {
+      notePath: 'contenido/mermaid.html',
+    });
+    expect(exported.markdown).toContain('```mermaid');
+    const again = convertMarkdownToHtml(exported.markdown, { sourcePath: 'contenido/mermaid.md' });
+    expect(again.body).toContain('<pre class="mermaid">');
+  });
+
   it('round-trips supported fixture notes through md → html → md', () => {
     const reversible = [
       'metadatos/front-matter-completo.md',

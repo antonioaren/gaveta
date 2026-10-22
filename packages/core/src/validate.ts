@@ -322,7 +322,7 @@ function visit(frame: Frame, tag: string, classes: readonly string[], report: Re
     return;
   }
   if (tag === 'script') {
-    if (frame.parentTag !== 'head' || !isTrustedMermaidScript(element)) {
+    if (frame.parentTag !== 'head' || !isTrustedMermaidScript(element, report.basePath)) {
       return;
     }
     validateMermaidScript(element, location, report);
@@ -491,7 +491,7 @@ function validateMermaidScript(
   location: SourceLocation | null,
   report: Report,
 ): void {
-  if (!isTrustedMermaidScript(element)) {
+  if (!isTrustedMermaidScript(element, report.basePath)) {
     report.diagnostics.push(makeDiagnostic('E_UNSAFE_SCRIPT', location, { element: 'script' }));
     return;
   }

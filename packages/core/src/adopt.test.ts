@@ -261,7 +261,8 @@ it('adopts a Claude doc with Mermaid and drops CDN loaders', async () => {
     const html = await readFile(join(root, 'arquitectura.html'), 'utf8');
     expect(html).toContain('data-gaveta="mermaid-lib"');
     expect(html).not.toContain('cdn.jsdelivr.net');
-    expect(html).toContain('<pre class="mermaid">');
+    expect(html).toContain('class="mermaid"');
+    expect(html).toContain('data-g-mermaid="');
     expect(validateNote(html, { notePath: 'arquitectura.html' }).ok).toBe(true);
   });
 });

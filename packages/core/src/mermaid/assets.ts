@@ -23,6 +23,11 @@ export const MERMAID_BOOT_ROLE = 'mermaid-boot';
 
 export const MERMAID_META = 'gaveta:mermaid';
 
+/** Canonical diagram source preserved for theme re-renders (data-g-* contract). */
+export const MERMAID_SOURCE_ATTR = 'data-g-mermaid';
+
+const MERMAID_SCRIPT_ATTRS = new Set(['defer', 'src', MERMAID_SCRIPT_ATTR]);
+
 const themeDir = join(import.meta.dirname, '..', 'theme');
 
 /** Pinned Mermaid bundle shipped with the vault (see MERMAID-LICENSE.txt). */
@@ -47,4 +52,13 @@ export function isMermaidAssetHref(href: string, basename: string): boolean {
     rest = rest.slice(3);
   }
   return rest === `${MERMAID_DIRECTORY}/${basename}`;
+}
+
+export function expectedMermaidScriptSrc(notePath: string, role: string): string {
+  const basename = role === MERMAID_LIB_ROLE ? MERMAID_MIN_BASENAME : MERMAID_BOOT_BASENAME;
+  return mermaidAssetHref(notePath, basename);
+}
+
+export function isAllowedMermaidScriptAttribute(name: string): boolean {
+  return MERMAID_SCRIPT_ATTRS.has(name.toLowerCase());
 }

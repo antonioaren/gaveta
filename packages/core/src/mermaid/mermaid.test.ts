@@ -5,7 +5,7 @@ import {
   MERMAID_BOOT_ROLE,
   MERMAID_LIB_ROLE,
   MERMAID_SCRIPT_ATTR,
-  mermaidAssetHref,
+  expectedMermaidScriptSrc,
 } from './assets.ts';
 import {
   buildMermaidPre,
@@ -126,16 +126,17 @@ describe('normalizeMermaidInTree', () => {
 
 describe('isTrustedMermaidScript', () => {
   it('accepts vendored defer scripts with data-gaveta roles', () => {
+    const notePath = 'notes/diagrama.html';
     const lib = element(
-      `<script defer ${MERMAID_SCRIPT_ATTR}="${MERMAID_LIB_ROLE}" src="${mermaidAssetHref('notes/diagrama.html', 'mermaid.min.js')}"></script>`,
+      `<script defer ${MERMAID_SCRIPT_ATTR}="${MERMAID_LIB_ROLE}" src="${expectedMermaidScriptSrc(notePath, MERMAID_LIB_ROLE)}"></script>`,
       'script',
     );
     const boot = element(
-      `<script defer ${MERMAID_SCRIPT_ATTR}="${MERMAID_BOOT_ROLE}" src="${mermaidAssetHref('notes/diagrama.html', 'mermaid-boot.js')}"></script>`,
+      `<script defer ${MERMAID_SCRIPT_ATTR}="${MERMAID_BOOT_ROLE}" src="${expectedMermaidScriptSrc(notePath, MERMAID_BOOT_ROLE)}"></script>`,
       'script',
     );
-    expect(isTrustedMermaidScript(lib)).toBe(true);
-    expect(isTrustedMermaidScript(boot)).toBe(true);
+    expect(isTrustedMermaidScript(lib, notePath)).toBe(true);
+    expect(isTrustedMermaidScript(boot, notePath)).toBe(true);
   });
 
   it('rejects arbitrary script tags', () => {

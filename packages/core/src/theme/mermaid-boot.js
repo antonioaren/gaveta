@@ -13,13 +13,27 @@
     return 'light';
   }
 
-  function configure() {
+  function storedSource(block) {
+    return block.getAttribute('data-g-mermaid');
+  }
+
+  function restoreSource(block) {
+    var stored = storedSource(block);
+    if (stored === null) {
+      block.setAttribute('data-g-mermaid', block.textContent);
+      return;
+    }
+    block.textContent = stored;
+    block.removeAttribute('data-processed');
+  }
+
+  function renderAll() {
     if (!window.mermaid) {
       return;
     }
     var dark = resolvedTheme() === 'dark';
     window.mermaid.initialize({
-      startOnLoad: true,
+      startOnLoad: false,
       securityLevel: 'strict',
       theme: dark ? 'dark' : 'default',
     });
@@ -27,19 +41,22 @@
     if (blocks.length === 0) {
       return;
     }
+    for (var index = 0; index < blocks.length; index += 1) {
+      restoreSource(blocks[index]);
+    }
     window.mermaid.run({ nodes: blocks }).catch(function () {
       /* Source stays visible when rendering fails. */
     });
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', configure);
+    document.addEventListener('DOMContentLoaded', renderAll);
   } else {
-    configure();
+    renderAll();
   }
 
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', configure);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
   new MutationObserver(function () {
-    configure();
+    renderAll();
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();

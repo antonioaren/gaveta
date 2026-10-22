@@ -5,6 +5,9 @@ import {
   MERMAID_BOOT_ROLE,
   MERMAID_MIN_BASENAME,
   MERMAID_SCRIPT_ATTR,
+  MERMAID_SOURCE_ATTR,
+  expectedMermaidScriptSrc,
+  isAllowedMermaidScriptAttribute,
   isMermaidAssetHref,
 } from './assets.ts';
 
@@ -81,11 +84,15 @@ export function readMermaidSourceFromDiv(element: ParseElement): string | null {
 }
 
 export function buildMermaidPre(source: string): NormElement {
+  const sanitized = sanitizeMermaidSource(source);
   return {
     kind: 'element',
     tag: 'pre',
-    attrs: [{ name: 'class', value: MERMAID_CLASS }],
-    children: [{ kind: 'text', value: sanitizeMermaidSource(source) }],
+    attrs: [
+      { name: 'class', value: MERMAID_CLASS },
+      { name: MERMAID_SOURCE_ATTR, value: sanitized },
+    ],
+    children: [{ kind: 'text', value: sanitized }],
     void: false,
   };
 }
@@ -153,23 +160,39 @@ function convertMermaidElement(node: NormElement): NormElement | null {
   return null;
 }
 
-export function isTrustedMermaidScript(element: ParseElement): boolean {
+export function isTrustedMermaidScript(element: ParseElement, notePath?: string | null): boolean {
   if (element.tagName.toLowerCase() !== 'script') {
     return false;
+  }
+  if (element.attrs.length !== 3) {
+    return false;
+  }
+  for (const attr of element.attrs) {
+    const name = attr.name.toLowerCase();
+    if (!isAllowedMermaidScriptAttribute(name)) {
+      return false;
+    }
   }
   const role = attribute(element, MERMAID_SCRIPT_ATTR);
   if (role !== MERMAID_LIB_ROLE && role !== MERMAID_BOOT_ROLE) {
     return false;
   }
-  const src = attribute(element, 'src');
-  if (src === null) {
-    return false;
-  }
-  const expected = role === MERMAID_LIB_ROLE ? MERMAID_MIN_BASENAME : MERMAID_BOOT_BASENAME;
-  if (!isMermaidAssetHref(src, expected)) {
-    return false;
-  }
   if (!hasAttribute(element, 'defer')) {
+    return false;
+  }
+  const src = attribute(element, 'src');
+  if (src === null || src.length === 0) {
+    return false;
+  }
+  if (src.includes('://') || src.includes('//') || src.includes('\\')) {
+    return false;
+  }
+  const basename = role === MERMAID_LIB_ROLE ? MERMAID_MIN_BASENAME : MERMAID_BOOT_BASENAME;
+  if (notePath !== undefined && notePath !== null) {
+    if (src !== expectedMermaidScriptSrc(notePath, role)) {
+      return false;
+    }
+  } else if (!isMermaidAssetHref(src, basename)) {
     return false;
   }
   return rawPreText(element.childNodes).trim().length === 0;

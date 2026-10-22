@@ -476,7 +476,8 @@ describe('normalizeNote mermaid', () => {
     expect(html).toContain('data-gaveta="mermaid-lib"');
     expect(html).toContain('data-gaveta="mermaid-boot"');
     expect(html).toContain('src="../.gaveta/mermaid.min.js"');
-    expect(html).toContain('<pre class="mermaid">');
+    expect(html).toContain('<pre class="mermaid"');
+    expect(html).toContain('data-g-mermaid="');
     expect(html).not.toContain('language-mermaid');
     expect(validateNote(html, { notePath: 'docs/diagramas.html' }).ok).toBe(true);
   });
