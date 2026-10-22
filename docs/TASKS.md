@@ -23,10 +23,10 @@ flowchart LR
 
 | Fase | Objetivo | Puerta de salida |
 | --- | --- | --- |
-| 0 | Repo, herramientas y decisiones bloqueantes | DEC-01 y DEC-04 aprobadas |
-| 1 | Núcleo y CLI: el agente escribe notas conectadas | **Puerta 1:** un agente (Claude Code) crea al menos 20 notas conectadas usando solo `gaveta guide`. ≥ 95 % de los comandos de escritura pasan a la primera y `doctor` reporta 0 rotos tras `mv` y `rm`. |
+| 0 | Repo, herramientas y decisiones | Decisiones aprobadas (hecho), monorepo y CI en verde |
+| 1 | Núcleo, CLI y skill: cualquier agente escribe notas conectadas | **Puerta 1:** un agente (Claude Code) crea al menos 20 notas conectadas usando solo la skill y `gaveta guide`. ≥ 95 % de los comandos de escritura pasan a la primera y `doctor` reporta 0 rotos tras `mv` y `rm`. |
 | 2 | App de solo lectura sobre el núcleo, e importación y exportación de Markdown por CLI | **Puerta 2:** una semana de uso diario con el agente. Latencia CLI → vista p95 < 500 ms, 0 incidencias de seguridad en el render, y una carpeta Markdown real importada con 0 enlaces rotos. |
-| 3 | Editor visual y de código | **Puerta 3:** el 100 % de las notas editadas en la app pasan `validate`, y abrir y guardar sin cambios no altera ningún archivo. |
+| 3 | CRUD completo en la app: crear, editar (visual y código), mover, renombrar y borrar | **Puerta 3:** el 100 % de las notas editadas en la app pasan `validate`, abrir y guardar sin cambios no altera ningún archivo, y cada operación de CRUD de la app produce el mismo archivo que su equivalente en la CLI. |
 | 4 | Requisitos P1 | — |
 
 ## Arquitectura del repositorio (objetivo)
@@ -38,9 +38,9 @@ gaveta/
 │   ├── cli/         # binario gaveta / gv (commander), salida humana y --json
 │   └── server/      # API local (Fastify) + watcher + WebSocket
 ├── apps/
-│   └── web/         # React + Vite: visor (fase 2) y editor (fase 3)
-├── integrations/
-│   └── claude-code/ # bloque CLAUDE.md, comando slash y, en fase 4, configuración MCP
+│   └── web/         # React + Vite: visor (fase 2) y CRUD con editor (fase 3)
+├── skills/
+│   └── gaveta/      # SKILL.md (Agent Skills) para Claude Code, Cursor, Codex y Copilot
 ├── fixtures/        # vaults de prueba
 └── docs/            # PRD, requisitos y tareas
 ```
@@ -49,8 +49,9 @@ gaveta/
 flowchart TB
   Cli["packages/cli"] --> Core["packages/core"]
   Server["packages/server"] --> Core
-  Web["apps/web"] -->|"HTTP + WS"| Server
-  Integrations["integrations/claude-code"] -->|"invoca"| Cli
+  Web["apps/web"] -->|"HTTP + WS: lectura y CRUD"| Server
+  Skill["skills/gaveta"] -->|"enseña a usar"| Cli
+  Agents["Claude Code, Cursor, Codex, Copilot"] -->|"cargan"| Skill
 ```
 
 **Stack propuesto (DEC-01):** TypeScript, Node ≥ 20, pnpm workspaces, `parse5` (parser HTML según el estándar), `better-sqlite3` (índice con FTS5), `ulid`, `commander`, `chokidar`, Fastify, React + Vite, TipTap y CodeMirror 6 (fase 3), Vitest y Playwright.
@@ -59,7 +60,7 @@ flowchart TB
 
 ## Fase 0 — Fundaciones
 
-- [ ] **T0.1 Aprobar las decisiones bloqueantes.** Revisar y aprobar DEC-01 (lenguaje) y DEC-04 (HTML completo). Registrar el resultado en `REQUIREMENTS.md`. El resto de decisiones (DEC-02, 03, 05 y 06) se pueden aprobar más tarde.
+- [x] **T0.1 Aprobar las decisiones.** DEC-01 a DEC-08 aprobadas el 2026-10-22 y registradas en `REQUIREMENTS.md`.
 - [ ] **T0.2 Monorepo.** pnpm workspaces, TypeScript estricto, ESLint y Prettier, Vitest, y los paquetes vacíos `core`, `cli`, `server` y `web`. Depende de: T0.1.
 - [ ] **T0.3 CI.** GitHub Actions con lint, typecheck y tests en Linux, macOS y Windows (REQ-NFR-05). Depende de: T0.2.
 - [ ] **T0.4 Vaults de prueba.** En `fixtures/`: un vault vacío, uno con 20 notas que enlazan a X (para REQ-LINK-09), uno con un problema de cada tipo (para REQ-LINK-11), notas maliciosas (para REQ-SEC-01 y 02) y un generador de vaults de 1000 y 5000 notas (para REQ-NFR). Depende de: T0.2.
@@ -98,9 +99,10 @@ flowchart TB
 
 ### 1D. Integración con Claude Code (validación de la puerta 1)
 
-- [ ] **T1.22 Instrucciones para el agente.** Contenido del bloque que inserta `init --agent-instructions`: cuándo usar Gaveta, buscar antes de crear, enlazar con `[[…]]`, usar `--json` y `--if-match`, y empezar siempre por `gaveta guide`. Depende de: T1.21.
-- [ ] **T1.23 Comando slash de Claude Code.** `integrations/claude-code/commands/gaveta.md` (`/gaveta <petición>`): buscar notas relacionadas, leer el contexto (`backlinks` y `graph --depth 1`) y crear o ampliar la nota con `gaveta new|edit --from -`. Incluye `gaveta init --agent-instructions claude --install-commands`, que lo copia a `.claude/commands/`. Depende de: T1.22.
-- [ ] **T1.24 Prueba de la puerta 1.** Una sesión guionizada con Claude Code sobre un vault vacío que genera al menos 20 notas (documentos, una presentación y listas de tareas) y registra la tasa de éxito a la primera, los enlaces por nota y el resultado de `doctor` tras varios `mv` y `rm`. Los resultados se guardan en `docs/gates/fase-1.md`. Depende de: T1.23.
+- [ ] **T1.22 Skill de Gaveta.** `skills/gaveta/SKILL.md` en formato Agent Skills, más referencias breves (flujo de trabajo, ejemplos por tipo de nota). Explica cuándo usar Gaveta, buscar antes de crear, leer el contexto (`backlinks` y `graph --depth 1`), escribir con `new` o `edit --from -`, enlazar con `[[…]]`, usar `--json` y `--if-match`, validar, y remitir a `gaveta guide` para el contrato. Se genera desde el mismo origen que `guide`. Cubre: REQ-AGENT-01, REQ-AGENT-04 y 05. Depende de: T1.21.
+- [ ] **T1.23 Instalación de la skill por agente.** `gaveta skill install --target claude|cursor|codex|copilot|all [--scope project|user]` y `gaveta skill status`. Además, `init --agent-instructions` con un bloque corto en `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/gaveta.mdc` y `.github/copilot-instructions.md`. Cubre: REQ-AGENT-02 a 04, REQ-VAULT-02. Depende de: T1.22, T1.14.
+- [ ] **T1.26 Prueba de la skill en varios agentes.** La misma tarea de documentación ("documenta este repo en Gaveta, conectando las notas") ejecutada con Claude Code, Cursor, Codex y GitHub Copilot usando solo la skill instalada. Se registra qué agentes la cargan, la tasa de éxito a la primera y los fallos de cada uno, en `docs/gates/fase-1-agentes.md`. Depende de: T1.23.
+- [ ] **T1.24 Prueba de la puerta 1.** Una sesión guionizada con Claude Code (con la skill instalada) sobre un vault vacío que genera al menos 20 notas (documentos, una presentación y listas de tareas) y registra la tasa de éxito a la primera, los enlaces por nota y el resultado de `doctor` tras varios `mv` y `rm`. Los resultados se guardan en `docs/gates/fase-1.md`. Depende de: T1.23.
 - [ ] **T1.25 Tests E2E de la fase 1.** Un test por cada criterio de aceptación P0 de la fase 1, incluido el de `file://` con Playwright (REQ-VAULT-05). Depende de: T1.21.
 
 ## Fase 2 — Visor de solo lectura e importación y exportación de Markdown
@@ -128,7 +130,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [ ] **T2.16 `gaveta export`.** Una nota, una carpeta o `--all`, conservando la jerarquía y los adjuntos. Cubre: REQ-MIG-08. Depende de: T2.15.
 - [ ] **T2.17 Comandos `import` y `export` en la CLI**, con su sobre `--json`, sus códigos de error y sus ejemplos en `gaveta guide`. Cubre: REQ-MIG-01 a 10, REQ-CLI-09. Depende de: T2.14, T2.16.
 - [ ] **T2.18 Tests de ida y vuelta** (Markdown → HTML → Markdown y HTML → Markdown → HTML) sobre los fixtures. Cubre: REQ-MIG-11. Depende de: T2.17.
-- [ ] **T2.19 Instrucciones para el agente.** Añadir al bloque de `CLAUDE.md` y al comando `/gaveta` cómo importar documentación Markdown existente y cómo exportarla. Depende de: T2.17, T1.23.
+- [ ] **T2.19 Skill: importar y exportar.** Añadir a la skill y a las instrucciones cómo importar documentación Markdown existente y cómo exportarla. Depende de: T2.17, T1.23.
 
 ### 2C. Puerta 2
 
@@ -144,8 +146,11 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [ ] **T3.6 Autocompletado de `[[`** en los dos modos. Cubre: REQ-APP-12. Depende de: T3.4, T3.5.
 - [ ] **T3.7 Conflictos.** Aviso y diff cuando la nota cambia fuera durante la edición. Cubre: REQ-APP-13. Depende de: T3.2, T2.2.
 - [ ] **T3.8 Renombrar, mover y borrar desde la app**, con diálogo de backlinks. Cubre: REQ-APP-14. Depende de: T3.2.
+- [ ] **T3.11 Crear notas desde la app.** Botón "Nueva nota" y atajo de teclado, con selección de tipo, carpeta, tags y título. También desde un nodo fantasma o un enlace pendiente, con el título ya rellenado. Cubre: REQ-APP-17. Depende de: T3.2.
+- [ ] **T3.12 Carpetas, tags y alias desde la app.** Crear, renombrar y borrar carpetas (reescribiendo los enlaces de las notas que contienen), y editar tags y alias desde el panel de la nota. Cubre: REQ-APP-18. Depende de: T3.8.
+- [ ] **T3.13 Paridad entre app y CLI.** Tests que ejecutan cada operación de CRUD desde la API de la app y desde la CLI, y comprueban que producen archivos idénticos. Cubre: REQ-APP-18, DEC-08. Depende de: T3.3 a T3.12.
 - [ ] **T3.10 Importar y exportar desde la app.** Arrastrar y soltar archivos o carpetas `.md` (o el menú "Importar") con una vista previa del `--dry-run` antes de confirmar, y "Exportar a Markdown" en una nota, en una carpeta y en el vault. Cubre: REQ-MIG-12. Depende de: T3.2, T2.17.
-- [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8, T3.10.
+- [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8, T3.10 a T3.13.
 
 ## Fase 4 — P1
 
@@ -177,6 +182,7 @@ flowchart LR
   T115 --> T121[T1.21]
   T121 --> T122[T1.22]
   T122 --> T123[T1.23]
+  T123 --> T126[T1.26]
   T123 --> T124["T1.24 Puerta 1"]
 ```
 
@@ -185,6 +191,7 @@ Se pueden trabajar en paralelo al camino crítico: T1.5 (tema), T1.11 (consultas
 ## Primeros cambios (este PR)
 
 - [x] `docs/PRD.md`: PRD limpio, con los diagramas de arquitectura, conexiones y roadmap reconstruidos en Mermaid.
-- [x] `docs/REQUIREMENTS.md`: requisitos trazables, decisiones propuestas, contrato de autoría y contrato de la CLI.
+- [x] `docs/REQUIREMENTS.md`: requisitos trazables, decisiones aprobadas (DEC-01 a DEC-08), contrato de autoría y contrato de la CLI.
 - [x] `docs/TASKS.md`: este plan.
-- [ ] Siguiente paso: T0.1 (aprobar DEC-01 y DEC-04) y, después, T0.2 (monorepo).
+- [x] T0.1: decisiones aprobadas.
+- [ ] Siguiente paso: T0.2 (monorepo).

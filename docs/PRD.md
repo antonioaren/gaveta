@@ -24,7 +24,7 @@ Oportunidad: un formato HTML con contrato claro, una CLI pensada para agentes y 
 
 1. **Archivos, no base de datos.** El vault es una carpeta de `.html`; el índice es una caché que se reconstruye.
 2. **La conexión es lo primero.** Ningún flujo (crear, mover, renombrar, borrar) puede dejar enlaces rotos sin avisar.
-3. **Agente primero, humano siempre.** Todo lo que hace la app se puede hacer por CLI con salida JSON; todo lo que escribe el agente se puede editar a mano.
+3. **Agente primero, humano siempre.** Todo lo que hace la app se puede hacer por CLI con salida JSON, y todo lo que escribe el agente se puede crear, editar, mover y borrar en la app. Las dos interfaces usan el mismo núcleo.
 4. **HTML semántico, estilo del vault.** Las notas usan los elementos y componentes del contrato; el aspecto lo pone el tema, no estilos inline.
 5. **Seguro por defecto.** El HTML se muestra aislado y sin scripts arbitrarios.
 
@@ -82,8 +82,9 @@ Un vault es una carpeta normal; Gaveta solo añade `.gaveta/` con configuración
 
 ```mermaid
 flowchart LR
-  Agent["Agente (Claude Code, Codex, script)"] --> Cli["CLI gaveta"]
-  App["App web (visor y editor)"] --> Serve["gaveta serve (API local)"]
+  Agent["Agente (Claude Code, Cursor, Copilot, Codex, script)"] --> Skill["Skill de Gaveta"]
+  Skill --> Cli["CLI gaveta"]
+  App["App web (visor y editor con CRUD)"] --> Serve["gaveta serve (API local)"]
   Cli --> Core["Núcleo: validador, resolutor de enlaces, escritura"]
   Serve --> Core
   Core --> Files["Vault: archivos .html"]
@@ -178,7 +179,15 @@ Los tags y las carpetas también organizan, pero no sustituyen al enlace: el gra
 
 ## CLI para agentes
 
-La CLI es la única vía de escritura del vault: la usan el agente, la app y los scripts del usuario, y todos comparten la misma validación.
+La CLI es la interfaz de los agentes, al estilo de `obsidian-cli`: la usan Claude Code, Cursor, GitHub Copilot, Codex o los scripts del usuario. La app no pasa por el binario, pero llama a las mismas operaciones del núcleo, de modo que nada escribe en el vault sin la misma validación y la misma protección de enlaces (DEC-08 en [REQUIREMENTS.md](REQUIREMENTS.md)).
+
+**Skill para agentes.** Gaveta trae una skill (`SKILL.md`, formato Agent Skills) que enseña a cualquier agente a documentar con la CLI:
+- Buscar antes de crear.
+- Leer el contexto de una nota.
+- Escribir con `[[…]]`.
+- Validar.
+
+`gaveta skill install --target claude|cursor|codex|copilot|all` la instala donde la busca cada agente. Para los agentes que no cargan skills, `gaveta init --agent-instructions` escribe un bloque equivalente en `CLAUDE.md`, `AGENTS.md`, `.cursor/rules/` o `.github/copilot-instructions.md`. La skill remite a `gaveta guide` en lugar de copiar el contrato, así que no queda desfasada.
 
 - **Salida doble:** legible por defecto, `--json` estable y versionado para agentes.
 - **Entrada flexible:** argumento, archivo o stdin (`--from -`), para pasar HTML largo sin escapar.
@@ -203,6 +212,7 @@ La CLI es la única vía de escritura del vault: la usan el agente, la app y los
 | `gaveta validate [<ref>]` · `gaveta doctor` | Valida HTML y salud de conexiones |
 | `gaveta import <archivo\|carpeta> [--in] [--dry-run] [--on-conflict]` | Importa Markdown y lo convierte en notas conectadas |
 | `gaveta export <ref\|carpeta> --to md --out <dir> [--links wiki\|relative]` | Exporta notas a Markdown |
+| `gaveta skill install\|status [--target] [--scope]` | Instala o comprueba la skill de Gaveta para cada agente |
 | `gaveta serve` | Arranca la app en localhost |
 
 `<ref>` acepta id, ruta o título; si un título es ambiguo, la CLI devuelve error con los candidatos.
@@ -261,7 +271,14 @@ $ gaveta export proyectos --to md --out ~/export --links wiki
 
 ## Visor y editor
 
-La app es lectura primero: tres columnas con explorador (carpetas, tags, tipos), nota y panel de conexiones (salientes, backlinks, grafo local).
+La app es lectura primero: tres columnas con explorador (carpetas, tags, tipos), nota y panel de conexiones (salientes, backlinks, grafo local). Lectura primero no significa solo lectura: crear, editar, mover, renombrar y borrar notas y carpetas desde la app son funciones esenciales de v1 (P0).
+
+- **CRUD completo:**
+  - "Nueva nota", eligiendo tipo, carpeta y tags, o desde un nodo fantasma del grafo.
+  - Edición visual y de código.
+  - Renombrar y mover arrastrando, con los enlaces reescritos.
+  - Borrado con diálogo de backlinks.
+  - Gestión de carpetas, tags y alias.
 
 - **Render aislado:** cada nota se muestra en un iframe sandbox con CSP que bloquea scripts y recursos remotos; la app inyecta el tema del vault.
 - **Tres modos:** lectura (por defecto), edición visual restringida a los elementos del contrato, y código con validación en vivo.
@@ -350,14 +367,15 @@ El mayor riesgo es la seguridad del HTML generado; el segundo, que el editor vis
 
 **Preguntas abiertas**
 
-Las propuestas de resolución están en [REQUIREMENTS.md — Decisiones propuestas](REQUIREMENTS.md#decisiones-propuestas-a-las-preguntas-abiertas).
+Todas están resueltas desde el 2026-10-22. El detalle de cada decisión está en [REQUIREMENTS.md — Decisiones](REQUIREMENTS.md#decisiones).
 
-- [ ] ¿CLI en Go (binario único) o en TypeScript (compartir validador con la app)? — Ingeniería, bloqueante para la fase 1.
-- [ ] ¿Sobre qué base se construye el editor visual y cómo mapea los componentes del contrato? — Ingeniería, bloqueante para la fase 3.
-- [ ] ¿Vocabulario de `rel` cerrado o abierto por vault? — Producto.
-- [ ] ¿Archivo HTML completo (portable) o solo `<article>` + metadatos (menos ruido)? — Producto e ingeniería, bloqueante para la fase 1.
-- [ ] ¿Imágenes remotas permitidas o descargadas siempre a `attachments/`? — Seguridad.
-- [ ] ¿Alias corto del binario (`gv`)? — Producto.
+- [x] ¿CLI en Go (binario único) o en TypeScript (compartir validador con la app)? → **TypeScript** (DEC-01).
+- [x] ¿Sobre qué base se construye el editor visual y cómo mapea los componentes del contrato? → **TipTap con un esquema generado desde el contrato, y CodeMirror para el modo código** (DEC-02).
+- [x] ¿Vocabulario de `rel` cerrado o abierto por vault? → **Abierto, con aviso fuera del vocabulario** (DEC-03).
+- [x] ¿Archivo HTML completo (portable) o solo `<article>` + metadatos (menos ruido)? → **HTML completo con formato canónico** (DEC-04).
+- [x] ¿Imágenes remotas permitidas o descargadas siempre a `attachments/`? → **Bloqueadas por defecto; se pueden descargar con `--fetch-assets`** (DEC-05).
+- [x] ¿Alias corto del binario (`gv`)? → **Sí** (DEC-06).
+- [x] ¿Cómo convive la CLI con la edición en la app? → **La CLI es la interfaz de los agentes, a través de una skill; la app tiene CRUD completo; las dos usan el mismo núcleo** (DEC-08).
 
 ## Fases y roadmap
 
@@ -366,13 +384,13 @@ La CLI y las conexiones van primero porque el agente es quien más escribe; la a
 ```mermaid
 flowchart LR
   F1["Fase 1: núcleo y CLI"] --> G1{"Puerta 1: el agente escribe conectado"}
-  G1 --> F2["Fase 2: visor de solo lectura"]
+  G1 --> F2["Fase 2: visor de solo lectura e import/export Markdown"]
   F2 --> G2{"Puerta 2: uso diario con el agente"}
   G2 --> F3["Fase 3: editor visual y de código"]
   F3 --> G3{"Puerta 3: edición sin degradar HTML"}
   G3 --> F4["Fase 4: P1 (MCP, embeds, menciones, PDF)"]
 ```
 
-La fase 2 es solo lectura a propósito: permite usar Gaveta a diario con el agente antes de invertir en el editor, la parte más arriesgada.
+La fase 2 es solo lectura a propósito: permite usar Gaveta a diario con el agente antes de invertir en el editor, la parte más arriesgada. La fase 3 completa el CRUD de la persona en la app (crear, editar, mover, renombrar y borrar), que es imprescindible para cerrar v1.
 
 > Nota: el diagrama de roadmap del PRD original era contenido embebido no exportado. Este diagrama lo reconstruye a partir del texto (4 fases, 3 puertas); el criterio concreto de cada puerta está en [TASKS.md](TASKS.md).

@@ -8,27 +8,28 @@ Este documento traduce el [PRD](PRD.md) en requisitos verificables. Cada requisi
 
 ## Índice
 
-1. [Decisiones propuestas a las preguntas abiertas](#decisiones-propuestas-a-las-preguntas-abiertas)
+1. [Decisiones](#decisiones)
 2. [Glosario](#glosario)
-3. [Requisitos funcionales](#requisitos-funcionales) (incluye [Importar y exportar Markdown](#importar-y-exportar-markdown))
+3. [Requisitos funcionales](#requisitos-funcionales) (incluye [Skill para agentes](#skill-para-agentes) e [Importar y exportar Markdown](#importar-y-exportar-markdown))
 4. [Contrato de autoría](#contrato-de-autoría)
 5. [Contrato de la CLI](#contrato-de-la-cli)
 6. [Requisitos no funcionales](#requisitos-no-funcionales)
 7. [Matriz de trazabilidad](#matriz-de-trazabilidad)
 
-## Decisiones propuestas a las preguntas abiertas
+## Decisiones
 
-El PRD deja seis preguntas abiertas, dos de ellas bloqueantes para la fase 1. Estas son las propuestas que asume el resto del documento. Mientras no se aprueben, cada una está en estado **Propuesta**.
+El PRD dejaba seis preguntas abiertas, dos de ellas bloqueantes para la fase 1, y la importación de Markdown añadió una séptima. Todas se aprobaron el 2026-10-22. Cambiar una decisión aprobada requiere actualizar esta tabla y los requisitos afectados.
 
-| Id | Pregunta | Propuesta | Motivo | Estado |
+| Id | Pregunta | Decisión | Motivo | Estado |
 | --- | --- | --- | --- | --- |
-| DEC-01 | ¿CLI en Go o en TypeScript? | **TypeScript** (Node ≥ 20) en un monorepo. El núcleo (`@gaveta/core`) se comparte entre la CLI, el servidor y la app. | Un único validador y un único resolutor de enlaces garantizan que la CLI y la app acepten exactamente el mismo HTML (principio 3). El binario único se puede generar más adelante con `bun build --compile` o con Node SEA. | Propuesta |
-| DEC-02 | Base del editor visual | **TipTap (ProseMirror)** para el modo visual, con un esquema que mapea 1:1 los elementos del contrato. Cualquier nodo desconocido se convierte en un nodo atómico `htmlBlock`. **CodeMirror 6** para el modo código. | ProseMirror permite un esquema cerrado (no degrada lo que no entiende) y serializar de vuelta a HTML de forma determinista. | Propuesta (bloquea la fase 3) |
-| DEC-03 | ¿Vocabulario de `rel` cerrado o abierto? | **Abierto por vault**, con el vocabulario sugerido como valor por defecto en `.gaveta/config.json`. Un `rel` fuera de la lista produce un aviso (`W_REL_UNKNOWN`), no un error. Con `"rel": { "strict": true }` pasa a ser un error. | Permite evolucionar sin romper notas y mantiene los filtros del grafo predecibles. | Propuesta |
-| DEC-04 | ¿HTML completo o solo `<article>` + metadatos? | **Archivo HTML completo**, con formateo canónico al guardar. | Es lo que exige el principio 1 y el criterio "una nota abierta en el navegador se ve con el tema". El ruido en los diffs se mitiga con el formateo canónico (REQ-FMT-01). | Propuesta (bloquea la fase 1) |
-| DEC-05 | ¿Imágenes remotas permitidas o descargadas? | **Bloqueadas por defecto.** `gaveta new/edit --fetch-assets` las descarga a `attachments/` y reescribe el `src`. Se pueden permitir dominios concretos en `config.json` (`"remoteAllowlist": []`). | Es coherente con "seguro por defecto" y evita filtrar datos al abrir la nota. | Propuesta |
-| DEC-06 | ¿Alias corto `gv`? | **Sí.** `gv` es un alias del mismo binario que `gaveta`. | Reduce tokens y escritura sin coste. | Propuesta |
-| DEC-07 | Librería de conversión entre Markdown y HTML | **unified**: `remark-parse` + `remark-gfm` + `remark-frontmatter` + `remark-rehype` para importar, y `rehype-parse` + `rehype-remark` + `remark-stringify` para exportar. Los wikilinks, los callouts y las tareas se resuelven con plugins propios. | Es el mismo AST (hast) en los dos sentidos, encaja con el normalizador del núcleo y tiene un ecosistema maduro. | Propuesta |
+| DEC-01 | ¿CLI en Go o en TypeScript? | **TypeScript** (Node ≥ 20) en un monorepo. El núcleo (`@gaveta/core`) se comparte entre la CLI, el servidor y la app. | Un único validador y un único resolutor de enlaces garantizan que la CLI y la app acepten exactamente el mismo HTML (principio 3). El binario único se puede generar más adelante con `bun build --compile` o con Node SEA. | Aprobada |
+| DEC-02 | Base del editor visual | **TipTap (ProseMirror)** para el modo visual, con un esquema que mapea 1:1 los elementos del contrato. Cualquier nodo desconocido se convierte en un nodo atómico `htmlBlock`. **CodeMirror 6** para el modo código. | ProseMirror permite un esquema cerrado (no degrada lo que no entiende) y serializar de vuelta a HTML de forma determinista. | Aprobada |
+| DEC-03 | ¿Vocabulario de `rel` cerrado o abierto? | **Abierto por vault**, con el vocabulario sugerido como valor por defecto en `.gaveta/config.json`. Un `rel` fuera de la lista produce un aviso (`W_REL_UNKNOWN`), no un error. Con `"rel": { "strict": true }` pasa a ser un error. | Permite evolucionar sin romper notas y mantiene los filtros del grafo predecibles. | Aprobada |
+| DEC-04 | ¿HTML completo o solo `<article>` + metadatos? | **Archivo HTML completo**, con formateo canónico al guardar. | Es lo que exige el principio 1 y el criterio "una nota abierta en el navegador se ve con el tema". El ruido en los diffs se mitiga con el formateo canónico (REQ-FMT-01). | Aprobada |
+| DEC-05 | ¿Imágenes remotas permitidas o descargadas? | **Bloqueadas por defecto.** `gaveta new/edit --fetch-assets` las descarga a `attachments/` y reescribe el `src`. Se pueden permitir dominios concretos en `config.json` (`"remoteAllowlist": []`). | Es coherente con "seguro por defecto" y evita filtrar datos al abrir la nota. | Aprobada |
+| DEC-06 | ¿Alias corto `gv`? | **Sí.** `gv` es un alias del mismo binario que `gaveta`. | Reduce tokens y escritura sin coste. | Aprobada |
+| DEC-07 | Librería de conversión entre Markdown y HTML | **unified**: `remark-parse` + `remark-gfm` + `remark-frontmatter` + `remark-rehype` para importar, y `rehype-parse` + `rehype-remark` + `remark-stringify` para exportar. Los wikilinks, los callouts y las tareas se resuelven con plugins propios. | Es el mismo AST (hast) en los dos sentidos, encaja con el normalizador del núcleo y tiene un ecosistema maduro. | Aprobada |
+| DEC-08 | ¿Qué significa "la CLI es la única vía de escritura"? | **Dos interfaces sobre un mismo núcleo.** La CLI es la interfaz de los agentes, al estilo de `obsidian-cli`: cualquier agente (Claude Code, Cursor, GitHub Copilot, Codex…) la usa a través de una skill de Gaveta. La app es la interfaz de la persona y permite crear, editar, mover, renombrar y borrar notas de forma nativa, sin pasar por el binario. Las dos llaman a las mismas operaciones de `@gaveta/core`, así que comparten validación, resolución de enlaces y protección contra enlaces rotos. | El agente necesita comandos deterministas y la persona necesita CRUD completo en la app. Ninguna de las dos interfaces puede escribir saltándose el núcleo. | Aprobada |
 
 ## Glosario
 
@@ -51,7 +52,7 @@ El PRD deja seis preguntas abiertas, dos de ellas bloqueantes para la fase 1. Es
 | Id | Prioridad | Fase | Requisito | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
 | REQ-VAULT-01 | P0 | 1 | `gaveta init [dir]` crea la carpeta `.gaveta/` con `config.json`, `theme.css` e `index.sqlite`. No toca ningún archivo existente. | Ejecutar `init` dos veces es idempotente. En un directorio con `.html` previos, esos archivos quedan intactos. |
-| REQ-VAULT-02 | P0 | 1 | `gaveta init --agent-instructions [claude\|agents]` añade o actualiza un bloque delimitado con instrucciones para el agente en `CLAUDE.md` o `AGENTS.md`. | Ejecutarlo dos veces no duplica el bloque (está delimitado por `<!-- gaveta:start -->` y `<!-- gaveta:end -->`). |
+| REQ-VAULT-02 | P0 | 1 | `gaveta init --agent-instructions [claude\|agents\|cursor\|copilot\|all]` añade o actualiza un bloque delimitado con instrucciones para el agente en el archivo que lee cada agente (ver REQ-AGENT-03). | Ejecutarlo dos veces no duplica el bloque (está delimitado por `<!-- gaveta:start -->` y `<!-- gaveta:end -->`). |
 | REQ-VAULT-03 | P0 | 1 | Cada nota es un HTML completo con `<title>`, `gaveta:id` (ULID), `gaveta:type`, `gaveta:created` y, opcionalmente, `gaveta:tags`, `gaveta:aliases` y `gaveta:updated`. | `gaveta validate` falla con `E_META_MISSING` si falta un metadato obligatorio. |
 | REQ-VAULT-04 | P0 | 1 | La CLI inserta `<link rel="stylesheet">` al tema con la ruta relativa correcta según la profundidad de la nota, y la recalcula al mover la nota. | Una nota en `a/b/c.html` enlaza `../../.gaveta/theme.css`. Tras `gaveta mv` a la raíz, enlaza `.gaveta/theme.css`. |
 | REQ-VAULT-05 | P0 | 1 | Abierta directamente en un navegador (`file://`), una nota se ve con el tema y sus enlaces navegan. | Test E2E: Playwright abre la nota con `file://`, comprueba que el estilo del tema se aplica y hace clic en un enlace que abre la nota destino. |
@@ -118,6 +119,19 @@ El PRD deja seis preguntas abiertas, dos de ellas bloqueantes para la fase 1. Es
 | REQ-CLI-14 | P1 | 4 | `gaveta mcp` expone los mismos comandos como servidor MCP por stdio (`new`, `read`, `edit`, `search`, `links`, `backlinks`, `link`, `graph`, `todo`, `validate`, `guide`). | — |
 | REQ-CLI-15 | P1 | 4 | `gaveta stats` calcula las métricas del PRD a partir del índice y de un log de comandos local opcional (`.gaveta/log.jsonl`). No envía telemetría. | — |
 
+### Skill para agentes
+
+La CLI es la interfaz de los agentes (DEC-08). La skill le enseña a cualquier agente a usarla sin que haya que explicárselo en cada conversación.
+
+| Id | Prioridad | Fase | Requisito | Criterio de aceptación |
+| --- | --- | --- | --- | --- |
+| REQ-AGENT-01 | P0 | 1 | Existe una skill de Gaveta en formato Agent Skills (`skills/gaveta/SKILL.md`, con front matter `name` y `description`, más archivos de referencia). Explica cuándo usar Gaveta, el flujo recomendado (buscar antes de crear, leer el contexto con `backlinks` y `graph --depth 1`, escribir con `new` o `edit --from -`, enlazar con `[[…]]`, comprobar con `validate`), el uso de `--json` y `--if-match`, y que `gaveta guide` es la referencia completa. | La skill no duplica el contrato: remite a `gaveta guide`, así que no puede quedar desfasada respecto a la CLI. |
+| REQ-AGENT-02 | P0 | 1 | `gaveta skill install --target claude\|cursor\|codex\|copilot\|all [--scope project\|user]` instala la skill donde la busca cada agente: `.claude/skills/gaveta/` (Claude Code), `.cursor/skills/gaveta/` (Cursor), `.agents/skills/gaveta/` (Codex) y `.github/skills/gaveta/` (GitHub Copilot). Con `--scope user` la instala en la carpeta del usuario del agente en lugar de en el proyecto. | Ejecutarlo dos veces es idempotente. `gaveta skill install --dry-run --json` lista las rutas que escribiría. |
+| REQ-AGENT-03 | P0 | 1 | Para agentes o versiones que no cargan skills, `init --agent-instructions` escribe un bloque equivalente y más corto en `CLAUDE.md`, `AGENTS.md` (Codex y otros), `.cursor/rules/gaveta.mdc` o `.github/copilot-instructions.md`. | Cada archivo destino tiene un test de snapshot. |
+| REQ-AGENT-04 | P0 | 1 | La skill y las instrucciones se generan desde el mismo origen que `gaveta guide` y se versionan con la CLI. `gaveta skill status` avisa si la copia instalada es más antigua que la CLI. | Tras actualizar la CLI, `skill status` informa de la versión desfasada y `skill install` la actualiza. |
+| REQ-AGENT-05 | P0 | 1 | La skill funciona aunque el agente se ejecute fuera del vault: usa `--vault` o `GAVETA_VAULT`, y la skill indica cómo comprobarlo (`gaveta doctor --json`). | Test E2E: desde un directorio fuera del vault, con `GAVETA_VAULT` definido, `gaveta new` escribe en el vault correcto. |
+| REQ-AGENT-06 | P1 | 4 | La skill puede usar `gaveta mcp` cuando el agente tiene MCP configurado, manteniendo la CLI como alternativa. | — |
+
 ### Importar y exportar Markdown
 
 Son P1 en el PRD, pero la parte de CLI se adelanta a la fase 2 porque facilita adoptar Gaveta con documentos que ya existen. La parte de app va en la fase 3 porque necesita la API de escritura.
@@ -155,7 +169,9 @@ Son P1 en el PRD, pero la parte de CLI se adelanta a la fase 2 porque facilita a
 | REQ-APP-11 | P0 | 3 | Modo código (CodeMirror) con validación en vivo contra el contrato. | Los errores se muestran en línea con su código. |
 | REQ-APP-12 | P0 | 3 | Autocompletado difuso de `[[` por títulos y alias, en los dos modos. | — |
 | REQ-APP-13 | P0 | 3 | Si la nota cambia fuera mientras la persona la edita, se avisa y se muestra un diff en lugar de sobrescribir. | La escritura desde la app usa `--if-match`. |
-| REQ-APP-14 | P0 | 3 | Renombrar, arrastrar y borrar en la app usan los mismos flujos que `mv` y `rm`, incluido el diálogo que lista los backlinks. | — |
+| REQ-APP-14 | P0 | 3 | Renombrar, arrastrar y borrar en la app usan las mismas operaciones del núcleo que `mv` y `rm`, incluido el diálogo que lista los backlinks. | Renombrar una nota con 20 backlinks desde la app deja `doctor` con 0 rotos. |
+| REQ-APP-17 | P0 | 3 | Crear notas desde la app: botón "Nueva nota" y atajo de teclado, con elección de tipo (`doc`, `slides` o `todo`), carpeta, tags y título. También desde un nodo fantasma del grafo o un enlace pendiente, con el título ya rellenado. | La nota creada pasa `validate` y los enlaces pendientes con ese título se convierten en canónicos. |
+| REQ-APP-18 | P0 | 3 | CRUD completo de la persona en la app: crear (REQ-APP-17), leer, editar (REQ-APP-09 a 11), mover o renombrar y borrar (REQ-APP-14), y además crear, renombrar y borrar carpetas y editar tags y alias. Todo usa las operaciones del núcleo (DEC-08), nunca escribe archivos directamente. | Cualquier operación hecha en la app se puede reproducir con la CLI y produce el mismo archivo. |
 | REQ-APP-15 | P1 | 4 | Vista agregada "Tareas" con filtros por fecha y prioridad, enlazando a la nota de origen. | — |
 | REQ-APP-16 | P1 | 4 | Exportar presentaciones a PDF. | — |
 
@@ -286,7 +302,8 @@ Relación entre los requisitos P0 del PRD (numerados del 1 al 11) y los ids de e
 | 6. Grafo global y local | REQ-GRAPH-01 a 04 |
 | 7. CLI v1 con `--json` | REQ-CLI-01 a 13 |
 | 8. Tres tipos de nota | REQ-TYPE-01 a 05, REQ-APP-06, REQ-APP-08 |
-| 9. Editor visual y de código | REQ-APP-09 a 13 |
+| 9. Editor visual y de código | REQ-APP-09 a 13, REQ-APP-17 y 18 |
 | 10. Render seguro | REQ-SEC-01 a 06 |
 | 11. Búsqueda de texto completo | REQ-CLI-10, REQ-APP-04 |
 | P1: importar y exportar Markdown | REQ-MIG-01 a 13 |
+| Skill para agentes (DEC-08) | REQ-AGENT-01 a 06, REQ-VAULT-02 |
