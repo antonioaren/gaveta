@@ -1,0 +1,172 @@
+# Gaveta — Plan de tareas v1
+
+Plan de ejecución del [PRD](PRD.md) a partir de los [requisitos](REQUIREMENTS.md). Cada tarea indica los requisitos que cubre y sus dependencias. Una tarea solo está terminada cuando sus criterios de aceptación tienen test y ese test pasa en CI.
+
+**Convenciones**
+
+- Id de tarea: `T<fase>.<número>`. Las dependencias se refieren a estos ids.
+- Estado: `[ ]` pendiente, `[~]` en curso, `[x]` hecha.
+- Cada tarea debería caber en un PR revisable. Si no cabe, se divide.
+
+## Resumen de fases
+
+```mermaid
+flowchart LR
+  F0["Fase 0: fundaciones"] --> F1["Fase 1: núcleo y CLI"]
+  F1 --> G1{"Puerta 1"}
+  G1 --> F2["Fase 2: visor de solo lectura"]
+  F2 --> G2{"Puerta 2"}
+  G2 --> F3["Fase 3: editor"]
+  F3 --> G3{"Puerta 3"}
+  G3 --> F4["Fase 4: P1"]
+```
+
+| Fase | Objetivo | Puerta de salida |
+| --- | --- | --- |
+| 0 | Repo, herramientas y decisiones bloqueantes | DEC-01 y DEC-04 aprobadas |
+| 1 | Núcleo y CLI: el agente escribe notas conectadas | **Puerta 1:** un agente (Claude Code) crea al menos 20 notas conectadas usando solo `gaveta guide`. ≥ 95 % de los comandos de escritura pasan a la primera y `doctor` reporta 0 rotos tras `mv` y `rm`. |
+| 2 | App de solo lectura sobre el núcleo | **Puerta 2:** una semana de uso diario con el agente. Latencia CLI → vista p95 < 500 ms y 0 incidencias de seguridad en el render. |
+| 3 | Editor visual y de código | **Puerta 3:** el 100 % de las notas editadas en la app pasan `validate`, y abrir y guardar sin cambios no altera ningún archivo. |
+| 4 | Requisitos P1 | — |
+
+## Arquitectura del repositorio (objetivo)
+
+```
+gaveta/
+├── packages/
+│   ├── core/        # contrato, parser, validador, normalizador, enlaces, índice, operaciones
+│   ├── cli/         # binario gaveta / gv (commander), salida humana y --json
+│   └── server/      # API local (Fastify) + watcher + WebSocket
+├── apps/
+│   └── web/         # React + Vite: visor (fase 2) y editor (fase 3)
+├── integrations/
+│   └── claude-code/ # bloque CLAUDE.md, comando slash y, en fase 4, configuración MCP
+├── fixtures/        # vaults de prueba
+└── docs/            # PRD, requisitos y tareas
+```
+
+```mermaid
+flowchart TB
+  Cli["packages/cli"] --> Core["packages/core"]
+  Server["packages/server"] --> Core
+  Web["apps/web"] -->|"HTTP + WS"| Server
+  Integrations["integrations/claude-code"] -->|"invoca"| Cli
+```
+
+**Stack propuesto (DEC-01):** TypeScript, Node ≥ 20, pnpm workspaces, `parse5` (parser HTML según el estándar), `better-sqlite3` (índice con FTS5), `ulid`, `commander`, `chokidar`, Fastify, React + Vite, TipTap y CodeMirror 6 (fase 3), Vitest y Playwright.
+
+---
+
+## Fase 0 — Fundaciones
+
+- [ ] **T0.1 Aprobar las decisiones bloqueantes.** Revisar y aprobar DEC-01 (lenguaje) y DEC-04 (HTML completo). Registrar el resultado en `REQUIREMENTS.md`. El resto de decisiones (DEC-02, 03, 05 y 06) se pueden aprobar más tarde.
+- [ ] **T0.2 Monorepo.** pnpm workspaces, TypeScript estricto, ESLint y Prettier, Vitest, y los paquetes vacíos `core`, `cli`, `server` y `web`. Depende de: T0.1.
+- [ ] **T0.3 CI.** GitHub Actions con lint, typecheck y tests en Linux, macOS y Windows (REQ-NFR-05). Depende de: T0.2.
+- [ ] **T0.4 Vaults de prueba.** En `fixtures/`: un vault vacío, uno con 20 notas que enlazan a X (para REQ-LINK-09), uno con un problema de cada tipo (para REQ-LINK-11), notas maliciosas (para REQ-SEC-01 y 02) y un generador de vaults de 1000 y 5000 notas (para REQ-NFR). Depende de: T0.2.
+
+## Fase 1 — Núcleo y CLI
+
+### 1A. Contrato y formato
+
+- [ ] **T1.1 Módulo de contrato.** `core/contract.ts` como fuente única de los elementos, atributos, clases y componentes permitidos, y de la estructura de cada tipo. Cubre: el contrato de autoría, REQ-TYPE-01 a 05. Depende de: T0.2.
+- [ ] **T1.2 Parser y modelo de nota.** Leer el HTML con `parse5` y extraer metadatos, título, secciones, enlaces (canónicos, pendientes y `[[…]]`), tareas y texto plano. Cubre: REQ-VAULT-03. Depende de: T1.1.
+- [ ] **T1.3 Validador.** Reglas del contrato, seguridad y estructura por tipo, con códigos estables. Cubre: REQ-CLI-11, REQ-SEC-02, REQ-SEC-04, REQ-TYPE-02 y 03. Depende de: T1.2.
+- [ ] **T1.4 Normalizador y formateo canónico.** Saneado de lo inseguro, eliminación de estilos inline, ids de sección y de tarea que falten, ruta del tema según la profundidad y serialización determinista e idempotente. Cubre: REQ-FMT-01 y 02, REQ-SEC-03, REQ-VAULT-04, REQ-NFR-08. Depende de: T1.3.
+- [ ] **T1.5 Tema por defecto.** `theme.css` con los estilos de los tres tipos y de los componentes P0, que se vea bien con `file://` y cumpla el contraste AA. Cubre: REQ-VAULT-05, REQ-NFR-10. Depende de: T1.1.
+
+### 1B. Vault, índice y enlaces
+
+- [ ] **T1.6 Vault y E/S segura.** Localizar el vault (`--vault`, `GAVETA_VAULT` o búsqueda ascendente), escritura atómica, protección de rutas y `config.json`. Cubre: REQ-VAULT-01, REQ-CLI-13, REQ-SEC-05. Depende de: T0.2.
+- [ ] **T1.7 Índice SQLite.** Esquema (`notes`, `aliases`, `links`, `sections`, `tasks`, `fts`), `reindex` completo e incremental, y tolerancia a archivos corruptos. Cubre: REQ-VAULT-06 y 07, REQ-NFR-03 y 07. Depende de: T1.2, T1.6.
+- [ ] **T1.8 Resolutor de referencias y enlaces.** Resolver `ref` (id, ruta o título/alias, sin distinguir mayúsculas ni acentos), convertir `[[…]]` a canónico o a pendiente, sugerencias por similitud, reparar `href` desde `data-g-to` y política de `rel`. Cubre: REQ-LINK-01 a 05, REQ-CLI-08. Depende de: T1.7.
+- [ ] **T1.9 Promoción de pendientes.** Al crear una nota, convertir en canónicos los pendientes que coinciden con su título o alias. Cubre: REQ-LINK-02. Depende de: T1.8.
+- [ ] **T1.10 Operaciones transaccionales `mv` y `rm`.** Reescritura en bloque de los `href` entrantes con reversión si falla algo, ruta del tema recalculada y, con `--force`, conversión de los enlaces entrantes a pendientes. Cubre: REQ-LINK-09 y 10. Depende de: T1.8.
+- [ ] **T1.11 Consultas de grafo.** Grafo global y local (profundidad de 1 a 3), filtros, nodos fantasma y contexto de los backlinks. Cubre: REQ-GRAPH-01 a 03, REQ-LINK-06 y 07. Depende de: T1.7.
+- [ ] **T1.12 Doctor.** Rotos, pendientes, huérfanas, duplicados y notas no válidas, más `--fix`. Cubre: REQ-LINK-11. Depende de: T1.8, T1.3.
+
+### 1C. CLI
+
+- [ ] **T1.13 Esqueleto de la CLI.** `commander`, alias `gv`, sobre `--json` versionado, códigos de salida, entrada por `--from` y stdin, y salida legible por defecto. Cubre: REQ-CLI-01 a 03, DEC-06. Depende de: T1.6.
+- [ ] **T1.14 `init` y `adopt`.** `init [--agent-instructions claude|agents]` con un bloque delimitado e idempotente, y `adopt <ruta>`. Cubre: REQ-VAULT-01, 02 y 08. Depende de: T1.13, T1.4.
+- [ ] **T1.15 `new`, `read` y `edit`.** Creación completa (normalizar, resolver, validar y escribir), `read --as html|text|outline` con `hash`, edición parcial por sección y `--if-match` en todas las escrituras. Cubre: REQ-CLI-04 a 07. Depende de: T1.13, T1.4, T1.8, T1.9.
+- [ ] **T1.16 Comandos de conexiones.** `links`, `backlinks`, `link` (idempotente) y `graph`. Cubre: REQ-LINK-06 a 08, REQ-GRAPH-01 a 03. Depende de: T1.15, T1.11.
+- [ ] **T1.17 `mv` y `rm`.** Cubre: REQ-LINK-09 y 10. Depende de: T1.15, T1.10.
+- [ ] **T1.18 `todo`.** `add`, `check`, `uncheck` y `list` sobre cualquier nota, con diff mínimo. Cubre: REQ-TYPE-04. Depende de: T1.15.
+- [ ] **T1.19 `search`.** FTS5 con fragmentos resaltados y filtros. Cubre: REQ-CLI-10. Depende de: T1.7, T1.13.
+- [ ] **T1.20 `validate`, `doctor` y `reindex`.** Cubre: REQ-CLI-11, REQ-LINK-11, REQ-VAULT-06. Depende de: T1.12, T1.13.
+- [ ] **T1.21 `guide`.** Se genera desde el contrato y desde el registro de comandos, con `--json`, `--topic` y `--errors`. Incluye un test que comprueba que todos los comandos aparecen con un ejemplo. Cubre: REQ-CLI-09. Depende de: T1.14 a T1.20.
+
+### 1D. Integración con Claude Code (validación de la puerta 1)
+
+- [ ] **T1.22 Instrucciones para el agente.** Contenido del bloque que inserta `init --agent-instructions`: cuándo usar Gaveta, buscar antes de crear, enlazar con `[[…]]`, usar `--json` y `--if-match`, y empezar siempre por `gaveta guide`. Depende de: T1.21.
+- [ ] **T1.23 Comando slash de Claude Code.** `integrations/claude-code/commands/gaveta.md` (`/gaveta <petición>`): buscar notas relacionadas, leer el contexto (`backlinks` y `graph --depth 1`) y crear o ampliar la nota con `gaveta new|edit --from -`. Incluye `gaveta init --agent-instructions claude --install-commands`, que lo copia a `.claude/commands/`. Depende de: T1.22.
+- [ ] **T1.24 Prueba de la puerta 1.** Una sesión guionizada con Claude Code sobre un vault vacío que genera al menos 20 notas (documentos, una presentación y listas de tareas) y registra la tasa de éxito a la primera, los enlaces por nota y el resultado de `doctor` tras varios `mv` y `rm`. Los resultados se guardan en `docs/gates/fase-1.md`. Depende de: T1.23.
+- [ ] **T1.25 Tests E2E de la fase 1.** Un test por cada criterio de aceptación P0 de la fase 1, incluido el de `file://` con Playwright (REQ-VAULT-05). Depende de: T1.21.
+
+## Fase 2 — Visor de solo lectura
+
+- [ ] **T2.1 Servidor local.** `gaveta serve`: Fastify en `127.0.0.1`, API de lectura sobre el núcleo (`notes`, `read`, `links`, `backlinks`, `graph`, `search`, `doctor`), token de sesión y validación de `Origin`. Cubre: REQ-CLI-12, REQ-SEC-06. Depende de: fase 1.
+- [ ] **T2.2 Watcher y eventos.** `chokidar`, reindexado incremental y WebSocket con `note:changed|added|removed|moved`. Incluye una medida automática de la latencia de la CLI a la vista. Cubre: REQ-APP-05, REQ-NFR-01. Depende de: T2.1.
+- [ ] **T2.3 Ruta de render aislado.** Endpoint `/render/:id` con CSP estricta y tema inyectado, más el script de puente de la app para la navegación por `postMessage`. Cubre: REQ-APP-02, REQ-SEC-01. Depende de: T2.1.
+- [ ] **T2.4 Estructura de la app.** React + Vite con diseño de tres columnas, explorador (carpetas, tags y tipos), pestañas e historial atrás y adelante. Cubre: REQ-APP-01 y 03. Depende de: T2.1.
+- [ ] **T2.5 Panel de conexiones.** Salientes, backlinks con contexto y grafo local. Cubre: REQ-APP-01. Depende de: T2.4.
+- [ ] **T2.6 Vista de grafo global.** Filtros por tipo, tag y `rel`, nodos fantasma con "Crear nota" (que deja el comando listo para copiar en esta fase) y tags como nodos opcionales. Cubre: REQ-GRAPH-04. Depende de: T2.4.
+- [ ] **T2.7 Vistas por tipo.** `doc` con índice lateral, `slides` con miniaturas y modo presentación, y `todo` con filtros (solo lectura). Cubre: REQ-APP-06. Depende de: T2.3.
+- [ ] **T2.8 Búsqueda y paleta.** Cmd/Ctrl+K sobre `search` y comandos de navegación. Cubre: REQ-APP-04. Depende de: T2.4.
+- [ ] **T2.9 Panel de salud y avisos.** Salida de `doctor` y aviso cuando un cambio externo rompe enlaces o el contrato. Cubre: REQ-APP-07. Depende de: T2.2.
+- [ ] **T2.10 Tests E2E de seguridad y latencia.** Notas maliciosas de `fixtures/` y medida del p95. Cubre: REQ-SEC-01, REQ-NFR-01. Depende de: T2.3, T2.2.
+- [ ] **T2.11 Prueba de la puerta 2.** Una semana de uso diario con el agente. Los resultados se guardan en `docs/gates/fase-2.md`. Depende de: T2.1 a T2.10.
+
+## Fase 3 — Editor visual y de código
+
+- [ ] **T3.1 Aprobar DEC-02** y prototipar el esquema de TipTap generado desde `contract.ts`, con el nodo `htmlBlock` para lo desconocido. Depende de: puerta 2.
+- [ ] **T3.2 API de escritura.** Endpoints de escritura en el servidor que llaman a las mismas operaciones del núcleo que la CLI, siempre con `if-match`. Cubre: REQ-APP-13. Depende de: T3.1.
+- [ ] **T3.3 Tareas interactivas.** Marcar y desmarcar desde la vista persiste `checked`. Cubre: REQ-APP-08. Depende de: T3.2.
+- [ ] **T3.4 Editor visual.** Componentes P0 y bloques HTML desconocidos conservados byte a byte. Abrir y guardar sin cambios no altera el archivo. Cubre: REQ-APP-09 y 10. Depende de: T3.1, T3.2.
+- [ ] **T3.5 Modo código.** CodeMirror 6 con validación en vivo usando el validador del núcleo. Cubre: REQ-APP-11. Depende de: T3.2.
+- [ ] **T3.6 Autocompletado de `[[`** en los dos modos. Cubre: REQ-APP-12. Depende de: T3.4, T3.5.
+- [ ] **T3.7 Conflictos.** Aviso y diff cuando la nota cambia fuera durante la edición. Cubre: REQ-APP-13. Depende de: T3.2, T2.2.
+- [ ] **T3.8 Renombrar, mover y borrar desde la app**, con diálogo de backlinks. Cubre: REQ-APP-14. Depende de: T3.2.
+- [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8.
+
+## Fase 4 — P1
+
+- [ ] **T4.1 `gaveta mcp`.** Servidor MCP por stdio con los mismos comandos y el mismo sobre JSON. Se registra con `claude mcp add gaveta -- gaveta mcp`. Cubre: REQ-CLI-14.
+- [ ] **T4.2 Menciones no enlazadas** en la CLI y en la app ("Enlazar"). Cubre: REQ-LINK-12.
+- [ ] **T4.3 Transclusión con `<gaveta-embed>`.** Cubre: REQ-LINK-13.
+- [ ] **T4.4 Vista agregada de tareas.** Cubre: REQ-APP-15.
+- [ ] **T4.5 Mermaid y exportación de presentaciones a PDF.** Cubre: REQ-TYPE-06, REQ-APP-16.
+- [ ] **T4.6 Plantillas por tipo.** Cubre: REQ-TYPE-07.
+- [ ] **T4.7 `gaveta stats`** con un log local opcional. Cubre: REQ-CLI-15.
+
+---
+
+## Camino crítico de la fase 1
+
+```mermaid
+flowchart LR
+  T01[T0.1] --> T02[T0.2]
+  T02 --> T11[T1.1]
+  T11 --> T12[T1.2]
+  T12 --> T13[T1.3]
+  T13 --> T14[T1.4]
+  T02 --> T16[T1.6]
+  T12 --> T17[T1.7]
+  T16 --> T17
+  T17 --> T18[T1.8]
+  T14 --> T115[T1.15]
+  T18 --> T115
+  T115 --> T121[T1.21]
+  T121 --> T122[T1.22]
+  T122 --> T123[T1.23]
+  T123 --> T124["T1.24 Puerta 1"]
+```
+
+Se pueden trabajar en paralelo al camino crítico: T1.5 (tema), T1.11 (consultas de grafo), T1.12 (doctor), T1.19 (búsqueda) y T0.3 y T0.4 (CI y fixtures).
+
+## Primeros cambios (este PR)
+
+- [x] `docs/PRD.md`: PRD limpio, con los diagramas de arquitectura, conexiones y roadmap reconstruidos en Mermaid.
+- [x] `docs/REQUIREMENTS.md`: requisitos trazables, decisiones propuestas, contrato de autoría y contrato de la CLI.
+- [x] `docs/TASKS.md`: este plan.
+- [ ] Siguiente paso: T0.1 (aprobar DEC-01 y DEC-04) y, después, T0.2 (monorepo).
