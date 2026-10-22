@@ -201,6 +201,8 @@ La CLI es la única vía de escritura del vault: la usan el agente, la app y los
 | `gaveta rm <ref> [--force]` | Borra; falla si tiene backlinks y no hay `--force` |
 | `gaveta todo add\|check\|uncheck\|list` | Gestiona tareas |
 | `gaveta validate [<ref>]` · `gaveta doctor` | Valida HTML y salud de conexiones |
+| `gaveta import <archivo\|carpeta> [--in] [--dry-run] [--on-conflict]` | Importa Markdown y lo convierte en notas conectadas |
+| `gaveta export <ref\|carpeta> --to md --out <dir> [--links wiki\|relative]` | Exporta notas a Markdown |
 | `gaveta serve` | Arranca la app en localhost |
 
 `<ref>` acepta id, ruta o título; si un título es ambiguo, la CLI devuelve error con los candidatos.
@@ -229,6 +231,33 @@ Los tres tipos comparten formato y conexiones; solo cambian la estructura del `<
 Las tareas también pueden vivir dentro de un documento; una vista "Tareas" que las agregue todas, enlazando a su nota de origen, queda como P1.
 
 **Componentes del contrato.** P0: callout (`<aside class="callout" data-kind="info|warn">`), tabla, figura con imagen y bloque de código. P1: diagrama (`<pre class="mermaid">` renderizado por la app) y `<gaveta-embed>`.
+
+## Importar y exportar Markdown
+
+Migrar no puede ser una barrera, ni para entrar en Gaveta ni para salir. Se puede importar y exportar Markdown en los dos sentidos, tanto un archivo suelto como una carpeta entera con subcarpetas. Así se pueden traer documentos desde Obsidian u otras herramientas, o llevarse el vault a cualquier sitio que entienda Markdown.
+
+- **Importar (Markdown → HTML):**
+  - El front matter (`title`, `tags`, `aliases`, `created`) pasa a `<meta name="gaveta:*">`.
+  - Los `[[wikilinks]]` y los enlaces relativos a `.md` se convierten en enlaces canónicos con `data-g-to`.
+  - Las listas de tareas GFM pasan a `ul.tasks` y los callouts de Obsidian (`> [!note]`) a `aside.callout`.
+  - Las imágenes locales se copian a `attachments/`.
+- **Carpetas en dos pasadas:** primero se crean todas las notas con su id y después se resuelven los enlaces. Así los enlaces cruzados entre archivos importados nunca quedan rotos.
+- **Exportar (HTML → Markdown):**
+  - Los enlaces canónicos pasan a `[[Título]]` (compatible con Obsidian) o a enlaces relativos `.md`, a elección.
+  - Los metadatos van a front matter, las tareas a `- [x]`, los callouts a `> [!info]` y las presentaciones a diapositivas separadas por `---`.
+  - Lo que Markdown no puede representar se exporta como HTML embebido y se avisa de ello.
+- **Sin sorpresas:** `--dry-run` muestra qué se va a crear y con qué avisos, y los conflictos de nombre se resuelven con `--on-conflict skip|rename|overwrite`.
+
+| Capacidad | En la app | En la CLI | Prioridad |
+| --- | --- | --- | --- |
+| Importar un archivo o una carpeta `.md` | Arrastrar y soltar, o menú "Importar" | `gaveta import <ruta>` | P1 (adelantado a la fase 2 en la CLI) |
+| Exportar una nota, una carpeta o el vault a `.md` | Menú "Exportar a Markdown" | `gaveta export <ref\|carpeta> --to md --out <dir>` | P1 (adelantado a la fase 2 en la CLI) |
+
+```bash
+$ gaveta import ~/obsidian/proyectos --in proyectos --dry-run --json
+$ gaveta import ~/obsidian/proyectos --in proyectos
+$ gaveta export proyectos --to md --out ~/export --links wiki
+```
 
 ## Visor y editor
 
@@ -281,12 +310,13 @@ P0 es lo mínimo para que Gaveta resuelva el problema; si se recorta algo de P0,
 - Vista agregada de tareas con filtros por fecha y prioridad.
 - Exportar presentaciones a PDF y diagramas Mermaid.
 - Plantillas por tipo de nota.
+- Importar y exportar Markdown, de un archivo o de una carpeta, conservando los enlaces. La CLI se adelanta a la fase 2 para facilitar la migración.
 
 **P2 — a tener en cuenta en el diseño, fuera de v1**
 
 - App de escritorio y app móvil.
 - Sync entre dispositivos.
-- Importar un vault de Obsidian (Markdown → HTML).
+- Importar formatos distintos de Markdown (Notion, Confluence, Google Docs).
 - Búsqueda semántica con embeddings.
 - Colaboración multiusuario y plugins.
 
@@ -316,6 +346,7 @@ El mayor riesgo es la seguridad del HTML generado; el segundo, que el editor vis
 | El agente escribe fuera del contrato (estilos inline, `div` sin semántica) | Medio | `gaveta guide`, validación con errores accionables y normalizador |
 | Persona y agente editan la misma nota a la vez | Medio | `--if-match`, watcher y diff antes de sobrescribir |
 | HTML más verboso que Markdown: diffs de git ruidosos y más tokens | Medio | Formateo canónico al guardar; `read --as outline\|text` para leer barato |
+| La conversión entre Markdown y HTML pierde información | Medio | Un mapeo documentado elemento a elemento; HTML embebido para lo que Markdown no representa; avisos `W_EXPORT_LOSSY`; tests de ida y vuelta |
 
 **Preguntas abiertas**
 

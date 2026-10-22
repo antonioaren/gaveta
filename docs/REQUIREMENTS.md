@@ -10,7 +10,7 @@ Este documento traduce el [PRD](PRD.md) en requisitos verificables. Cada requisi
 
 1. [Decisiones propuestas a las preguntas abiertas](#decisiones-propuestas-a-las-preguntas-abiertas)
 2. [Glosario](#glosario)
-3. [Requisitos funcionales](#requisitos-funcionales)
+3. [Requisitos funcionales](#requisitos-funcionales) (incluye [Importar y exportar Markdown](#importar-y-exportar-markdown))
 4. [Contrato de autoría](#contrato-de-autoría)
 5. [Contrato de la CLI](#contrato-de-la-cli)
 6. [Requisitos no funcionales](#requisitos-no-funcionales)
@@ -28,6 +28,7 @@ El PRD deja seis preguntas abiertas, dos de ellas bloqueantes para la fase 1. Es
 | DEC-04 | ¿HTML completo o solo `<article>` + metadatos? | **Archivo HTML completo**, con formateo canónico al guardar. | Es lo que exige el principio 1 y el criterio "una nota abierta en el navegador se ve con el tema". El ruido en los diffs se mitiga con el formateo canónico (REQ-FMT-01). | Propuesta (bloquea la fase 1) |
 | DEC-05 | ¿Imágenes remotas permitidas o descargadas? | **Bloqueadas por defecto.** `gaveta new/edit --fetch-assets` las descarga a `attachments/` y reescribe el `src`. Se pueden permitir dominios concretos en `config.json` (`"remoteAllowlist": []`). | Es coherente con "seguro por defecto" y evita filtrar datos al abrir la nota. | Propuesta |
 | DEC-06 | ¿Alias corto `gv`? | **Sí.** `gv` es un alias del mismo binario que `gaveta`. | Reduce tokens y escritura sin coste. | Propuesta |
+| DEC-07 | Librería de conversión entre Markdown y HTML | **unified**: `remark-parse` + `remark-gfm` + `remark-frontmatter` + `remark-rehype` para importar, y `rehype-parse` + `rehype-remark` + `remark-stringify` para exportar. Los wikilinks, los callouts y las tareas se resuelven con plugins propios. | Es el mismo AST (hast) en los dos sentidos, encaja con el normalizador del núcleo y tiene un ecosistema maduro. | Propuesta |
 
 ## Glosario
 
@@ -116,6 +117,26 @@ El PRD deja seis preguntas abiertas, dos de ellas bloqueantes para la fase 1. Es
 | REQ-CLI-13 | P0 | 1 | Cada escritura de la CLI es atómica (escribe en un archivo temporal y lo renombra) y deja el archivo con formato canónico. | Matar el proceso a mitad de una escritura nunca deja un archivo truncado. |
 | REQ-CLI-14 | P1 | 4 | `gaveta mcp` expone los mismos comandos como servidor MCP por stdio (`new`, `read`, `edit`, `search`, `links`, `backlinks`, `link`, `graph`, `todo`, `validate`, `guide`). | — |
 | REQ-CLI-15 | P1 | 4 | `gaveta stats` calcula las métricas del PRD a partir del índice y de un log de comandos local opcional (`.gaveta/log.jsonl`). No envía telemetría. | — |
+
+### Importar y exportar Markdown
+
+Son P1 en el PRD, pero la parte de CLI se adelanta a la fase 2 porque facilita adoptar Gaveta con documentos que ya existen. La parte de app va en la fase 3 porque necesita la API de escritura.
+
+| Id | Prioridad | Fase | Requisito | Criterio de aceptación |
+| --- | --- | --- | --- | --- |
+| REQ-MIG-01 | P1 | 2 | `gaveta import <archivo.md>` crea una nota a partir de un archivo Markdown, pasando por el mismo normalizador, resolutor y validador que `new`. | La nota resultante pasa `validate` y la salida JSON incluye id, ruta, avisos y enlaces resueltos y pendientes. |
+| REQ-MIG-02 | P1 | 2 | `gaveta import <carpeta>` importa todos los `.md` de forma recursiva, conserva la estructura de subcarpetas (bajo `--in`, si se indica) e ignora `.obsidian/`, `.git/` y los patrones de `--exclude`. | Un vault de Obsidian de prueba con 50 notas y subcarpetas se importa con la misma jerarquía. |
+| REQ-MIG-03 | P1 | 2 | La importación de carpetas va en dos pasadas: primero asigna un id a cada archivo y después resuelve los enlaces. Los enlaces entre archivos importados nunca quedan pendientes por culpa del orden. | Tras importar el vault de prueba, `doctor` reporta 0 rotos y solo los pendientes que ya lo eran en el origen. |
+| REQ-MIG-04 | P1 | 2 | Mapeo de importación: front matter (`title`, `tags`, `aliases`, `created`, `type`) a `gaveta:*`, con el título por defecto sacado del primer `# h1` o del nombre del archivo; `[[wikilinks]]` (con `\|texto` y `#sección`) y enlaces relativos `.md` a enlaces canónicos; tareas GFM a `ul.tasks`; callouts de Obsidian (`> [!note]`, `> [!warning]`) a `aside.callout`; tablas GFM; bloques de código con lenguaje; bloques ` ```mermaid ` a `pre.mermaid`. Un front matter `type: slides` o `marp: true` divide la nota en diapositivas por `---`. | Hay un caso de prueba por elemento del mapeo. |
+| REQ-MIG-05 | P1 | 2 | Las imágenes y adjuntos locales referenciados se copian a `attachments/` (sin duplicar por hash de contenido) y se reescribe la ruta. Las imágenes remotas siguen la política de DEC-05. | Dos notas que usan la misma imagen generan un solo archivo en `attachments/`. |
+| REQ-MIG-06 | P1 | 2 | `--dry-run` muestra qué notas se crearían, con sus avisos y conflictos, sin escribir nada. `--on-conflict skip\|rename\|overwrite` decide qué hacer si la ruta destino ya existe (`skip` por defecto). `overwrite` conserva el `gaveta:id` de la nota que se sustituye. | Con `--dry-run`, el vault queda idéntico byte a byte. |
+| REQ-MIG-07 | P1 | 2 | Importar una carpeta es atómico: si falla una nota con un error que no es un aviso, no se escribe ninguna, salvo con `--continue-on-error`, que importa las válidas y lista las fallidas. | Un archivo con un error en mitad de la carpeta aborta la importación y deja el vault intacto. |
+| REQ-MIG-08 | P1 | 2 | `gaveta export <ref\|carpeta\|--all> --to md --out <dir>` exporta una nota, una carpeta o el vault entero a `.md`, conservando la estructura de carpetas y copiando los adjuntos referenciados. | Exportar el vault de 50 notas produce 50 `.md` con la misma jerarquía. |
+| REQ-MIG-09 | P1 | 2 | Mapeo de exportación (el inverso de REQ-MIG-04): metadatos a front matter YAML, enlaces canónicos a `[[Título]]` (`--links wiki`, por defecto) o a enlaces relativos `.md` (`--links relative`), pendientes a `[[Título]]`, tareas a `- [ ]`/`- [x]`, callouts a `> [!info]`/`> [!warning]` y presentaciones a diapositivas separadas por `---`. | Hay un caso de prueba por elemento del mapeo. |
+| REQ-MIG-10 | P1 | 2 | Lo que Markdown no puede representar (bloques HTML desconocidos, `rel`, atributos `data-g-due` y `data-g-priority`) se exporta como HTML embebido o se guarda en el front matter (`gaveta:` por enlace o por tarea), y se informa con `W_EXPORT_LOSSY`. | La salida JSON lista, por archivo, qué se ha degradado. |
+| REQ-MIG-11 | P1 | 2 | Ida y vuelta: importar un `.md` que solo usa el subconjunto soportado y volver a exportarlo produce un Markdown equivalente (mismo AST de mdast tras normalizar los espacios). Y exportar una nota y volver a importarla conserva su id, título, tags, enlaces y tareas. | Tests de propiedad sobre los fixtures en los dos sentidos. |
+| REQ-MIG-12 | P1 | 3 | En la app: arrastrar y soltar archivos o carpetas `.md` (o el menú "Importar") abre una vista previa con el resultado de `--dry-run` antes de confirmar. El menú "Exportar a Markdown" está disponible en una nota, en una carpeta y en el vault. | — |
+| REQ-MIG-13 | P1 | 4 | `gaveta mcp` expone también `import` y `export`. | — |
 
 ### Visor y editor (app)
 
@@ -228,6 +249,11 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `W_REMOTE_RESOURCE` | Recurso remoto bloqueado |
 | `W_INLINE_STYLE_REMOVED` | Estilos inline eliminados por el normalizador |
 | `W_UNSAFE_REMOVED` | Contenido inseguro eliminado al guardar |
+| `E_IMPORT_PARSE` | Un `.md` no se puede parsear (por ejemplo, front matter YAML no válido) |
+| `E_IMPORT_ABORTED` | La importación de una carpeta se ha abortado por un error (no se escribió nada) |
+| `W_IMPORT_UNSUPPORTED` | Sintaxis Markdown sin equivalente en el contrato; se conserva como bloque HTML |
+| `W_IMPORT_SKIPPED` | Archivo omitido por `--on-conflict skip` o por `--exclude` |
+| `W_EXPORT_LOSSY` | Información que Markdown no puede representar y que se ha degradado |
 
 **Localización del vault:** `--vault <dir>`, después la variable de entorno `GAVETA_VAULT` y, por último, una búsqueda ascendente de `.gaveta/` desde el directorio actual.
 
@@ -263,3 +289,4 @@ Relación entre los requisitos P0 del PRD (numerados del 1 al 11) y los ids de e
 | 9. Editor visual y de código | REQ-APP-09 a 13 |
 | 10. Render seguro | REQ-SEC-01 a 06 |
 | 11. Búsqueda de texto completo | REQ-CLI-10, REQ-APP-04 |
+| P1: importar y exportar Markdown | REQ-MIG-01 a 13 |

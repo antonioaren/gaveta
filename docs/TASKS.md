@@ -14,7 +14,7 @@ Plan de ejecución del [PRD](PRD.md) a partir de los [requisitos](REQUIREMENTS.m
 flowchart LR
   F0["Fase 0: fundaciones"] --> F1["Fase 1: núcleo y CLI"]
   F1 --> G1{"Puerta 1"}
-  G1 --> F2["Fase 2: visor de solo lectura"]
+  G1 --> F2["Fase 2: visor e import/export Markdown"]
   F2 --> G2{"Puerta 2"}
   G2 --> F3["Fase 3: editor"]
   F3 --> G3{"Puerta 3"}
@@ -25,7 +25,7 @@ flowchart LR
 | --- | --- | --- |
 | 0 | Repo, herramientas y decisiones bloqueantes | DEC-01 y DEC-04 aprobadas |
 | 1 | Núcleo y CLI: el agente escribe notas conectadas | **Puerta 1:** un agente (Claude Code) crea al menos 20 notas conectadas usando solo `gaveta guide`. ≥ 95 % de los comandos de escritura pasan a la primera y `doctor` reporta 0 rotos tras `mv` y `rm`. |
-| 2 | App de solo lectura sobre el núcleo | **Puerta 2:** una semana de uso diario con el agente. Latencia CLI → vista p95 < 500 ms y 0 incidencias de seguridad en el render. |
+| 2 | App de solo lectura sobre el núcleo, e importación y exportación de Markdown por CLI | **Puerta 2:** una semana de uso diario con el agente. Latencia CLI → vista p95 < 500 ms, 0 incidencias de seguridad en el render, y una carpeta Markdown real importada con 0 enlaces rotos. |
 | 3 | Editor visual y de código | **Puerta 3:** el 100 % de las notas editadas en la app pasan `validate`, y abrir y guardar sin cambios no altera ningún archivo. |
 | 4 | Requisitos P1 | — |
 
@@ -103,7 +103,9 @@ flowchart TB
 - [ ] **T1.24 Prueba de la puerta 1.** Una sesión guionizada con Claude Code sobre un vault vacío que genera al menos 20 notas (documentos, una presentación y listas de tareas) y registra la tasa de éxito a la primera, los enlaces por nota y el resultado de `doctor` tras varios `mv` y `rm`. Los resultados se guardan en `docs/gates/fase-1.md`. Depende de: T1.23.
 - [ ] **T1.25 Tests E2E de la fase 1.** Un test por cada criterio de aceptación P0 de la fase 1, incluido el de `file://` con Playwright (REQ-VAULT-05). Depende de: T1.21.
 
-## Fase 2 — Visor de solo lectura
+## Fase 2 — Visor de solo lectura e importación y exportación de Markdown
+
+### 2A. Visor
 
 - [ ] **T2.1 Servidor local.** `gaveta serve`: Fastify en `127.0.0.1`, API de lectura sobre el núcleo (`notes`, `read`, `links`, `backlinks`, `graph`, `search`, `doctor`), token de sesión y validación de `Origin`. Cubre: REQ-CLI-12, REQ-SEC-06. Depende de: fase 1.
 - [ ] **T2.2 Watcher y eventos.** `chokidar`, reindexado incremental y WebSocket con `note:changed|added|removed|moved`. Incluye una medida automática de la latencia de la CLI a la vista. Cubre: REQ-APP-05, REQ-NFR-01. Depende de: T2.1.
@@ -115,7 +117,22 @@ flowchart TB
 - [ ] **T2.8 Búsqueda y paleta.** Cmd/Ctrl+K sobre `search` y comandos de navegación. Cubre: REQ-APP-04. Depende de: T2.4.
 - [ ] **T2.9 Panel de salud y avisos.** Salida de `doctor` y aviso cuando un cambio externo rompe enlaces o el contrato. Cubre: REQ-APP-07. Depende de: T2.2.
 - [ ] **T2.10 Tests E2E de seguridad y latencia.** Notas maliciosas de `fixtures/` y medida del p95. Cubre: REQ-SEC-01, REQ-NFR-01. Depende de: T2.3, T2.2.
-- [ ] **T2.11 Prueba de la puerta 2.** Una semana de uso diario con el agente. Los resultados se guardan en `docs/gates/fase-2.md`. Depende de: T2.1 a T2.10.
+### 2B. Importar y exportar Markdown (CLI)
+
+Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que ya existen. Solo depende del núcleo de la fase 1, no del visor, así que se puede desarrollar en paralelo a las tareas T2.1 a T2.10.
+
+- [ ] **T2.12 Aprobar DEC-07** (unified/remark/rehype) y preparar `fixtures/markdown/`: un vault de Obsidian de prueba con 50 notas y subcarpetas, wikilinks con alias y sección, enlaces relativos, tareas, callouts, tablas, mermaid, imágenes compartidas, una presentación Marp y casos no soportados. Depende de: fase 1.
+- [ ] **T2.13 Conversor Markdown → HTML** en `core/convert/md-to-html.ts`, con plugins para wikilinks, callouts, tareas, mermaid y slides. La salida pasa por el normalizador y el validador del núcleo. Cubre: REQ-MIG-04, REQ-MIG-01. Depende de: T2.12.
+- [ ] **T2.14 Importación de carpetas.** Recorrido recursivo con exclusiones, asignación de ids y resolución de enlaces en dos pasadas, copia de adjuntos deduplicada, `--dry-run`, `--on-conflict` y escritura atómica del lote (`--continue-on-error`). Cubre: REQ-MIG-02, 03, 05, 06 y 07. Depende de: T2.13, T1.10.
+- [ ] **T2.15 Conversor HTML → Markdown** en `core/convert/html-to-md.ts`, con `--links wiki|relative`, front matter, tareas, callouts, slides y `W_EXPORT_LOSSY` para lo que no se puede representar. Cubre: REQ-MIG-09 y 10. Depende de: T2.12.
+- [ ] **T2.16 `gaveta export`.** Una nota, una carpeta o `--all`, conservando la jerarquía y los adjuntos. Cubre: REQ-MIG-08. Depende de: T2.15.
+- [ ] **T2.17 Comandos `import` y `export` en la CLI**, con su sobre `--json`, sus códigos de error y sus ejemplos en `gaveta guide`. Cubre: REQ-MIG-01 a 10, REQ-CLI-09. Depende de: T2.14, T2.16.
+- [ ] **T2.18 Tests de ida y vuelta** (Markdown → HTML → Markdown y HTML → Markdown → HTML) sobre los fixtures. Cubre: REQ-MIG-11. Depende de: T2.17.
+- [ ] **T2.19 Instrucciones para el agente.** Añadir al bloque de `CLAUDE.md` y al comando `/gaveta` cómo importar documentación Markdown existente y cómo exportarla. Depende de: T2.17, T1.23.
+
+### 2C. Puerta 2
+
+- [ ] **T2.11 Prueba de la puerta 2.** Una semana de uso diario con el agente, que incluye importar al menos una carpeta de documentos Markdown reales. Los resultados se guardan en `docs/gates/fase-2.md`. Depende de: T2.1 a T2.10, T2.17.
 
 ## Fase 3 — Editor visual y de código
 
@@ -127,11 +144,12 @@ flowchart TB
 - [ ] **T3.6 Autocompletado de `[[`** en los dos modos. Cubre: REQ-APP-12. Depende de: T3.4, T3.5.
 - [ ] **T3.7 Conflictos.** Aviso y diff cuando la nota cambia fuera durante la edición. Cubre: REQ-APP-13. Depende de: T3.2, T2.2.
 - [ ] **T3.8 Renombrar, mover y borrar desde la app**, con diálogo de backlinks. Cubre: REQ-APP-14. Depende de: T3.2.
-- [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8.
+- [ ] **T3.10 Importar y exportar desde la app.** Arrastrar y soltar archivos o carpetas `.md` (o el menú "Importar") con una vista previa del `--dry-run` antes de confirmar, y "Exportar a Markdown" en una nota, en una carpeta y en el vault. Cubre: REQ-MIG-12. Depende de: T3.2, T2.17.
+- [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8, T3.10.
 
 ## Fase 4 — P1
 
-- [ ] **T4.1 `gaveta mcp`.** Servidor MCP por stdio con los mismos comandos y el mismo sobre JSON. Se registra con `claude mcp add gaveta -- gaveta mcp`. Cubre: REQ-CLI-14.
+- [ ] **T4.1 `gaveta mcp`.** Servidor MCP por stdio con los mismos comandos (incluidos `import` y `export`) y el mismo sobre JSON. Se registra con `claude mcp add gaveta -- gaveta mcp`. Cubre: REQ-CLI-14, REQ-MIG-13.
 - [ ] **T4.2 Menciones no enlazadas** en la CLI y en la app ("Enlazar"). Cubre: REQ-LINK-12.
 - [ ] **T4.3 Transclusión con `<gaveta-embed>`.** Cubre: REQ-LINK-13.
 - [ ] **T4.4 Vista agregada de tareas.** Cubre: REQ-APP-15.
