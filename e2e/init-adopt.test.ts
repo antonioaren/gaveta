@@ -41,6 +41,34 @@ function run(
   };
 }
 
+it('initializes at --vault or GAVETA_VAULT when no positional dir is given', () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-init-target-'));
+  const cwd = join(parent, 'cwd');
+  const byOption = join(parent, 'by-option');
+  const byEnv = join(parent, 'by-env');
+  mkdirSync(cwd);
+  try {
+    const option = run(['init', '--json', '--vault', byOption], { cwd });
+    expect(option.status).toBe(0);
+    expect(option.stderr).toBe('');
+    expect(JSON.parse(option.stdout)).toMatchObject({
+      data: { root: realpathSync(byOption) },
+    });
+
+    const fromEnv = run(['init', '--json'], {
+      cwd,
+      env: { ...process.env, GAVETA_VAULT: byEnv },
+    });
+    expect(fromEnv.status).toBe(0);
+    expect(fromEnv.stderr).toBe('');
+    expect(JSON.parse(fromEnv.stdout)).toMatchObject({
+      data: { root: realpathSync(byEnv) },
+    });
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+});
+
 it('initializes a vault from the binary and stays idempotent', () => {
   const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-init-'));
   const directory = join(parent, 'vault');

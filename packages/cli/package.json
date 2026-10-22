@@ -4,6 +4,9 @@
   "private": true,
   "description": "gaveta / gv binary. Command registry, versioned JSON envelope, global options, and init, adopt, new, read, edit, and search.",
   "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "bin": {
     "gaveta": "./bin/gaveta.js",
     "gv": "./bin/gaveta.js"

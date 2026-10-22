@@ -54,7 +54,7 @@ describe('T0.3 local check', () => {
     expect(asString(scripts['test:coverage'], 'scripts.test:coverage')).toContain('--coverage');
     expect(asString(scripts['test:e2e'], 'scripts.test:e2e')).toContain('vitest.e2e.config.ts');
     const engines = asRecord(manifest.engines, 'package.json engines');
-    expect(engines.node).toBe('>=22.13.0');
+    expect(engines.node).toBe('>=22.18.0');
     const devDependencies = asRecord(manifest.devDependencies, 'package.json devDependencies');
     expect(devDependencies['@vitest/coverage-v8']).toBeTruthy();
   });
@@ -94,7 +94,10 @@ describe('T0.3 CI workflows', () => {
     }
     expect(setup).toContain('node-version-file: .nvmrc');
     expect(setup).toContain('cache: pnpm');
-    expect(read('.nvmrc').trim()).toBe('22');
+    expect(read('.nvmrc').trim()).toBe('22.18.0');
+    expect(ci).toContain('unit (node-min)');
+    expect(ci).toContain('e2e (node-min)');
+    expect(ci).toContain("node-version: '22.18.0'");
     expect(pipeline).toContain('pnpm install --frozen-lockfile');
     expect(pipeline).not.toContain('pull_request_target');
     expect(pipeline).not.toContain('write-all');

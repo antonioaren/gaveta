@@ -3,6 +3,7 @@ import {
   GAVETA_VAULT_ENV,
   GavetaError,
   GavetaRefError,
+  assertRuntimeSupported,
   discoverVault,
   exitCodeFor,
   formatDiagnostic,
@@ -70,6 +71,7 @@ export async function runCli(argv: readonly string[], io: CliIo = {}): Promise<n
 
   let json = jsonRequested;
   try {
+    assertRuntimeSupported();
     const parsed = await parseCommand(registry, userArgs);
     if (parsed.kind === 'help') {
       writers.stdout(renderHelp(registry, parsed.commandName));
@@ -191,6 +193,7 @@ async function execute(
       cwd: io.cwd,
       env: io.env,
       json: io.json,
+      vaultOption: globals.vault,
       vault,
       strictRel,
       input,
