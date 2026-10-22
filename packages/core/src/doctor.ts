@@ -18,6 +18,7 @@ import {
   type IndexedNote,
   type VaultIndex,
 } from './sqlite/store.ts';
+import { vaultAssetsNeedUpgrade } from './vault/assets.ts';
 import { readVaultConfig } from './vault/config.ts';
 import { readVaultText, writeVaultText } from './vault/paths.ts';
 import { validateNote, type ValidateNoteOptions } from './validate.ts';
@@ -49,6 +50,7 @@ export interface DoctorReport {
 export interface DoctorVaultOptions {
   readonly fix?: boolean;
   readonly strictRel?: boolean;
+  readonly cliVersion?: string;
 }
 
 interface PlannedFix {
@@ -87,7 +89,13 @@ export async function doctorVault(
     };
     const relPolicy = { strict: options.strictRel === true, vocabulary: config.rel.vocabulary };
     let catalog = loadCatalog(index);
-    let findings = await collectFindings(root, index, catalog, validateOptions);
+    let findings = await collectFindings(
+      root,
+      index,
+      catalog,
+      validateOptions,
+      options.cliVersion === undefined ? { config } : { config, cliVersion: options.cliVersion },
+    );
     let fixed: DoctorFix[] = [];
     if (options.fix === true) {
       const planned = await planFixes(root, index, findings, validateOptions, relPolicy);
@@ -95,7 +103,15 @@ export async function doctorVault(
         await commitFixes(root, index, planned);
         fixed = planned.map((file) => ({ path: file.path, codes: file.codes }));
         catalog = loadCatalog(index);
-        findings = await collectFindings(root, index, catalog, validateOptions);
+        findings = await collectFindings(
+          root,
+          index,
+          catalog,
+          validateOptions,
+          options.cliVersion === undefined
+            ? { config }
+            : { config, cliVersion: options.cliVersion },
+        );
       }
     }
     return {
@@ -131,11 +147,16 @@ async function collectFindings(
   index: VaultIndex,
   catalog: Catalog,
   validateOptions: ValidateNoteOptions,
+  vaultMeta: {
+    readonly config: Awaited<ReturnType<typeof readVaultConfig>>;
+    readonly cliVersion?: string;
+  },
 ): Promise<DoctorFinding[]> {
   const findings: DoctorFinding[] = [];
   findings.push(...linkFindings(catalog));
   findings.push(...duplicateFindings(index));
   findings.push(...orphanFindings(catalog));
+  findings.push(...vaultAssetFindings(vaultMeta.config, vaultMeta.cliVersion));
   findings.push(...(await mermaidVaultFindings(root, catalog)));
   findings.push(...(await noteFindings(root, catalog, validateOptions)));
   return sortFindings(findings);
@@ -177,6 +198,31 @@ async function mermaidVaultFindings(root: string, catalog: Catalog): Promise<Doc
       hint: text.hint,
       path: '.gaveta',
       details: { missing: missing.join(',') },
+    },
+  ];
+}
+
+function vaultAssetFindings(
+  config: Awaited<ReturnType<typeof readVaultConfig>>,
+  cliVersion: string | undefined,
+): DoctorFinding[] {
+  if (cliVersion === undefined) {
+    return [];
+  }
+  if (!vaultAssetsNeedUpgrade(config, cliVersion)) {
+    return [];
+  }
+  const text = formatDiagnostic('W_VAULT_ASSETS_OUTDATED');
+  return [
+    {
+      code: 'W_VAULT_ASSETS_OUTDATED',
+      message: text.message,
+      hint: text.hint,
+      path: '.gaveta/config.json',
+      details: {
+        assetsVersion: config.assetsVersion ?? 'desconocida',
+        cliVersion,
+      },
     },
   ];
 }

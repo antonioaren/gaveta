@@ -1,6 +1,6 @@
 {
   "name": "@gaveta/web",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "React app. Shell until the phase 2 viewer.",
   "type": "module",

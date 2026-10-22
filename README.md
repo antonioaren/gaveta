@@ -39,14 +39,35 @@ pnpm exec gaveta search Other --vault mi-vault --json
 open mi-vault/origen.html
 ```
 
-Para tener `gaveta` y `gv` en el PATH global (una vez: `pnpm setup` y reinicia la shell si hace falta):
+Para instalar desde un checkout de git (recomendado hoy) y dejar `gaveta` y `gv` en `~/.local/bin`:
 
 ```bash
-cd packages/cli
-pnpm link --global
+git clone https://github.com/antonioaren/gaveta.git
+cd gaveta
+corepack enable
+pnpm install
+mkdir -p ~/.local/bin
+ln -sf "$(pwd)/packages/cli/bin/gaveta.js" ~/.local/bin/gaveta
+ln -sf "$(pwd)/packages/cli/bin/gaveta.js" ~/.local/bin/gv
 ```
 
-Comprueba con `gaveta version`. No hace falta `NODE_NO_WARNINGS`.
+Comprueba con `gaveta version` (muestra versión SemVer, commit git, Node y método de instalación). No hace falta `NODE_NO_WARNINGS`.
+
+### Actualizar
+
+En un checkout de git en la rama `main`, sin cambios locales sin confirmar:
+
+```bash
+gaveta update
+```
+
+Solo comprobar si hay actualización (`0` = al día, `1` = disponible):
+
+```bash
+gaveta update --check
+```
+
+Por defecto sigue el último tag `v*` (`--channel stable`); usa `--channel main` para seguir `origin/main`. Si la instalación no es un checkout de git, el comando muestra los pasos manuales. Tras actualizar, refresca los assets de `.gaveta/` del vault actual (o del indicado con `--vault`) sin tocar las notas. Ver [docs/releasing.md](docs/releasing.md) para publicar versiones.
 
 ## Desarrollo
 
@@ -61,7 +82,7 @@ pnpm exec gaveta version
 
 `pnpm check` ejecuta format, lint, typecheck, tests con cobertura, e2e y `pnpm audit --audit-level=high`. Es el mismo conjunto que la CI local. El flujo de trabajo de los agentes está en [AGENTS.md](AGENTS.md).
 
-`gaveta` y `gv` son el mismo binario. `gaveta version` imprime la versión; `--json` escribe el sobre versionado, `--vault` localiza el vault y `--from` lee un archivo o stdin. El resto de comandos llega en la fase 1.
+`gaveta` y `gv` son el mismo binario. `gaveta version` y `gaveta update` gestionan la versión instalada; `--json` escribe el sobre versionado, `--vault` localiza el vault y `--from` lee un archivo o stdin.
 
 ### Importar desde Claude
 

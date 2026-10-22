@@ -5,6 +5,7 @@ import { renderHelp } from './help.ts';
 it('registers version, init, adopt, search, new, read, edit, mv, rm, connection, todo, validate, doctor, reindex, and guide commands', () => {
   expect(commands.map((command) => command.name)).toEqual([
     'version',
+    'update',
     'init',
     'adopt',
     'search',

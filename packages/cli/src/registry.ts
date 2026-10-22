@@ -15,11 +15,13 @@ import { reindexCommand } from './commands/reindex.ts';
 import { searchCommand } from './commands/search.ts';
 import { todoCommand } from './commands/todo.ts';
 import { validateCommand } from './commands/validate.ts';
+import { updateCommand } from './commands/update.ts';
 import { versionCommand } from './commands/version.ts';
 import type { CommandSpec } from './types.ts';
 
 const peerCommands: readonly CommandSpec[] = [
   versionCommand,
+  updateCommand,
   initCommand,
   adoptCommand,
   searchCommand,

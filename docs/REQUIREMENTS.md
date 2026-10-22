@@ -305,8 +305,16 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `W_EXPORT_LOSSY` | Información que Markdown no puede representar y que se ha degradado |
 | `E_RUNTIME_UNSUPPORTED` | Node o SQLite del sistema no cumplen el mínimo (por ejemplo, falta FTS5) |
 | `E_INDEX_CORRUPT` | El índice SQLite está dañado y no se ha podido rehacer |
+| `E_UPDATE_DIRTY` | El checkout de git tiene cambios sin confirmar |
+| `E_UPDATE_BRANCH` | El checkout de git no está en la rama main |
+| `E_UPDATE_NOT_FAST_FORWARD` | La actualización requeriría un merge que no es fast-forward |
+| `E_UPDATE_REMOTE` | El remoto origin no apunta al repositorio oficial de Gaveta |
+| `E_UPDATE_FAILED` | No se ha podido completar la actualización desde git |
+| `E_UPDATE_UNSUPPORTED` | Este método de instalación no admite gaveta update automático |
 | `W_INDEX_RECOVERED` | El índice estaba dañado o era de una versión incompatible y se ha creado de nuevo |
 | `W_SKILL_OUTDATED` | La copia instalada de la skill es más antigua que la CLI actual |
+| `W_VAULT_ASSET_MODIFIED` | Un archivo de .gaveta/ difiere del tema de la CLI y no se ha sobrescrito |
+| `W_VAULT_ASSETS_OUTDATED` | Los assets de .gaveta/ son más antiguos que la CLI actual |
 
 **Localización del vault:** `--vault <dir>`, después la variable de entorno `GAVETA_VAULT` y, por último, una búsqueda ascendente de `.gaveta/` desde el directorio actual.
 

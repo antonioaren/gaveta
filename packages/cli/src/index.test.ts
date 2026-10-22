@@ -18,6 +18,7 @@ it('links the CLI to core', () => {
   expect(LINKED_CORE_PACKAGE_ID).toBe('@gaveta/core');
   expect(SCHEMA_VERSION).toBe(1);
   expect(commands.map((command) => command.name)).toContain('version');
+  expect(commands.map((command) => command.name)).toContain('update');
 });
 
 it('exposes gaveta and gv as the same binary', () => {

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readWorkspaceVersion, resolveInstallInfo } from '@gaveta/core';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { CommandResult, CommandSpec } from '../types.ts';
@@ -9,14 +9,11 @@ export function cliVersion(): string {
   if (cachedVersion !== undefined) {
     return cachedVersion;
   }
-  const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-  const manifest: unknown = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'));
-  if (!isRecord(manifest) || typeof manifest.version !== 'string') {
-    throw new Error('CLI package.json has no version');
-  }
-  cachedVersion = manifest.version;
+  cachedVersion = readWorkspaceVersion();
   return cachedVersion;
 }
+
+const CLI_ENTRY = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'bin', 'gaveta.js');
 
 export const versionCommand: CommandSpec = {
   name: 'version',
@@ -24,13 +21,27 @@ export const versionCommand: CommandSpec = {
   example: 'gaveta version --json',
   requiresVault: false,
   input: 'optional',
-  run(context): CommandResult {
+  async run(context): Promise<CommandResult> {
     const version = cliVersion();
+    const install = await resolveInstallInfo(CLI_ENTRY);
+    const humanParts = [`gaveta ${version}`];
+    if (install.git !== null) {
+      const dirty = install.git.dirty ? ' (dirty)' : '';
+      humanParts.push(`git ${install.git.shortCommit}${dirty}`);
+    }
+    humanParts.push(`node ${install.nodeVersion}`);
+    humanParts.push(`install ${install.method}`);
     return {
-      human: `gaveta ${version}\n`,
+      human: `${humanParts.join(' · ')}\n`,
       data: {
         name: 'gaveta',
         version,
+        install: {
+          method: install.method,
+          nodeVersion: install.nodeVersion,
+          repoRoot: install.repoRoot,
+          git: install.git,
+        },
         vault:
           context.vault === null
             ? null
@@ -47,7 +58,3 @@ export const versionCommand: CommandSpec = {
     };
   },
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}

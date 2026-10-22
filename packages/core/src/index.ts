@@ -207,6 +207,39 @@ export {
 
 export type { AdoptOptions, AdoptResult, AdoptWarning } from './adopt.ts';
 
+export { readWorkspaceVersion, workspaceRootFromModuleUrl } from './workspace-version.ts';
+
+export { changelogEntriesBetween } from './changelog.ts';
+
+export {
+  applyGitUpdate,
+  checkGitUpdate,
+  defaultUpdateChannel,
+  resolveInstallInfo,
+  type GitCheckoutInfo,
+  type GitUpdateApplyResult,
+  type GitUpdateCheckResult,
+  type GitUpdateOptions,
+  type GitUpdateTarget,
+  type InstallInfo,
+  type InstallMethod,
+  type UpdateChannel,
+} from './install/git.ts';
+
+export { GAVETA_ALLOWED_REMOTES, GAVETA_GITHUB_REPO } from './install/constants.ts';
+
+export { isAllowedGavetaRemote, normalizeRemoteUrl } from './install/remote.ts';
+
+export { defaultProcessRunner, type ProcessRunner, type SpawnResult } from './process-runner.ts';
+
+export {
+  hashVaultAsset,
+  upgradeVaultAssets,
+  vaultAssetsNeedUpgrade,
+  type UpgradeVaultAssetsResult,
+  type VaultAssetUpgradeWarning,
+} from './vault/assets.ts';
+
 export { initVault } from './vault/init.ts';
 
 export type { AgentInstructionResult, InitVaultOptions, InitVaultResult } from './vault/init.ts';

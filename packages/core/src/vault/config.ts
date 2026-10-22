@@ -12,15 +12,19 @@ export interface VaultConfig {
     vocabulary: string[];
   };
   remoteAllowlist: string[];
+  assetsVersion?: string;
+  /** sha256 hex of last gaveta-written content per vault asset path */
+  assets?: Record<string, string>;
 }
 
-export function createDefaultVaultConfig(): VaultConfig {
+export function createDefaultVaultConfig(assetsVersion?: string): VaultConfig {
   return {
     rel: {
       strict: false,
       vocabulary: [...SUGGESTED_REL],
     },
     remoteAllowlist: [],
+    ...(assetsVersion !== undefined ? { assetsVersion } : {}),
   };
 }
 
@@ -28,10 +32,11 @@ export function parseVaultConfig(value: unknown): VaultConfig {
   if (!isRecord(value)) {
     throw configInvalid('la raíz tiene que ser un objeto');
   }
-  assertExactKeys(
+  assertAllowedKeys(
     value,
     ['rel', 'remoteAllowlist'],
-    'tiene que tener exactamente las claves rel y remoteAllowlist',
+    ['assetsVersion', 'assets'],
+    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion y assets son opcionales)',
   );
   const rel = value.rel;
   if (!isRecord(rel)) {
@@ -45,7 +50,18 @@ export function parseVaultConfig(value: unknown): VaultConfig {
   if (typeof rel.strict !== 'boolean') {
     throw configInvalid('rel.strict tiene que ser booleano');
   }
-  return {
+  let assetsVersion: string | undefined;
+  if ('assetsVersion' in value) {
+    if (typeof value.assetsVersion !== 'string' || !/^\d+\.\d+\.\d+$/.test(value.assetsVersion)) {
+      throw configInvalid('assetsVersion tiene que ser un texto SemVer (por ejemplo 0.1.0)');
+    }
+    assetsVersion = value.assetsVersion;
+  }
+  let assets: Record<string, string> | undefined;
+  if ('assets' in value) {
+    assets = parseAssetHashes(value.assets);
+  }
+  const parsed: VaultConfig = {
     rel: {
       strict: rel.strict,
       vocabulary: parseStringList(
@@ -62,6 +78,37 @@ export function parseVaultConfig(value: unknown): VaultConfig {
       'remoteAllowlist tiene duplicados',
     ),
   };
+  if (assetsVersion !== undefined && assets !== undefined) {
+    return { ...parsed, assetsVersion, assets };
+  }
+  if (assetsVersion !== undefined) {
+    return { ...parsed, assetsVersion };
+  }
+  if (assets !== undefined) {
+    return { ...parsed, assets };
+  }
+  return parsed;
+}
+
+function parseAssetHashes(value: unknown): Record<string, string> {
+  if (!isRecord(value)) {
+    throw configInvalid('assets tiene que ser un objeto');
+  }
+  const entries = Object.entries(value);
+  const assets: Record<string, string> = {};
+  for (const [path, hash] of entries) {
+    if (path.trim() === '' || path.includes('\0')) {
+      throw configInvalid('assets admite solo rutas relativas dentro del vault');
+    }
+    if (typeof hash !== 'string' || !/^[a-f0-9]{64}$/.test(hash)) {
+      throw configInvalid('assets tiene que mapear rutas a hashes sha256 en hex');
+    }
+    if (assets[path] !== undefined) {
+      throw configInvalid('assets tiene claves duplicadas');
+    }
+    assets[path] = hash;
+  }
+  return assets;
 }
 
 export async function readVaultConfig(vaultRoot: string): Promise<VaultConfig> {
@@ -98,17 +145,20 @@ export async function writeVaultConfig(vaultRoot: string, config: unknown): Prom
 }
 
 function serializeVaultConfig(config: VaultConfig): string {
-  return `${JSON.stringify(
-    {
-      rel: {
-        strict: config.rel.strict,
-        vocabulary: config.rel.vocabulary,
-      },
-      remoteAllowlist: config.remoteAllowlist,
+  const body: Record<string, unknown> = {
+    rel: {
+      strict: config.rel.strict,
+      vocabulary: config.rel.vocabulary,
     },
-    null,
-    2,
-  )}\n`;
+    remoteAllowlist: config.remoteAllowlist,
+  };
+  if (config.assetsVersion !== undefined) {
+    body.assetsVersion = config.assetsVersion;
+  }
+  if (config.assets !== undefined && Object.keys(config.assets).length > 0) {
+    body.assets = config.assets;
+  }
+  return `${JSON.stringify(body, null, 2)}\n`;
 }
 
 async function assertGavetaDirectory(vaultRoot: string): Promise<void> {
@@ -159,16 +209,30 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function assertAllowedKeys(
+  record: Record<string, unknown>,
+  required: readonly string[],
+  optional: readonly string[],
+  detail: string,
+): void {
+  const allowed = new Set([...required, ...optional]);
+  const actual = Object.keys(record);
+  for (const key of required) {
+    if (!actual.includes(key)) {
+      throw configInvalid(detail);
+    }
+  }
+  if (actual.some((key) => !allowed.has(key))) {
+    throw configInvalid(detail);
+  }
+}
+
 function assertExactKeys(
   record: Record<string, unknown>,
   keys: readonly string[],
   detail: string,
 ): void {
-  const actual = Object.keys(record);
-  const expected = new Set(keys);
-  if (actual.length !== keys.length || actual.some((key) => !expected.has(key))) {
-    throw configInvalid(detail);
-  }
+  assertAllowedKeys(record, keys, [], detail);
 }
 
 function parseStringList(
