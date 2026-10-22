@@ -60,7 +60,8 @@ const DEFAULT_POLICY: RelPolicy = { strict: false, vocabulary: [...SUGGESTED_REL
 
 /**
  * Convert `[[...]]` to canonical or pending anchors, repair `href` from `data-g-to`,
- * and apply the vault `rel` policy. Existing `data-g-pending` anchors are not promoted.
+ * and apply the vault `rel` policy. Existing `data-g-pending` anchors stay pending;
+ * `promotePendingLinks` rewrites them when the target note is created.
  */
 export function resolveNoteLinks(options: ResolveNoteLinksOptions): ResolveNoteLinksResult {
   if (typeof options.html !== 'string' || typeof options.fromPath !== 'string') {
