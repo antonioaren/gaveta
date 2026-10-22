@@ -72,6 +72,22 @@ describe('theme showcase (file://)', () => {
     await page.close();
   });
 
+  it('navigates to a linked note under file:// (REQ-VAULT-05)', async () => {
+    const page = await browser.newPage();
+    await openNote(page, 'light');
+
+    const linkColor = await page
+      .locator('a[data-g-to]')
+      .first()
+      .evaluate((node) => getComputedStyle(node).color);
+    expect(linkColor).not.toBe('');
+
+    await page.locator('a[data-g-to][href="vitrina-slides.html"]').click();
+    await page.waitForURL(/vitrina-slides\.html$/);
+    expect(await page.locator('h1').textContent()).toContain('Tema en presentación');
+    await page.close();
+  });
+
   it('honors html data-theme override over system preference', async () => {
     const page = await browser.newPage();
     await page.emulateMedia({ colorScheme: 'light' });
