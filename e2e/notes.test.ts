@@ -80,6 +80,28 @@ function redact(value: unknown): unknown {
   return next;
 }
 
+it('creates notes with escaped angle brackets in inline code', () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-esc-'));
+  try {
+    const vault = makeVault(parent);
+    const html = '<article><h1>Esc</h1><p><code>a/&lt;n&gt;/b</code> y 1 &lt; 2</p></article>';
+    const created = run(['new', 'Esc', '--type', 'doc', '--from', '-', '--json'], vault, html);
+    expect(created.status).toBe(0);
+    expect(created.stderr).toBe('');
+    const body = JSON.parse(created.stdout) as { ok: boolean; data: { path: string } };
+    expect(body.ok).toBe(true);
+    expect(body.data.path).toBe('esc.html');
+    const validated = run(['validate', 'esc.html', '--json'], vault);
+    expect(validated.status).toBe(0);
+    expect(validated.stderr).toBe('');
+    const onDisk = readFileSync(join(vault, 'esc.html'), 'utf8');
+    expect(onDisk).toContain('<code>a/&lt;n&gt;/b</code>');
+    expect(onDisk.toLowerCase().indexOf('<n>')).toBe(-1);
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+});
+
 it('creates, reads, edits, and searches from the binary', () => {
   const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-notes-'));
   try {

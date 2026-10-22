@@ -259,6 +259,7 @@ describe('convertHtmlToMarkdown', () => {
       'tareas/tareas-basicas.md',
       'contenido/mermaid.md',
       'contenido/codigo.md',
+      'contenido/codigo-angulos.md',
     ];
     for (const path of reversible) {
       expectRoundTrip(path);
