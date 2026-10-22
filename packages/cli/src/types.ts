@@ -40,6 +40,17 @@ export interface CommandOption {
   readonly kind?: 'string' | 'boolean';
 }
 
+/** A subcommand of a parent CLI command (for example `todo add`). */
+export interface CommandSubSpec {
+  readonly name: string;
+  readonly summary: string;
+  readonly example: string;
+  readonly input?: CommandInputMode;
+  readonly args?: readonly CommandArgument[];
+  readonly options?: readonly CommandOption[];
+  run(context: CommandContext): CommandResult | Promise<CommandResult>;
+}
+
 /**
  * One CLI command. `guide` (T1.21) is generated from this registry:
  * every command needs a summary and an example.
@@ -59,7 +70,8 @@ export interface CommandSpec {
   };
   readonly args?: readonly CommandArgument[];
   readonly options?: readonly CommandOption[];
-  run(context: CommandContext): CommandResult | Promise<CommandResult>;
+  readonly subcommands?: readonly CommandSubSpec[];
+  run?(context: CommandContext): CommandResult | Promise<CommandResult>;
 }
 
 export interface CommandContext {
@@ -72,4 +84,5 @@ export interface CommandContext {
   readonly input: ResolvedInput | null;
   readonly positionals: readonly string[];
   readonly options: Readonly<Record<string, string>>;
+  readonly subcommand?: string;
 }

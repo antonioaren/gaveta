@@ -29,7 +29,13 @@ import { CliFailure } from './failure.ts';
 import { renderHelp } from './help.ts';
 import { readCommandInput } from './input.ts';
 import { commands } from './registry.ts';
-import type { CommandResult, CommandSpec, CommandWarning } from './types.ts';
+import type {
+  CommandContext,
+  CommandResult,
+  CommandSpec,
+  CommandSubSpec,
+  CommandWarning,
+} from './types.ts';
 
 export interface CliIo {
   readonly stdout?: (chunk: string) => void;
@@ -48,8 +54,10 @@ interface Globals {
 
 interface ParsedCommand {
   readonly spec: CommandSpec;
+  readonly subcommand: CommandSubSpec | undefined;
   readonly positionals: readonly string[];
   readonly options: Readonly<Record<string, string>>;
+  readonly globals: Globals;
 }
 
 interface Writers {
@@ -140,7 +148,7 @@ async function parseCommand(
   if (parsed === undefined) {
     throw new Error('The command action did not run.');
   }
-  return { kind: 'run', command: parsed, globals: readGlobals(rawOptions(program)) };
+  return { kind: 'run', command: parsed, globals: parsed.globals };
 }
 
 async function execute(
@@ -155,13 +163,14 @@ async function execute(
     readonly json: boolean;
   },
 ): Promise<number> {
-  const { spec, positionals } = parsed;
-  if (spec.input === 'none' && globals.from !== undefined) {
+  const { spec, subcommand, positionals } = parsed;
+  const inputMode = commandInputMode(spec, subcommand);
+  const args = commandArgs(spec, subcommand);
+  if (inputMode === 'none' && globals.from !== undefined) {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Este comando no admite contenido.' });
   }
-  const allowedPositionals =
-    (spec.args?.length ?? 0) + (spec.contentArgument === undefined ? 0 : 1);
-  if (spec.input === 'none' && positionals.length > allowedPositionals) {
+  const allowedPositionals = (args?.length ?? 0) + (spec.contentArgument === undefined ? 0 : 1);
+  if (inputMode === 'none' && positionals.length > allowedPositionals) {
     throw new CliFailure(
       'E_ARG_INVALID',
       {},
@@ -186,21 +195,29 @@ async function execute(
     argument,
     stdin: io.stdin,
     cwd: io.cwd,
-    required: spec.input === 'required',
+    required: inputMode === 'required',
   });
+  const context: CommandContext = {
+    cwd: io.cwd,
+    env: io.env,
+    json: io.json,
+    vaultOption: globals.vault,
+    vault,
+    strictRel,
+    input,
+    positionals,
+    options: parsed.options,
+    ...(subcommand === undefined ? {} : { subcommand: subcommand.name }),
+  };
   let result: CommandResult;
   try {
-    result = await spec.run({
-      cwd: io.cwd,
-      env: io.env,
-      json: io.json,
-      vaultOption: globals.vault,
-      vault,
-      strictRel,
-      input,
-      positionals,
-      options: parsed.options,
-    });
+    if (subcommand !== undefined) {
+      result = await subcommand.run(context);
+    } else if (spec.run !== undefined) {
+      result = await spec.run(context);
+    } else {
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Falta el subcomando.' });
+    }
   } catch (error) {
     return reportCaught(io.writers, io.json, spec.name, error, strictRel);
   }
@@ -398,41 +415,103 @@ function createProgram(
     .option('--from <ruta>', 'Contenido desde un archivo, o - para leer stdin.');
 
   for (const spec of registry) {
-    const command = program.command(spec.name).description(spec.summary);
-    for (const arg of spec.args ?? []) {
-      command.argument(arg.required ? `<${arg.name}>` : `[${arg.name}]`, arg.description);
-    }
-    if (spec.contentArgument !== undefined) {
-      const syntax = spec.contentArgument.required
-        ? `<${spec.contentArgument.name}>`
-        : `[${spec.contentArgument.name}]`;
-      command.argument(syntax, spec.contentArgument.description);
-    }
-    for (const option of spec.options ?? []) {
-      const built = new Option(option.flags, option.description);
-      if (option.choices !== undefined) {
-        built.choices([...option.choices]);
+    const parent = program.command(spec.name).description(spec.summary);
+    if (spec.subcommands !== undefined && spec.subcommands.length > 0) {
+      for (const sub of spec.subcommands) {
+        registerLeafCommand(parent.command(sub.name), spec, sub, onRun);
       }
-      command.addOption(built);
+      continue;
     }
-    command.allowExcessArguments(false);
-    command.action((...params: unknown[]) => {
-      const commandObject = params.at(-1);
-      if (!(commandObject instanceof Command)) {
-        throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
-      }
-      onRun({
-        spec,
-        positionals: [...commandObject.args],
-        options: readCommandOptions(params.at(-2), spec),
-      });
-    });
+    registerLeafCommand(parent, spec, undefined, onRun);
   }
   return program;
 }
 
-function rawOptions(program: Command): unknown {
-  return program.opts();
+function attachGlobalOptions(command: Command): void {
+  command
+    .option('--json', 'Escribe el sobre JSON versionado en stdout.')
+    .option('--vault <dir>', 'Ruta del vault.')
+    .option('--from <ruta>', 'Contenido desde un archivo, o - para leer stdin.');
+}
+
+function registerLeafCommand(
+  command: Command,
+  spec: CommandSpec,
+  subcommand: CommandSubSpec | undefined,
+  onRun: (command: ParsedCommand) => void,
+): void {
+  if (subcommand !== undefined) {
+    attachGlobalOptions(command);
+  }
+  command.description(subcommand?.summary ?? spec.summary);
+  const args = commandArgs(spec, subcommand);
+  for (const arg of args ?? []) {
+    command.argument(arg.required ? `<${arg.name}>` : `[${arg.name}]`, arg.description);
+  }
+  if (subcommand === undefined && spec.contentArgument !== undefined) {
+    const syntax = spec.contentArgument.required
+      ? `<${spec.contentArgument.name}>`
+      : `[${spec.contentArgument.name}]`;
+    command.argument(syntax, spec.contentArgument.description);
+  }
+  const options = subcommand?.options ?? spec.options ?? [];
+  for (const option of options) {
+    const built = new Option(option.flags, option.description);
+    if (option.choices !== undefined) {
+      built.choices([...option.choices]);
+    }
+    if (option.kind === 'boolean') {
+      built.default(false);
+    }
+    command.addOption(built);
+  }
+  const optionSpec = { options, name: spec.name };
+  command.allowExcessArguments(false);
+  command.action((...params: unknown[]) => {
+    const commandObject = params.at(-1);
+    if (!(commandObject instanceof Command)) {
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
+    }
+    onRun({
+      spec,
+      subcommand,
+      positionals: [...commandObject.args],
+      options: readCommandOptions(params.at(-2), optionSpec),
+      globals: readExecutedGlobals(commandObject),
+    });
+  });
+}
+
+function commandArgs(
+  spec: CommandSpec,
+  subcommand: CommandSubSpec | undefined,
+):
+  | readonly { readonly name: string; readonly description: string; readonly required: boolean }[]
+  | undefined {
+  if (subcommand !== undefined) {
+    return subcommand.args;
+  }
+  return spec.args;
+}
+
+function commandInputMode(
+  spec: CommandSpec,
+  subcommand: CommandSubSpec | undefined,
+): CommandSpec['input'] {
+  if (subcommand !== undefined) {
+    return subcommand.input ?? 'none';
+  }
+  return spec.input;
+}
+
+function readExecutedGlobals(command: Command): Globals {
+  const merged: Record<string, unknown> = {};
+  let current: Command | null = command;
+  while (current !== null) {
+    Object.assign(merged, current.opts());
+    current = current.parent;
+  }
+  return readGlobals(merged);
 }
 
 function readGlobals(value: unknown): Globals {
@@ -459,16 +538,26 @@ function readStringOption(value: unknown): string | undefined {
   return value;
 }
 
-function readCommandOptions(value: unknown, spec: CommandSpec): Readonly<Record<string, string>> {
+const GLOBAL_OPTION_KEYS = new Set(['json', 'vault', 'from']);
+
+function readCommandOptions(
+  value: unknown,
+  spec: {
+    readonly options: readonly { readonly name: string; readonly kind?: 'string' | 'boolean' }[];
+  },
+): Readonly<Record<string, string>> {
   if (!isRecord(value)) {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
   }
   const kinds = new Map(
-    (spec.options ?? []).map((option) => [option.name, option.kind ?? 'string'] as const),
+    spec.options.map((option) => [option.name, option.kind ?? 'string'] as const),
   );
   const options: Record<string, string> = {};
   for (const [key, entry] of Object.entries(value)) {
     if (!kinds.has(key)) {
+      if (GLOBAL_OPTION_KEYS.has(key)) {
+        continue;
+      }
       throw new CliFailure('E_ARG_INVALID', {}, { problem: 'La opción no existe.' });
     }
     if (entry === undefined) {
