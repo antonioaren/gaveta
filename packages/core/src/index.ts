@@ -78,6 +78,10 @@ export type {
   WikilinkParts,
 } from './parser.ts';
 
+export { normalizeNote } from './normalize.ts';
+
+export type { NormalizeNoteOptions, NormalizeResult } from './normalize.ts';
+
 export { validateNote, validateVault } from './validate.ts';
 
 export type {

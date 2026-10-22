@@ -1122,6 +1122,32 @@ function isSafeNotePath(value: string): boolean {
   return true;
 }
 
+/** Shared with the normalizer so path checks are not reimplemented. */
+export function referenceEscapesVault(reference: string, notePath: string | null): boolean {
+  return escapesVault(reference, notePath);
+}
+
+/** External anchors must carry `rel=noopener`. `javascript:` and `file:` are not external links. */
+export function isExternalAnchorHref(href: string): boolean {
+  return isExternalLink(href);
+}
+
+export function remoteUrlIsAllowed(url: string, allowlist: readonly string[]): boolean {
+  return isAllowlisted(url, allowlistHosts(allowlist));
+}
+
+export function isSafeVaultNotePath(value: string): boolean {
+  return isSafeNotePath(value);
+}
+
+export function cssResourceUrls(value: string): readonly string[] {
+  return cssReferences(value);
+}
+
+export function metaRefreshUrl(content: string): string | null {
+  return refreshTarget(content);
+}
+
 function isShellTag(tag: string): boolean {
   return (DOCUMENT_SHELL.elements as readonly string[]).includes(tag);
 }

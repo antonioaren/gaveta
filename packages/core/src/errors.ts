@@ -182,6 +182,13 @@ export const DIAGNOSTICS = {
     message: 'Se han eliminado {count} estilos en línea.',
     hint: 'El aspecto lo pone el tema del vault, no el atributo style.',
   },
+  W_CLASS_REMOVED: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'Se han eliminado {count} clases fuera del contrato.',
+    hint: 'Solo se conservan las clases del contrato.',
+  },
   W_UNSAFE_REMOVED: {
     severity: 'warning',
     exitCode: null,
