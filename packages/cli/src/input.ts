@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { buffer } from 'node:stream/consumers';
 import type { Readable } from 'node:stream';
 import { CliFailure } from './failure.ts';
 import type { InputSource, ResolvedInput } from './types.ts';
@@ -60,24 +61,7 @@ async function readFileInput(from: string, cwd: string): Promise<ResolvedInput> 
 }
 
 async function readStdin(stdin: Readable): Promise<Buffer> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of stdin) {
-    chunks.push(asBuffer(chunk));
-  }
-  return Buffer.concat(chunks);
-}
-
-function asBuffer(chunk: unknown): Buffer {
-  if (Buffer.isBuffer(chunk)) {
-    return chunk;
-  }
-  if (typeof chunk === 'string') {
-    return Buffer.from(chunk);
-  }
-  if (chunk instanceof Uint8Array) {
-    return Buffer.from(chunk);
-  }
-  throw new CliFailure('E_ARG_INVALID', {}, { problem: 'No se ha podido leer stdin.' });
+  return await buffer(stdin);
 }
 
 function toInput(buffer: Buffer, source: InputSource): ResolvedInput {

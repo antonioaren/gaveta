@@ -1,0 +1,87 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`creates, reads, edits, and searches from the binary 1`] = `
+"{
+  "ok": true,
+  "schemaVersion": 1,
+  "command": "new",
+  "data": {
+    "id": "<id>",
+    "path": "notas/origen.html",
+    "hash": "<hash>",
+    "title": "Origen",
+    "type": "doc",
+    "links": {
+      "resolved": [
+        {
+          "kind": "canonical",
+          "text": "Other",
+          "title": "Other",
+          "id": "<id>",
+          "path": "other.html",
+          "href": "../other.html",
+          "suggestions": []
+        }
+      ],
+      "pending": []
+    },
+    "promoted": []
+  },
+  "warnings": []
+}
+"
+`;
+
+exports[`snapshots a conflict and does not overwrite the note 1`] = `
+"{
+  "ok": false,
+  "schemaVersion": 1,
+  "command": "edit",
+  "error": {
+    "code": "E_CONFLICT",
+    "message": "La nota ha cambiado desde la última lectura.",
+    "hint": "Hay que volver a leer la nota y reintentar con el hash actual en --if-match."
+  }
+}
+"
+`;
+
+exports[`snapshots read --as outline for a stable fixture note 1`] = `
+"{
+  "ok": true,
+  "schemaVersion": 1,
+  "command": "read",
+  "data": {
+    "id": "01M5HGV880000000000000000R",
+    "path": "nota-sana.html",
+    "title": "Nota sana",
+    "type": "doc",
+    "hash": "sha256:8c44ff60d43a0ccd3b10b4398a402b6ad479756f54d5b2fbf8081a5e9036ec27",
+    "as": "outline",
+    "outline": {
+      "sections": [
+        {
+          "id": "resumen",
+          "heading": "Resumen",
+          "level": 2,
+          "text": "Resumen\\nNota destino",
+          "children": []
+        }
+      ],
+      "tasks": [],
+      "links": [
+        {
+          "kind": "canonical",
+          "text": "Nota destino",
+          "href": "nota-destino.html",
+          "targetId": "01M5HGV880000000000000000S",
+          "pendingTitle": null,
+          "sectionId": "resumen"
+        }
+      ]
+    }
+  },
+  "warnings": []
+}
+"
+`;

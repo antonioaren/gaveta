@@ -2,6 +2,7 @@ import {
   EXIT_CODES,
   GAVETA_VAULT_ENV,
   GavetaError,
+  GavetaRefError,
   discoverVault,
   exitCodeFor,
   formatDiagnostic,
@@ -275,6 +276,9 @@ function errorBody(error: GavetaError): JsonErrorBody {
   if (error instanceof CliFailure && error.details !== undefined) {
     return { ...body, details: error.details };
   }
+  if (error instanceof GavetaRefError) {
+    return { ...body, details: error.details };
+  }
   return body;
 }
 
@@ -449,11 +453,26 @@ function readCommandOptions(value: unknown, spec: CommandSpec): Readonly<Record<
   if (!isRecord(value)) {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
   }
-  const allowed = new Set((spec.options ?? []).map((option) => option.name));
+  const kinds = new Map(
+    (spec.options ?? []).map((option) => [option.name, option.kind ?? 'string'] as const),
+  );
   const options: Record<string, string> = {};
   for (const [key, entry] of Object.entries(value)) {
-    if (!allowed.has(key)) {
+    if (!kinds.has(key)) {
       throw new CliFailure('E_ARG_INVALID', {}, { problem: 'La opción no existe.' });
+    }
+    if (entry === undefined) {
+      continue;
+    }
+    if (kinds.get(key) === 'boolean') {
+      if (entry === true) {
+        options[key] = 'true';
+        continue;
+      }
+      if (entry === false) {
+        continue;
+      }
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });
     }
     if (typeof entry !== 'string' || entry.length === 0) {
       throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });

@@ -36,6 +36,8 @@ export interface CommandOption {
   readonly flags: string;
   readonly description: string;
   readonly choices?: readonly string[];
+  /** Boolean flags are stored as `'true'` only when the user passes them. */
+  readonly kind?: 'string' | 'boolean';
 }
 
 /**

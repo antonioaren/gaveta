@@ -272,6 +272,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_PATH_EXISTS` | El destino de `new` o `mv` ya existe |
 | `E_HAS_BACKLINKS` | `rm` sin `--force` de una nota con backlinks |
 | `E_CONFLICT` | `--if-match` no coincide |
+| `E_SECTION_NOT_FOUND` | El id de sección no existe en la nota |
 | `W_LINK_PENDING` | Enlace pendiente creado |
 | `W_REL_UNKNOWN` | `rel` fuera del vocabulario |
 | `W_REMOTE_RESOURCE` | Recurso remoto bloqueado |

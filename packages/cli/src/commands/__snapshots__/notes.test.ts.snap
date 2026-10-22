@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`new, read and edit > snapshots stable error envelopes for each command 1`] = `
+"{
+  "ok": false,
+  "schemaVersion": 1,
+  "command": "new",
+  "error": {
+    "code": "E_ARG_INVALID",
+    "message": "El argumento falta o está fuera de rango.",
+    "hint": "Consulta gaveta guide para ver los valores que admite el comando.",
+    "details": {
+      "problem": "El tipo tiene que ser doc, slides o todo."
+    }
+  }
+}
+"
+`;
+
+exports[`new, read and edit > snapshots stable error envelopes for each command 2`] = `
+"{
+  "ok": false,
+  "schemaVersion": 1,
+  "command": "read",
+  "error": {
+    "code": "E_REF_NOT_FOUND",
+    "message": "No hay ninguna nota que coincida con esa referencia.",
+    "hint": "Comprueba el id, la ruta o el título, o busca con gaveta search.",
+    "details": {
+      "suggestions": []
+    }
+  }
+}
+"
+`;
+
+exports[`new, read and edit > snapshots stable error envelopes for each command 3`] = `
+"{
+  "ok": false,
+  "schemaVersion": 1,
+  "command": "edit",
+  "error": {
+    "code": "E_CONFLICT",
+    "message": "La nota ha cambiado desde la última lectura.",
+    "hint": "Hay que volver a leer la nota y reintentar con el hash actual en --if-match."
+  }
+}
+"
+`;
