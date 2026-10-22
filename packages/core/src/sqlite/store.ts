@@ -45,6 +45,8 @@ import {
   SELECT_NOTE,
   SELECT_NOTES,
   SELECT_NOTES_FOR_ID,
+  SELECT_NOTES_FOR_TITLE_FOLD,
+  SELECT_PATHS_FOR_ALIAS_FOLD,
   SELECT_PATHS_FOR_ID,
   SELECT_PROBLEMS,
   SELECT_SECTIONS_FOR_PATH,
@@ -201,6 +203,8 @@ interface Statements {
   readonly notes: StatementSync;
   readonly note: StatementSync;
   readonly notesForId: StatementSync;
+  readonly notesForTitleFold: StatementSync;
+  readonly pathsForAliasFold: StatementSync;
   readonly aliases: StatementSync;
   readonly aliasesForPath: StatementSync;
   readonly links: StatementSync;
@@ -385,6 +389,47 @@ export class VaultIndex {
       notes.push(mapNote(row, this.aliasList(cellText(row, 'path'))));
     }
     return notes;
+  }
+
+  /**
+   * Notes whose title matches `title` without case or accents.
+   * Uses `title_folded` and a bound parameter.
+   */
+  notesMatchingTitle(title: string): IndexedNote[] {
+    this.assertOpen();
+    const folded = foldedKey(title);
+    if (folded.length === 0) {
+      return [];
+    }
+    const notes: IndexedNote[] = [];
+    for (const row of this.statements.notesForTitleFold.all(folded)) {
+      const notePath = cellText(row, 'path');
+      notes.push(mapNote(row, this.aliasList(notePath)));
+    }
+    return notes;
+  }
+
+  /**
+   * Paths whose alias matches `alias` without case or accents.
+   * Uses `alias_folded` and a bound parameter. Paths are unique and ordered.
+   */
+  pathsMatchingAlias(alias: string): string[] {
+    this.assertOpen();
+    const folded = foldedKey(alias);
+    if (folded.length === 0) {
+      return [];
+    }
+    const paths: string[] = [];
+    const seen = new Set<string>();
+    for (const row of this.statements.pathsForAliasFold.all(folded)) {
+      const notePath = cellText(row, 'path');
+      if (seen.has(notePath)) {
+        continue;
+      }
+      seen.add(notePath);
+      paths.push(notePath);
+    }
+    return paths;
   }
 
   aliases(notePath?: string): IndexedAlias[] {
@@ -713,6 +758,8 @@ function prepareStatements(database: DatabaseSync): Statements {
     notes: database.prepare(SELECT_NOTES),
     note: database.prepare(SELECT_NOTE),
     notesForId: database.prepare(SELECT_NOTES_FOR_ID),
+    notesForTitleFold: database.prepare(SELECT_NOTES_FOR_TITLE_FOLD),
+    pathsForAliasFold: database.prepare(SELECT_PATHS_FOR_ALIAS_FOLD),
     aliases: database.prepare(SELECT_ALIASES),
     aliasesForPath: database.prepare(SELECT_ALIASES_FOR_PATH),
     links: database.prepare(SELECT_LINKS),
@@ -1053,6 +1100,13 @@ function flattenSections(
     });
     flattenSections(section.children, ordinal, out);
   }
+}
+
+function foldedKey(value: string): string {
+  if (typeof value !== 'string') {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return foldMatchKey(value.trim());
 }
 
 function uniqueStrings(values: readonly string[]): string[] {

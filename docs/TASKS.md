@@ -79,7 +79,7 @@ flowchart TB
 
 - [x] **T1.6 Vault y E/S segura.** Localizar el vault (`--vault`, `GAVETA_VAULT` o búsqueda ascendente), escritura atómica, protección de rutas y `config.json`. Cubre: REQ-VAULT-01, REQ-CLI-13, REQ-SEC-05. Depende de: T0.2.
 - [x] **T1.7 Índice SQLite.** Esquema (`notes`, `aliases`, `links`, `sections`, `tasks`, `fts`), `reindex` completo e incremental, y tolerancia a archivos corruptos. Cubre: REQ-VAULT-06 y 07, REQ-NFR-03 y 07. Depende de: T1.2, T1.6.
-- [ ] **T1.8 Resolutor de referencias y enlaces.** Resolver `ref` (id, ruta o título/alias, sin distinguir mayúsculas ni acentos), convertir `[[…]]` a canónico o a pendiente, sugerencias por similitud, reparar `href` desde `data-g-to` y política de `rel`. Cubre: REQ-LINK-01 a 05, REQ-CLI-08. Depende de: T1.7.
+- [x] **T1.8 Resolutor de referencias y enlaces.** Resolver `ref` (id, ruta o título/alias, sin distinguir mayúsculas ni acentos), convertir `[[…]]` a canónico o a pendiente, sugerencias por similitud, reparar `href` desde `data-g-to` y política de `rel`. Cubre: REQ-LINK-01 a 05, REQ-CLI-08. Depende de: T1.7.
 - [ ] **T1.9 Promoción de pendientes.** Al crear una nota, convertir en canónicos los pendientes que coinciden con su título o alias. Cubre: REQ-LINK-02. Depende de: T1.8.
 - [ ] **T1.10 Operaciones transaccionales `mv` y `rm`.** Reescritura en bloque de los `href` entrantes con reversión si falla algo, ruta del tema recalculada y, con `--force`, conversión de los enlaces entrantes a pendientes. Cubre: REQ-LINK-09 y 10. Depende de: T1.8.
 - [x] **T1.11 Consultas de grafo.** Grafo global y local (profundidad de 1 a 3), filtros, nodos fantasma y contexto de los backlinks. Cubre: REQ-GRAPH-01 a 03, REQ-LINK-06 y 07. Depende de: T1.7.

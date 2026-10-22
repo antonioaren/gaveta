@@ -162,3 +162,26 @@ export type {
   LocalGraphOptions,
   OutgoingLink,
 } from './graph.ts';
+
+export {
+  SUGGESTION_LIMIT,
+  GavetaRefError,
+  assessRel,
+  relativeNoteHref,
+  resolveNoteLinks,
+  resolveRef,
+  resolveTitle,
+  suggestNotes,
+} from './links/index.ts';
+
+export type {
+  LinkDiagnostic,
+  NoteRef,
+  NoteSuggestion,
+  RelAssessment,
+  RelPolicy,
+  ResolveNoteLinksOptions,
+  ResolveNoteLinksResult,
+  ResolvedLink,
+  ResolvedRef,
+} from './links/index.ts';

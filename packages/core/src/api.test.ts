@@ -23,6 +23,14 @@ import {
   graphGhostKey,
   localGraph,
   outgoingLinks,
+  resolveRef,
+  resolveTitle,
+  resolveNoteLinks,
+  suggestNotes,
+  relativeNoteHref,
+  assessRel,
+  GavetaRefError,
+  SUGGESTION_LIMIT,
 } from './index.ts';
 
 it('exports vault I/O and the shared slug helper from the package entry', () => {
@@ -49,4 +57,12 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(GRAPH_DEPTH_MIN).toBe(1);
   expect(GRAPH_DEPTH_MAX).toBe(3);
   expect(BACKLINK_CONTEXT_LIMIT).toBe(200);
+  expect(typeof resolveRef).toBe('function');
+  expect(typeof resolveTitle).toBe('function');
+  expect(typeof resolveNoteLinks).toBe('function');
+  expect(typeof suggestNotes).toBe('function');
+  expect(typeof relativeNoteHref).toBe('function');
+  expect(typeof assessRel).toBe('function');
+  expect(GavetaRefError.prototype).toBeInstanceOf(GavetaError);
+  expect(SUGGESTION_LIMIT).toBe(5);
 });
