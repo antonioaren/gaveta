@@ -17,17 +17,29 @@ corepack enable
 pnpm install
 ```
 
-Ejecuta la CLI desde el repo sin instalarla:
+Ejecuta la CLI desde el repo sin instalarla (el título va como argumento; el HTML del cuerpo, con `--from -`):
 
 ```bash
-pnpm exec gaveta init ./mi-vault --json
-pnpm exec gaveta new ./mi-vault/nota.html --title "Hola" --json
-pnpm exec gaveta read nota --json --vault ./mi-vault
-pnpm exec gaveta edit nota --vault ./mi-vault --from - --json   # escribe en stdin
-pnpm exec gaveta search hola --json --vault ./mi-vault
+pnpm exec gaveta init mi-vault --json
+
+echo '<article><h1>Other</h1><section id="cuerpo"><p>Nota de referencia.</p></section></article>' \
+  | pnpm exec gaveta new "Other" --type doc --vault mi-vault --from - --json
+
+echo '<article><h1>Origen</h1><section id="cuerpo"><p>Ver [[Other]]</p></section></article>' \
+  | pnpm exec gaveta new "Origen" --type doc --vault mi-vault --from - --json
+
+pnpm exec gaveta read Origen --as outline --vault mi-vault --json
+
+echo '<p>Más texto.</p>' \
+  | pnpm exec gaveta edit Origen --vault mi-vault --section cuerpo --append --from - --json
+
+pnpm exec gaveta search Other --vault mi-vault --json
+
+# macOS: abre la nota en el navegador (file://)
+open mi-vault/origen.html
 ```
 
-Para tener `gaveta` y `gv` en el PATH global:
+Para tener `gaveta` y `gv` en el PATH global (una vez: `pnpm setup` y reinicia la shell si hace falta):
 
 ```bash
 cd packages/cli
