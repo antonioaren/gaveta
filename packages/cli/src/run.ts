@@ -2,6 +2,7 @@ import {
   EXIT_CODES,
   GAVETA_VAULT_ENV,
   GavetaError,
+  GavetaOperationError,
   GavetaRefError,
   assertRuntimeSupported,
   discoverVault,
@@ -277,6 +278,9 @@ function errorBody(error: GavetaError): JsonErrorBody {
     hint: error.hint,
   };
   if (error instanceof CliFailure && error.details !== undefined) {
+    return { ...body, details: error.details };
+  }
+  if (error instanceof GavetaOperationError) {
     return { ...body, details: error.details };
   }
   if (error instanceof GavetaRefError) {

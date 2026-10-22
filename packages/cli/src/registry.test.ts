@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { commands } from './registry.ts';
 import { renderHelp } from './help.ts';
 
-it('registers version, init, adopt, search, new, read, and edit', () => {
+it('registers version, init, adopt, search, new, read, edit, mv, and rm', () => {
   expect(commands.map((command) => command.name)).toEqual([
     'version',
     'init',
@@ -11,6 +11,8 @@ it('registers version, init, adopt, search, new, read, and edit', () => {
     'new',
     'read',
     'edit',
+    'mv',
+    'rm',
   ]);
   const names = new Set(commands.map((command) => command.name));
   expect(names.size).toBe(commands.length);
