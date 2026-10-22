@@ -95,7 +95,7 @@ flowchart TB
 - [x] **T1.18 `todo`.** `add`, `check`, `uncheck` y `list` sobre cualquier nota, con diff mínimo. Cubre: REQ-TYPE-04. Depende de: T1.15.
 - [x] **T1.19 `search`.** FTS5 con fragmentos resaltados y filtros. Cubre: REQ-CLI-10. Depende de: T1.7, T1.13.
 - [x] **T1.20 `validate`, `doctor` y `reindex`.** Cubre: REQ-CLI-11, REQ-LINK-11, REQ-VAULT-06. Depende de: T1.12, T1.13.
-- [ ] **T1.21 `guide`.** Se genera desde el contrato y desde el registro de comandos, con `--json`, `--topic` y `--errors`. Incluye un test que comprueba que todos los comandos aparecen con un ejemplo. Cubre: REQ-CLI-09. Depende de: T1.14 a T1.20.
+- [x] **T1.21 `guide`.** Se genera desde el contrato y desde el registro de comandos, con `--json`, `--topic` y `--errors`. Incluye un test que comprueba que todos los comandos aparecen con un ejemplo. Cubre: REQ-CLI-09. Depende de: T1.14 a T1.20.
 
 ### 1D. Integración con Claude Code (validación de la puerta 1)
 

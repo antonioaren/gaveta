@@ -38,6 +38,17 @@ export {
   slugify,
 } from './contract.ts';
 
+export {
+  GUIDE_TOPICS,
+  buildGuide,
+  isGuideTopic,
+  type GuideBuildOptions,
+  type GuideCommandEntry,
+  type GuideDiagnosticEntry,
+  type GuideResult,
+  type GuideTopic,
+} from './guide.ts';
+
 export type {
   BodyElement,
   ContractClass,
