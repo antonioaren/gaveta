@@ -135,3 +135,26 @@ export type {
   SearchOptions,
   VaultIndex,
 } from './sqlite/store.ts';
+
+export {
+  BACKLINK_CONTEXT_LIMIT,
+  GRAPH_DEPTH_MAX,
+  GRAPH_DEPTH_MIN,
+  GRAPH_GHOST_PREFIX,
+  backlinks,
+  globalGraph,
+  graphGhostKey,
+  localGraph,
+  outgoingLinks,
+} from './graph.ts';
+
+export type {
+  Backlink,
+  Graph,
+  GraphEdge,
+  GraphFilters,
+  GraphNode,
+  LinkTarget,
+  LocalGraphOptions,
+  OutgoingLink,
+} from './graph.ts';
