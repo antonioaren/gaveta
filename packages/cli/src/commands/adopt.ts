@@ -16,7 +16,7 @@ export const adoptCommand: CommandSpec = {
   ],
   options: [
     {
-      name: 'claudeFrom',
+      name: 'source',
       flags: '--source <origen>',
       description: 'Origen del HTML: claude convierte artefactos de Claude.',
       choices: ['claude'],
@@ -45,7 +45,7 @@ export const adoptCommand: CommandSpec = {
     }
     const result = await adoptNote(context.vault.root, ruta, {
       ...(context.strictRel ? { strictRel: true } : {}),
-      ...(context.options.claudeFrom === 'claude' ? { source: 'claude' } : {}),
+      ...(context.options.source === 'claude' ? { source: 'claude' } : {}),
       ...(asType !== undefined ? { as: asType } : {}),
       ...(context.options.allowCdn === 'true' ? { allowCdn: true } : {}),
     });

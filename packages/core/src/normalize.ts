@@ -116,6 +116,7 @@ const META_ORDER = [
   'gaveta:aliases',
   'gaveta:created',
   'gaveta:updated',
+  'gaveta:artifact-cdn',
 ] as const;
 
 const HEAD_ORDER = ['charset', 'title', ...META_ORDER, 'theme'];

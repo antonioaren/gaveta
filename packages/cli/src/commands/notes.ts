@@ -47,7 +47,7 @@ export const newCommand: CommandSpec = {
       description: 'Tipo: doc, slides, todo, dashboard, design o artifact.',
     },
     {
-      name: 'claudeFrom',
+      name: 'source',
       flags: '--source <origen>',
       description: 'Con --from -, convierte HTML de Claude antes de crear la nota.',
       choices: ['claude'],
@@ -225,7 +225,7 @@ function materializeClaudeInput(
   readonly artifactCdn: boolean;
 } {
   const typeOption = context.options.type;
-  if (context.options.claudeFrom !== 'claude') {
+  if (context.options.source !== 'claude') {
     return {
       type: readType(typeOption),
       html: context.input?.text,

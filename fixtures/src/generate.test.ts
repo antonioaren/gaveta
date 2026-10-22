@@ -20,8 +20,8 @@ import { slugify } from './slug.ts';
 import { ULID_PATTERN, noteUlid } from './ulid.ts';
 
 const GOLDEN: Record<(typeof NFR_NOTE_COUNTS)[number], string> = {
-  1000: '65e7b542724fad72798daa5bc452b677aaf44c2550e48b0dcf2dc9306b131a00',
-  5000: '32f4ed67f3dae8ef817495cbb7223bc217027cc15b6e44dbad10b558487b456e',
+  1000: '6a8ce811d97d908db6c3668a3588f5ad7958a9df8b9547ff9df856b15d500b33',
+  5000: '6fd4066b54849d01b728fe35dd9baa498d66d8c8a7802464e2c8cfb94a730854',
 };
 
 function fingerprint(files: readonly GeneratedFile[]): string {

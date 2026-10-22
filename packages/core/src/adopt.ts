@@ -83,7 +83,7 @@ export async function adoptNote(
       allowCdn: options.allowCdn === true,
       title: chooseTitle(parsedSource, parsedSource, located.relative),
     });
-    source = wrapClaudeBody(converted.title, converted.body);
+    source = wrapClaudeBody(converted.title, converted.body, converted.type, converted.allowCdn);
     claudeWarnings.push(...converted.warnings.map(claudeWarningToAdopt));
     adoptOptions = { ...options, allowCdn: options.allowCdn === true || converted.allowCdn };
   }
@@ -359,8 +359,10 @@ function headingText(model: NoteModel | null): string | null {
   return null;
 }
 
-function wrapClaudeBody(title: string, body: string): string {
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escapeText(title)}</title></head><body>${body}</body></html>`;
+function wrapClaudeBody(title: string, body: string, type: NoteType, artifactCdn: boolean): string {
+  const cdnMeta =
+    type === 'artifact' && artifactCdn ? `<meta name="${ARTIFACT_CDN_META}" content="true">` : '';
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escapeText(title)}</title><meta name="gaveta:type" content="${type}">${cdnMeta}</head><body>${body}</body></html>`;
 }
 
 function claudeWarningToAdopt(warning: ClaudeConvertWarning): AdoptWarning {

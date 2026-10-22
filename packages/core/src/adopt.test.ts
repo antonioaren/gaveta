@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
@@ -213,6 +214,31 @@ it('refuses a duplicate id and leaves the file untouched', async () => {
     } finally {
       index.close();
     }
+  });
+});
+
+it('imports a Claude React artifact with CDN CSP metadata', async () => {
+  await withTemp(async (parent) => {
+    const root = await makeVault(parent);
+    const source = readFileSync(
+      join(import.meta.dirname, '../../../fixtures/claude/react-app.html'),
+      'utf8',
+    );
+    await writeFile(join(root, 'react.html'), source);
+
+    const result = asAdopted(
+      await adoptNote(root, 'react.html', {
+        source: 'claude',
+        allowCdn: true,
+        now: () => CREATED,
+        createId: () => NOTE_ID,
+      }),
+    );
+    expect(result.type).toBe('artifact');
+    const html = await readFile(join(root, 'react.html'), 'utf8');
+    expect(html).toContain('gaveta:artifact-cdn');
+    expect(html).toContain('sandbox="allow-scripts"');
+    expect(validateNote(html, { notePath: 'react.html' }).ok).toBe(true);
   });
 });
 
