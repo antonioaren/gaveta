@@ -56,6 +56,13 @@ export const DIAGNOSTICS = {
     message: "No existe '{title}'.",
     hint: "¿Quisiste decir '{suggestion}'?",
   },
+  E_LINK_BROKEN: {
+    severity: 'error',
+    exitCode: 2,
+    escalatesToError: false,
+    message: 'El enlace apunta a un id que no existe en el vault.',
+    hint: 'Corrige data-g-to o crea la nota destino. gaveta doctor --fix no repara enlaces rotos.',
+  },
   E_META_MISSING: {
     severity: 'error',
     exitCode: 2,
@@ -167,6 +174,27 @@ export const DIAGNOSTICS = {
     escalatesToError: false,
     message: 'Se ha creado un enlace pendiente.',
     hint: 'Crea la nota que falta o elige una de las sugerencias por similitud.',
+  },
+  W_LINK_HREF_STALE: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'El href no coincide con data-g-to.',
+    hint: 'Ejecuta gaveta doctor --fix para recalcular la ruta relativa.',
+  },
+  W_NOTE_ORPHAN: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'La nota no tiene enlaces entrantes ni salientes.',
+    hint: 'Enlázala con otra nota o bórrala si ya no hace falta.',
+  },
+  W_THEME_HREF: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'La ruta del tema no corresponde a la profundidad de la nota.',
+    hint: 'Ejecuta gaveta doctor --fix para apuntar al tema con la ruta relativa correcta.',
   },
   W_REL_UNKNOWN: {
     severity: 'warning',

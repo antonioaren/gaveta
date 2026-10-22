@@ -19,6 +19,7 @@ import {
   GRAPH_DEPTH_MAX,
   GRAPH_DEPTH_MIN,
   adoptNote,
+  doctorVault,
   backlinks,
   globalGraph,
   initVault,
@@ -86,6 +87,7 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(SUGGESTION_LIMIT).toBe(5);
   expect(typeof initVault).toBe('function');
   expect(typeof adoptNote).toBe('function');
+  expect(typeof doctorVault).toBe('function');
   expect(typeof moveNote).toBe('function');
   expect(typeof removeNote).toBe('function');
   expect(GavetaOperationError.prototype).toBeInstanceOf(GavetaError);

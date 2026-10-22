@@ -115,6 +115,10 @@ export {
 
 export { DEFAULT_THEME_CSS } from './theme/theme.ts';
 
+export { doctorVault } from './doctor.ts';
+
+export type { DoctorFinding, DoctorFix, DoctorReport, DoctorVaultOptions } from './doctor.ts';
+
 export { adoptNote } from './adopt.ts';
 
 export type { AdoptOptions, AdoptResult, AdoptWarning } from './adopt.ts';

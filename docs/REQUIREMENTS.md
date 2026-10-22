@@ -261,6 +261,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_REF_NOT_FOUND` | El `ref` no corresponde a ninguna nota |
 | `E_REF_AMBIGUOUS` | El título o alias coincide con varias notas |
 | `E_LINK_UNRESOLVED` | Enlace que no se puede resolver en un contexto que no admite pendientes (`gaveta link`) |
+| `E_LINK_BROKEN` | `data-g-to` apunta a un id que no existe en el vault |
 | `E_META_MISSING` | Falta un metadato obligatorio |
 | `E_ID_DUPLICATE` | Dos archivos comparten `gaveta:id` |
 | `E_HTML_INVALID` | HTML no parseable o elemento fuera del contrato |
@@ -274,6 +275,9 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_CONFLICT` | `--if-match` no coincide |
 | `E_SECTION_NOT_FOUND` | El id de sección no existe en la nota |
 | `W_LINK_PENDING` | Enlace pendiente creado |
+| `W_LINK_HREF_STALE` | `href` canónico desfasado respecto a `data-g-to` |
+| `W_NOTE_ORPHAN` | Nota sin enlaces entrantes ni salientes |
+| `W_THEME_HREF` | Ruta del tema incorrecta para la profundidad de la nota |
 | `W_REL_UNKNOWN` | `rel` fuera del vocabulario |
 | `W_REMOTE_RESOURCE` | Recurso remoto bloqueado |
 | `W_INLINE_STYLE_REMOVED` | Estilos inline eliminados por el normalizador |
