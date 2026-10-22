@@ -4,7 +4,7 @@ Hand-written Gaveta vaults and a deterministic generator. Notes follow the HTML 
 
 **Re-validated in T1.3.** `validateNote` / `validateVault` accept the empty vault, the backlinks vault, and the seeded generator output with no errors. The problems vault fails on the invalid task and on the duplicate id. The malicious vault produces the codes in the table below. Shape tests in this package are not a substitute for that check.
 
-`config.json` is provisional until T1.6. `theme.css` is a placeholder until T1.5 (dark text `#1a1a1a` on `#ffffff` so a note opened with `file://` is not unstyled). The same two files are copied into every vault. There is no `index.sqlite`; the index is a cache.
+`config.json` is provisional until T1.6. `theme.css` is a byte copy of the core default theme (`packages/core/src/theme/theme.css`), including a `prefers-color-scheme: dark` palette. The same two files are copied into every vault. There is no `index.sqlite`; the index is a cache.
 
 Filenames use the 2026-10-22 slug rule: lowercase, strip accents, map every other character to a hyphen. Directory names (`enlaces/`, `dup/`, `anidada/`, `notes/`) are layout, not part of the slug.
 

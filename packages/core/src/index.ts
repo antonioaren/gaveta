@@ -106,3 +106,5 @@ export {
   writeVaultConfig,
   type VaultConfig,
 } from './vault/config.ts';
+
+export { DEFAULT_THEME_CSS } from './theme/theme.ts';
