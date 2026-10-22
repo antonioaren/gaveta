@@ -249,6 +249,10 @@ export type { AffectedNote, MoveNoteResult, RemoveNoteResult } from './ops/types
 
 export { createNote, editNote, linkNote, noteContentHash, readNote } from './notes.ts';
 
+export { addTaskToNote, checkTask, listTasks, uncheckTask } from './todos.ts';
+
+export type { AddTaskResult, ListedTask, ListTasksResult, ToggleTaskResult } from './todos.ts';
+
 export type {
   CreateNoteResult,
   EditNoteResult,

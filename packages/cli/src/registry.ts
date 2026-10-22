@@ -9,6 +9,7 @@ import { initCommand } from './commands/init.ts';
 import { mvCommand, rmCommand } from './commands/move-remove.ts';
 import { editCommand, newCommand, readCommand } from './commands/notes.ts';
 import { searchCommand } from './commands/search.ts';
+import { todoCommand } from './commands/todo.ts';
 import { versionCommand } from './commands/version.ts';
 import type { CommandSpec } from './types.ts';
 
@@ -27,4 +28,5 @@ export const commands: readonly CommandSpec[] = [
   backlinksCommand,
   linkCommand,
   graphCommand,
+  todoCommand,
 ];

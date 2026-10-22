@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { commands } from './registry.ts';
 import { renderHelp } from './help.ts';
 
-it('registers version, init, adopt, search, new, read, edit, mv, rm, and connection commands', () => {
+it('registers version, init, adopt, search, new, read, edit, mv, rm, connection, and todo commands', () => {
   expect(commands.map((command) => command.name)).toEqual([
     'version',
     'init',
@@ -17,6 +17,7 @@ it('registers version, init, adopt, search, new, read, edit, mv, rm, and connect
     'backlinks',
     'link',
     'graph',
+    'todo',
   ]);
   const names = new Set(commands.map((command) => command.name));
   expect(names.size).toBe(commands.length);
@@ -27,6 +28,10 @@ it('gives every command a summary and an example the guide can print', () => {
     expect(command.summary.length).toBeGreaterThan(0);
     expect(command.example).toContain(command.name);
     expect(command.example.startsWith('gaveta ')).toBe(true);
+    for (const sub of command.subcommands ?? []) {
+      expect(sub.example).toContain(command.name);
+      expect(sub.example).toContain(sub.name);
+    }
   }
 });
 

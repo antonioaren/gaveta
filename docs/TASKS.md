@@ -92,7 +92,7 @@ flowchart TB
 - [x] **T1.15 `new`, `read` y `edit`.** Creación completa (normalizar, resolver, validar y escribir), `read --as html|text|outline` con `hash`, edición parcial por sección y `--if-match` en todas las escrituras. Cubre: REQ-CLI-04 a 07. Depende de: T1.13, T1.4, T1.8, T1.9.
 - [x] **T1.16 Comandos de conexiones.** `links`, `backlinks`, `link` (idempotente) y `graph`. Cubre: REQ-LINK-06 a 08, REQ-GRAPH-01 a 03. Depende de: T1.15, T1.11.
 - [x] **T1.17 `mv` y `rm`.** Cubre: REQ-LINK-09 y 10. Depende de: T1.15, T1.10.
-- [ ] **T1.18 `todo`.** `add`, `check`, `uncheck` y `list` sobre cualquier nota, con diff mínimo. Cubre: REQ-TYPE-04. Depende de: T1.15.
+- [x] **T1.18 `todo`.** `add`, `check`, `uncheck` y `list` sobre cualquier nota, con diff mínimo. Cubre: REQ-TYPE-04. Depende de: T1.15.
 - [x] **T1.19 `search`.** FTS5 con fragmentos resaltados y filtros. Cubre: REQ-CLI-10. Depende de: T1.7, T1.13.
 - [ ] **T1.20 `validate`, `doctor` y `reindex`.** Cubre: REQ-CLI-11, REQ-LINK-11, REQ-VAULT-06. Depende de: T1.12, T1.13.
 - [ ] **T1.21 `guide`.** Se genera desde el contrato y desde el registro de comandos, con `--json`, `--topic` y `--errors`. Incluye un test que comprueba que todos los comandos aparecen con un ejemplo. Cubre: REQ-CLI-09. Depende de: T1.14 a T1.20.

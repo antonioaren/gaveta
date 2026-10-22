@@ -180,6 +180,13 @@ const expected = {
     message: 'No hay ninguna sección con ese id.',
     hint: 'Usa gaveta read --as outline para ver los ids de sección.',
   },
+  E_TASK_NOT_FOUND: {
+    severity: 'error',
+    exitCode: 4,
+    escalatesToError: false,
+    message: 'No hay ninguna tarea con ese id en la nota.',
+    hint: 'Usa gaveta todo list <ref> para ver los ids de tarea.',
+  },
   W_LINK_PENDING: {
     severity: 'warning',
     exitCode: null,

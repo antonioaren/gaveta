@@ -13,12 +13,21 @@ export function renderHelp(registry: readonly CommandSpec[], commandName?: strin
   if (commandName !== undefined && commandName.length > 0) {
     const command = registry.find((item) => item.name === commandName);
     if (command !== undefined) {
+      const subcommandLines =
+        command.subcommands === undefined
+          ? []
+          : [
+              '',
+              'Subcomandos:',
+              ...command.subcommands.map((sub) => `  ${sub.name.padEnd(8)}  ${sub.summary}`),
+            ];
       return [
         usageLine(command),
         '',
         command.summary,
         '',
         `Ejemplo: ${command.example}`,
+        ...subcommandLines,
         '',
         ...optionBlock(command),
         '',

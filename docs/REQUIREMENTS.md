@@ -284,6 +284,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_HAS_BACKLINKS` | `rm` sin `--force` de una nota con backlinks |
 | `E_CONFLICT` | `--if-match` no coincide |
 | `E_SECTION_NOT_FOUND` | El id de sección no existe en la nota |
+| `E_TASK_NOT_FOUND` | No hay ninguna tarea con ese id en la nota |
 | `W_LINK_PENDING` | Enlace pendiente creado |
 | `W_LINK_HREF_STALE` | `href` canónico desfasado respecto a `data-g-to` |
 | `W_NOTE_ORPHAN` | Nota sin enlaces entrantes ni salientes |
