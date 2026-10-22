@@ -156,6 +156,8 @@ export { convertClaudeHtml } from './convert/claude.ts';
 
 export { convertMarkdownToHtml, finalizeMarkdownHtml } from './convert/md-to-html.ts';
 
+export { convertHtmlToMarkdown } from './convert/html-to-md.ts';
+
 export type {
   FinalizeMarkdownOptions,
   FinalizeMarkdownResult,
@@ -163,6 +165,15 @@ export type {
   MarkdownConvertResult,
   MarkdownConvertWarning,
 } from './convert/md-to-html.ts';
+
+export type {
+  HtmlExportLinksMode,
+  HtmlExportLoss,
+  HtmlExportTarget,
+  HtmlToMarkdownOptions,
+  HtmlToMarkdownResult,
+  HtmlToMarkdownWarning,
+} from './convert/html-to-md.ts';
 
 export type {
   ClaudeConvertOptions,
