@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   EXIT_CODES,
   GAVETA_DIRECTORY,
+  GAVETA_VAULT_ENV,
   createDefaultVaultConfig,
   writeVaultConfig,
 } from '@gaveta/core';
@@ -46,6 +47,40 @@ function capture(overrides: Omit<CliIo, 'stdout' | 'stderr'> = {}): {
 function argv(...args: string[]): string[] {
   return ['node', 'gaveta', ...args];
 }
+
+it('creates the vault at --vault or GAVETA_VAULT when no positional dir is given', async () => {
+  await withTemp(async (parent) => {
+    const cwd = join(parent, 'cwd');
+    const byOption = join(parent, 'by-option');
+    const byEnv = join(parent, 'by-env');
+    await mkdir(cwd);
+
+    const optionRun = capture({ cwd, env: {} });
+    expect(await runCli(argv('init', '--json', '--vault', byOption), optionRun.io)).toBe(
+      EXIT_CODES.ok,
+    );
+    expect(JSON.parse(optionRun.stdout())).toMatchObject({
+      data: { root: await realpath(byOption) },
+    });
+    expect(optionRun.stderr()).toBe('');
+
+    const envRun = capture({ cwd, env: { [GAVETA_VAULT_ENV]: byEnv } });
+    expect(await runCli(argv('init', '--json'), envRun.io)).toBe(EXIT_CODES.ok);
+    expect(JSON.parse(envRun.stdout())).toMatchObject({
+      data: { root: await realpath(byEnv) },
+    });
+    expect(envRun.stderr()).toBe('');
+
+    const positional = join(parent, 'positional');
+    const both = capture({ cwd, env: { [GAVETA_VAULT_ENV]: byEnv } });
+    expect(await runCli(argv('init', '--json', '--vault', byOption, positional), both.io)).toBe(
+      EXIT_CODES.ok,
+    );
+    expect(JSON.parse(both.stdout())).toMatchObject({
+      data: { root: await realpath(positional) },
+    });
+  });
+});
 
 it('prints a Spanish init envelope and leaves an existing note untouched', async () => {
   await withTemp(async (parent) => {

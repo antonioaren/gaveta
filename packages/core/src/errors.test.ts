@@ -257,6 +257,14 @@ const expected = {
     message: 'Parte de la nota no se puede representar en Markdown y se ha degradado.',
     hint: 'La salida JSON lista, por archivo, qué se ha degradado.',
   },
+  E_RUNTIME_UNSUPPORTED: {
+    severity: 'error',
+    exitCode: 5,
+    escalatesToError: false,
+    message:
+      'Este entorno no es compatible: Node {version} detectado; se requiere Node {minimum} o superior.',
+    hint: 'Instala una versión reciente de Node (por ejemplo `nvm install 22` o `brew install node`) y vuelve a ejecutar gaveta.',
+  },
   E_INDEX_CORRUPT: {
     severity: 'error',
     exitCode: 5,
@@ -315,6 +323,7 @@ it('maps exit codes and escalates an unknown rel only when the vault is strict',
   expect(exitCodeFor('W_REL_UNKNOWN', { strictRel: true })).toBe(EXIT_CODES.validation);
   expect(exitCodeFor('W_LINK_PENDING', { strictRel: true })).toBeNull();
   expect(exitCodeFor('E_CONFLICT', { strictRel: true })).toBe(EXIT_CODES.conflict);
+  expect(exitCodeFor('E_RUNTIME_UNSUPPORTED')).toBe(EXIT_CODES.internal);
   expect(exitCodeFor('E_INDEX_CORRUPT')).toBe(EXIT_CODES.internal);
   expect(exitCodeFor('W_INDEX_RECOVERED')).toBeNull();
 });

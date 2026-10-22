@@ -127,6 +127,21 @@ export { initVault } from './vault/init.ts';
 
 export type { AgentInstructionResult, InitVaultOptions, InitVaultResult } from './vault/init.ts';
 
+export { resolveInitDirectory } from './vault/init-target.ts';
+
+export type { ResolveInitDirectoryOptions } from './vault/init-target.ts';
+
+export {
+  MIN_SUPPORTED_NODE,
+  assertRuntimeSupported,
+  isNodeVersionAtLeast,
+  probeFts5,
+  runtimeUnsupportedFromSqlite,
+  sqliteIndicatesMissingFts5,
+} from './runtime.ts';
+
+export type { RuntimeProbe } from './runtime.ts';
+
 export {
   INDEX_RELATIVE_PATH,
   INDEX_SCHEMA_VERSION,

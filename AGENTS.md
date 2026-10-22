@@ -21,7 +21,7 @@ Packages are TypeScript, pnpm workspaces, and (for Node packages) `NodeNext` wit
 
 ## Commands
 
-Requires Node >= 22 (`.nvmrc`). pnpm is pinned via `packageManager`.
+Requires Node >= 22.18 (`.nvmrc`). pnpm is pinned via `packageManager`.
 
 ```bash
 pnpm install
@@ -46,7 +46,7 @@ pnpm check
 
 These are amendments to `docs/REQUIREMENTS.md`. Do not reopen them in a task.
 
-- **Node >= 22.** The SQLite index uses built-in `node:sqlite` with FTS5, not `better-sqlite3`.
+- **Node >= 22.18.** The SQLite index uses built-in `node:sqlite` with FTS5, not `better-sqlite3`. Older Node 22 builds (for example 22.14 on macOS) may lack FTS5; the CLI fails fast with `E_RUNTIME_UNSUPPORTED`.
 - **Slugs and filenames.** Lowercase, strip accents (NFD, then remove diacritics), map every non-alphanumeric to a hyphen, collapse and trim hyphens. A collision gets `-2`, `-3`, … on the base slug. Section ids use the same rule. File collisions are resolved in the destination directory; section-id collisions, inside the note.
 - **CI platforms.** Linux and macOS now. Windows is T4.8, at the end of the project. REQ-NFR-05 still requires the product to work on Windows.
 - **Language.** Code, comments, and commit messages are English. User-facing CLI messages (including JSON `message` and `hint`) are Spanish. Error codes stay the stable identifiers from the CLI contract.

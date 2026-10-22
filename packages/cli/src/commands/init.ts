@@ -1,4 +1,4 @@
-import { initVault } from '@gaveta/core';
+import { initVault, resolveInitDirectory } from '@gaveta/core';
 import type { CommandResult, CommandSpec } from '../types.ts';
 
 export const initCommand: CommandSpec = {
@@ -24,11 +24,15 @@ export const initCommand: CommandSpec = {
     },
   ],
   async run(context): Promise<CommandResult> {
-    const directory = context.positionals[0];
+    const directory = resolveInitDirectory({
+      ...(context.positionals[0] !== undefined ? { positional: context.positionals[0] } : {}),
+      ...(context.vaultOption !== undefined ? { vaultOption: context.vaultOption } : {}),
+      env: context.env,
+    });
     const target = context.options.agentInstructions;
     const result = await initVault({
       cwd: context.cwd,
-      ...(typeof directory === 'string' ? { directory } : {}),
+      ...(directory !== undefined ? { directory } : {}),
       ...(typeof target === 'string' ? { agentInstructions: target } : {}),
     });
     const lines = [

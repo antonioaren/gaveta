@@ -66,6 +66,7 @@ export interface CommandContext {
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
   readonly json: boolean;
+  readonly vaultOption: string | undefined;
   readonly vault: VaultLocation | null;
   readonly strictRel: boolean;
   readonly input: ResolvedInput | null;

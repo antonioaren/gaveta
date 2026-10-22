@@ -4,6 +4,9 @@
   "private": true,
   "description": "React app. Shell until the phase 2 viewer.",
   "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import './warning-filter.js';
 // The CLI is TypeScript and nothing is emitted. Node 22.18+ strips types by
 // default. Older Node 22 still needs --experimental-strip-types, so re-exec once.
 import { spawnSync } from 'node:child_process';

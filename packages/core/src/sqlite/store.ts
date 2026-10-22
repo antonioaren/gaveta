@@ -6,6 +6,7 @@ import path from 'node:path';
 import { DatabaseSync, type SQLOutputValue, type StatementSync } from 'node:sqlite';
 import { isNoteType, type NoteType } from '../contract.ts';
 import { formatDiagnostic, GavetaError, isDiagnosticCode, type DiagnosticCode } from '../errors.ts';
+import { runtimeUnsupportedFromSqlite } from '../runtime.ts';
 import {
   parseNote,
   type NoteLinkKind,
@@ -838,6 +839,10 @@ function openDatabase(file: string): { database: DatabaseSync; recovery: IndexPr
   try {
     database = createDatabase(file);
   } catch (error) {
+    const unsupported = runtimeUnsupportedFromSqlite(error);
+    if (unsupported !== null) {
+      throw unsupported;
+    }
     if (isRecoverableSqlite(error)) {
       return recoverDatabase(file, 'corrupt');
     }
@@ -864,6 +869,10 @@ function openDatabase(file: string): { database: DatabaseSync; recovery: IndexPr
     if (error instanceof GavetaError) {
       throw error;
     }
+    const unsupported = runtimeUnsupportedFromSqlite(error);
+    if (unsupported !== null) {
+      throw unsupported;
+    }
     if (isRecoverableSqlite(error)) {
       return recoverDatabase(file, 'corrupt');
     }
@@ -885,9 +894,13 @@ function recoverDatabase(
     configureDatabase(database);
     migrateDatabase(database);
     return { database, recovery: recoveryProblem(reason) };
-  } catch {
+  } catch (error) {
     if (database !== undefined) {
       closeQuietly(database);
+    }
+    const unsupported = runtimeUnsupportedFromSqlite(error);
+    if (unsupported !== null) {
+      throw unsupported;
     }
     throw new GavetaError('E_INDEX_CORRUPT');
   }

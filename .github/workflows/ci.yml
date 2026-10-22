@@ -4,6 +4,7 @@
 # typecheck (ubuntu-latest), typecheck (macos-latest),
 # unit (ubuntu-latest), unit (macos-latest),
 # e2e (ubuntu-latest), e2e (macos-latest),
+# unit (node-min), e2e (node-min),
 # audit
 name: CI
 
@@ -83,6 +84,34 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      - run: pnpm test:e2e
+
+  unit-min-node:
+    name: unit (node-min)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.18.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:coverage
+
+  e2e-min-node:
+    name: e2e (node-min)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.18.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: pnpm test:e2e
 
   audit:

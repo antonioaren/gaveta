@@ -4,6 +4,9 @@
   "private": true,
   "description": "Hand-written vault fixtures and a deterministic generator for performance tests.",
   "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "exports": {
     ".": "./src/index.ts"
   },

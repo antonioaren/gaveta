@@ -8,9 +8,37 @@ Base de conocimiento local, al estilo Obsidian, donde cada nota es un archivo HT
 - [Requisitos](docs/REQUIREMENTS.md): requisitos verificables, decisiones aprobadas y contratos de autoría y de la CLI.
 - [Tareas](docs/TASKS.md): plan de ejecución por fases.
 
+## Probar el MVP
+
+Requisito: **Node.js ≥ 22.18** (coincide con `.nvmrc` y `engines` del monorepo). En macOS/Linux:
+
+```bash
+corepack enable
+pnpm install
+```
+
+Ejecuta la CLI desde el repo sin instalarla:
+
+```bash
+pnpm exec gaveta init ./mi-vault --json
+pnpm exec gaveta new ./mi-vault/nota.html --title "Hola" --json
+pnpm exec gaveta read nota --json --vault ./mi-vault
+pnpm exec gaveta edit nota --vault ./mi-vault --from - --json   # escribe en stdin
+pnpm exec gaveta search hola --json --vault ./mi-vault
+```
+
+Para tener `gaveta` y `gv` en el PATH global:
+
+```bash
+cd packages/cli
+pnpm link --global
+```
+
+Comprueba con `gaveta version`. No hace falta `NODE_NO_WARNINGS`.
+
 ## Desarrollo
 
-Requisito: Node.js ≥ 22. pnpm 10 está fijado en `packageManager`.
+Requisito: Node.js ≥ 22.18. pnpm 10 está fijado en `packageManager`.
 
 ```bash
 pnpm install

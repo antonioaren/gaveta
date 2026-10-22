@@ -266,6 +266,14 @@ export const DIAGNOSTICS = {
     message: 'Parte de la nota no se puede representar en Markdown y se ha degradado.',
     hint: 'La salida JSON lista, por archivo, qué se ha degradado.',
   },
+  E_RUNTIME_UNSUPPORTED: {
+    severity: 'error',
+    exitCode: 5,
+    escalatesToError: false,
+    message:
+      'Este entorno no es compatible: Node {version} detectado; se requiere Node {minimum} o superior.',
+    hint: 'Instala una versión reciente de Node (por ejemplo `nvm install 22` o `brew install node`) y vuelve a ejecutar gaveta.',
+  },
   E_INDEX_CORRUPT: {
     severity: 'error',
     exitCode: 5,
