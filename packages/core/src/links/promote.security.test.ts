@@ -99,6 +99,20 @@ function isElement(node: ParseChild): node is ParseElement {
   );
 }
 
+function countExact(haystack: string, needle: string): number {
+  let count = 0;
+  let cursor = 0;
+  while (cursor < haystack.length) {
+    const found = haystack.indexOf(needle, cursor);
+    if (found === -1) {
+      return count;
+    }
+    count += 1;
+    cursor = found + needle.length;
+  }
+  return count;
+}
+
 it('treats a hostile pending title as data and never copies it into the href', () => {
   const html = `<p><a data-g-pending="${PAYLOAD.replaceAll('"', '&quot;')}">x</a></p><script>alert(1)</script>`;
   const result = promotePendingAnchors({
@@ -109,7 +123,8 @@ it('treats a hostile pending title as data and never copies it into the href', (
   expect(result.html).not.toContain(PAYLOAD);
   expect(result.html).not.toContain('DROP TABLE');
   expect(result.html).toContain('<script>alert(1)</script>');
-  expect(result.html.match(/<script>/g)).toEqual(['<script>']);
+  expect(countExact(result.html, '<script>')).toBe(1);
+  expect(countExact(result.html, '</script>')).toBe(1);
   const anchor = anchorsOf(result.html)[0];
   expect(anchor).toEqual({
     href: 'docs/nota.html',
