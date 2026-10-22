@@ -22,6 +22,8 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@gaveta/cli": "workspace:*",
+    "@gaveta/core": "workspace:*",
+    "@gaveta/fixtures": "workspace:*",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "10.13.0",

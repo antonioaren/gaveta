@@ -22,6 +22,7 @@
     "commander": "14.0.3"
   },
   "devDependencies": {
+    "@gaveta/fixtures": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
