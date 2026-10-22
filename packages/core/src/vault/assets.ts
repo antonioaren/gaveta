@@ -2,6 +2,14 @@ import { createHash } from 'node:crypto';
 import { lstat } from 'node:fs/promises';
 import path from 'node:path';
 import { GavetaError } from '../errors.ts';
+import {
+  DEFAULT_MERMAID_BOOT_JS,
+  DEFAULT_MERMAID_LICENSE,
+  DEFAULT_MERMAID_MIN_JS,
+  MERMAID_BOOT_RELATIVE,
+  MERMAID_LICENSE_RELATIVE,
+  MERMAID_MIN_RELATIVE,
+} from '../mermaid/assets.ts';
 import { DEFAULT_THEME_CSS } from '../theme/theme.ts';
 import { readVaultConfig, writeVaultConfig, type VaultConfig } from './config.ts';
 import { GAVETA_DIRECTORY } from './constants.ts';
@@ -9,6 +17,13 @@ import { pathOutsideVault } from './errors.ts';
 import { isInsideVault, readVaultText, writeVaultText } from './paths.ts';
 
 const THEME_RELATIVE_PATH = `${GAVETA_DIRECTORY}/theme.css`;
+
+const BUNDLED_VAULT_ASSETS: readonly { readonly relative: string; readonly content: string }[] = [
+  { relative: THEME_RELATIVE_PATH, content: DEFAULT_THEME_CSS },
+  { relative: MERMAID_MIN_RELATIVE, content: DEFAULT_MERMAID_MIN_JS },
+  { relative: MERMAID_BOOT_RELATIVE, content: DEFAULT_MERMAID_BOOT_JS },
+  { relative: MERMAID_LICENSE_RELATIVE, content: DEFAULT_MERMAID_LICENSE },
+];
 
 export interface VaultAssetUpgradeWarning {
   readonly code: 'W_VAULT_ASSET_MODIFIED';
@@ -26,8 +41,8 @@ export function hashVaultAsset(content: string): string {
 }
 
 /**
- * Refresh bundled vault assets (theme, future mermaid bundles) without touching notes.
- * User-modified theme files are detected by hash and left intact with a warning.
+ * Refresh bundled vault assets (theme, mermaid bundles) without touching notes.
+ * User-modified files are detected by hash and left intact with a warning.
  */
 export async function upgradeVaultAssets(
   vaultRoot: string,
@@ -39,25 +54,10 @@ export async function upgradeVaultAssets(
   const config = await readVaultConfig(vaultRoot);
   const upgraded: string[] = [];
   const warnings: VaultAssetUpgradeWarning[] = [];
-  const themePath = path.join(vaultRoot, ...THEME_RELATIVE_PATH.split('/'));
-  if (!isInsideVault(vaultRoot, themePath)) {
-    throw pathOutsideVault();
-  }
-  const listed = await lstatOrNull(themePath);
-  const bundledHash = hashVaultAsset(DEFAULT_THEME_CSS);
-  if (listed === null) {
-    await writeVaultText(vaultRoot, THEME_RELATIVE_PATH, DEFAULT_THEME_CSS);
-    upgraded.push(THEME_RELATIVE_PATH);
-  } else if (listed.isFile()) {
-    const existing = await readVaultText(vaultRoot, THEME_RELATIVE_PATH);
-    const existingHash = hashVaultAsset(existing);
-    if (existingHash === bundledHash) {
-      // already matches the CLI bundle
-    } else {
-      warnings.push({ code: 'W_VAULT_ASSET_MODIFIED', path: THEME_RELATIVE_PATH });
-    }
-  } else {
-    throw new GavetaError('E_PATH_EXISTS');
+  for (const asset of BUNDLED_VAULT_ASSETS) {
+    const result = await syncBundledAsset(vaultRoot, asset.relative, asset.content);
+    upgraded.push(...result.upgraded);
+    warnings.push(...result.warnings);
   }
   const nextConfig: VaultConfig = {
     ...config,
@@ -75,6 +75,34 @@ export function vaultAssetsNeedUpgrade(config: VaultConfig, cliVersion: string):
     return true;
   }
   return config.assetsVersion !== cliVersion;
+}
+
+async function syncBundledAsset(
+  vaultRoot: string,
+  relative: string,
+  bundled: string,
+): Promise<{ upgraded: string[]; warnings: VaultAssetUpgradeWarning[] }> {
+  const absolute = path.join(vaultRoot, ...relative.split('/'));
+  if (!isInsideVault(vaultRoot, absolute)) {
+    throw pathOutsideVault();
+  }
+  const listed = await lstatOrNull(absolute);
+  const bundledHash = hashVaultAsset(bundled);
+  const upgraded: string[] = [];
+  const warnings: VaultAssetUpgradeWarning[] = [];
+  if (listed === null) {
+    await writeVaultText(vaultRoot, relative, bundled);
+    upgraded.push(relative);
+    return { upgraded, warnings };
+  }
+  if (!listed.isFile()) {
+    throw new GavetaError('E_PATH_EXISTS');
+  }
+  const existing = await readVaultText(vaultRoot, relative);
+  if (hashVaultAsset(existing) !== bundledHash) {
+    warnings.push({ code: 'W_VAULT_ASSET_MODIFIED', path: relative });
+  }
+  return { upgraded, warnings };
 }
 
 async function lstatOrNull(target: string): Promise<Awaited<ReturnType<typeof lstat>> | null> {

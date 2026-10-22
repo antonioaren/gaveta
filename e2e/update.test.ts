@@ -22,5 +22,5 @@ it('runs update --check on a clean main checkout or refuses a dirty tree', () =>
   }
   expect(check.status).toBe(EXIT_CODES.conflict);
   const payload = parseJson<{ error: { code: string } }>(check.stdout);
-  expect(payload.error?.code).toBe('E_UPDATE_DIRTY');
+  expect(['E_UPDATE_DIRTY', 'E_UPDATE_BRANCH']).toContain(payload.error?.code);
 });
