@@ -16,6 +16,8 @@ export async function createBareGitFixture(parent: string): Promise<GitFixture> 
   runGit(parent, ['init', '--bare', bareRoot]);
   await mkdir(worktree, { recursive: true });
   runGit(parent, ['clone', bareRoot, worktree]);
+  runGit(worktree, ['config', 'user.email', 'gaveta@test.local']);
+  runGit(worktree, ['config', 'user.name', 'Gaveta Tests']);
   runGit(worktree, ['checkout', '-b', 'main']);
   const officialRemote = GAVETA_ALLOWED_REMOTES[0];
   if (officialRemote === undefined) {
