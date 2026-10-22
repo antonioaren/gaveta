@@ -9,7 +9,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit && pnpm -r --if-present typecheck",
-    "lint": "eslint .",
+    "lint": "eslint . && node tests/check-conflict-markers.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
