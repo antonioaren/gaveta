@@ -50,4 +50,12 @@ describe('convertMarkdownToHtml security', () => {
     const html = convertHostile('# Hostil\n\n```html\n<script>alert(1)</script>\n```\n');
     expect(hostileIndexOf(html, '<script')).toBe(-1);
   });
+
+  it('keeps angle brackets inside inline code as inert text after finalize', () => {
+    const markdown = '# Rutas\n\nRuta `skills/<n>/SKILL.md` y `1 < 2`.\n';
+    const html = convertHostile(markdown);
+    expect(html).toContain('<code>skills/&lt;n&gt;/SKILL.md</code>');
+    expect(html).toContain('<code>1 &lt; 2</code>');
+    expect(hostileIndexOf(html, '<n>')).toBe(-1);
+  });
 });

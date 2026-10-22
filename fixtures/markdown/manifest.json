@@ -1,10 +1,11 @@
 {
   "version": 1,
   "description": "Obsidian-style Markdown vault for REQ-MIG import/export tests (T2.12).",
-  "noteCount": 52,
+  "noteCount": 53,
   "notePaths": [
     "contenido/callouts-completos.md",
     "contenido/callouts-plegables.md",
+    "contenido/codigo-angulos.md",
     "contenido/codigo.md",
     "contenido/imagenes.md",
     "contenido/mermaid.md",

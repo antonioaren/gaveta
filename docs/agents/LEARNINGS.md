@@ -51,6 +51,10 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · T4.5 · Copying `data-gaveta` on a script is not enough to pass validate; `src` must equal `mermaidAssetHref(notePath, role)` with exactly three attributes and an empty body. · Reject `://`, extra attrs, and wrong `../` depth in `isTrustedMermaidScript`.
 - 2026-10-22 · T1.22 · `buildSkill` bytes rarely match committed `skills/gaveta/*.md` because Prettier reflows prose and inserts a blank line after YAML front matter. · Fingerprint the bundle after `prettier.format` in `tests/skill.test.ts`, or regenerate and run `pnpm format` before committing.
 - 2026-10-22 · T2.15 · parse5 `serialize(element)` drops the outer tag; feeding that fragment to rehype turns `<h1>` into plain text. · Wrap with `serializeOuter` before `rehype-parse`. Dashboard, design `g-frame`, artifact `iframe`, and custom components export as embedded HTML with `W_EXPORT_LOSSY`; link `rel` and task `data-g-priority` go under `gaveta:` in front matter. GFM table alignment and import-only task date formats (✅/⏳/`[completion::]`) are lossy on md→html→md.
+<<<<<<< HEAD
+=======
+- 2026-10-22 · fix · `serializeInline` wrote text nodes raw while `serializeRaw` escaped them, so `&lt;` in `<code>` became `<n>` and `validateNote` failed with `E_HTML_INVALID`. · Call `escapeText` for every text node on serialization (inline and block); keep `normalize(normalize(x)) === normalize(x)`.
+>>>>>>> a20b0e5 (fix(core): escape text nodes in normalize serializeInline)
 - 2026-10-22 · T1.21 · `guide` must not import `commands` from `registry.ts` (circular load). · Register with `createGuideCommand(peerCommands)` so the guide lists peers plus itself without importing the full registry.
 - 2026-10-22 · T1.21 · If only GitGuardian appears on a PR, check for merge conflicts first. · Rebase on `main` until `mergeable_state` is clean; GitHub skips the CI workflow on conflicting PRs.
 - 2026-10-22 · T2.13 · ESLint `no-misleading-character-class` rejects calendar emojis inside `[…]` in task-date regexes. · Match `\u{1F4C5}` / `\u{1F5D3}` explicitly instead of literal emoji in a class.

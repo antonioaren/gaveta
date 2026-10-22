@@ -1301,7 +1301,7 @@ function serializeInline(children: readonly NormChild[]): string {
   let raw = '';
   for (const child of children) {
     if (child.kind === 'text') {
-      raw += child.value.replace(/[ \t\n\r\f]+/g, ' ');
+      raw += escapeText(child.value.replace(/[ \t\n\r\f]+/g, ' '));
       continue;
     }
     const attrs = serializeAttrs(child);
