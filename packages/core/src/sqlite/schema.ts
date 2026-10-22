@@ -210,6 +210,17 @@ export const SELECT_DUPLICATE_IDS = `SELECT id FROM notes
 
 export const SELECT_PATHS_FOR_ID = 'SELECT path FROM notes WHERE id = ? ORDER BY path';
 
+/**
+ * Title and alias lookup for the link resolver.
+ * The folded key is always a bound `?` parameter, never interpolated.
+ */
+export const SELECT_NOTES_FOR_TITLE_FOLD = `SELECT path, id, title, title_folded, type, created, updated, tags, plain_text,
+  content_hash, mtime_ms, size_bytes
+  FROM notes WHERE title_folded = ? ORDER BY path`;
+
+export const SELECT_PATHS_FOR_ALIAS_FOLD =
+  'SELECT path FROM aliases WHERE alias_folded = ? ORDER BY path, alias';
+
 export const SEARCH = `SELECT
   notes.path AS path,
   notes.id AS id,
