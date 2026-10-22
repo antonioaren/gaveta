@@ -16,18 +16,18 @@ Requisito: Node.js ≥ 22. pnpm 10 está fijado en `packageManager`.
 pnpm install
 pnpm check
 pnpm dev
-pnpm exec gaveta
+pnpm exec gaveta version
 ```
 
 `pnpm check` ejecuta format, lint, typecheck, tests con cobertura, e2e y `pnpm audit --audit-level=high`. Es el mismo conjunto que la CI local. El flujo de trabajo de los agentes está en [AGENTS.md](AGENTS.md).
 
-`gaveta` y `gv` son el mismo binario. Todavía no tiene comandos: imprime la versión. El núcleo, la API y el visor llegan en las fases 1 y 2.
+`gaveta` y `gv` son el mismo binario. `gaveta version` imprime la versión; `--json` escribe el sobre versionado, `--vault` localiza el vault y `--from` lee un archivo o stdin. El resto de comandos llega en la fase 1.
 
-| Paquete          | Ruta              | Estado                 |
-| ---------------- | ----------------- | ---------------------- |
-| `@gaveta/core`   | `packages/core`   | vacío hasta la fase 1  |
-| `@gaveta/cli`    | `packages/cli`    | binario sin comandos   |
-| `@gaveta/server` | `packages/server` | vacío hasta la fase 2  |
-| `@gaveta/web`    | `apps/web`        | esqueleto React + Vite |
+| Paquete          | Ruta              | Estado                            |
+| ---------------- | ----------------- | --------------------------------- |
+| `@gaveta/core`   | `packages/core`   | vacío hasta la fase 1             |
+| `@gaveta/cli`    | `packages/cli`    | esqueleto (`version`, sobre JSON) |
+| `@gaveta/server` | `packages/server` | vacío hasta la fase 2             |
+| `@gaveta/web`    | `apps/web`        | esqueleto React + Vite            |
 
 Los paquetes de Node usan TypeScript estricto con `NodeNext` y sin emit. Los imports relativos llevan extensión `.ts`. La app usa la resolución de Vite.

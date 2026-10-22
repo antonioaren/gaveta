@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`snapshots the version JSON envelope 1`] = `
+"{
+  "ok": true,
+  "schemaVersion": 1,
+  "command": "version",
+  "data": {
+    "name": "gaveta",
+    "version": "0.0.0",
+    "vault": null,
+    "input": null
+  },
+  "warnings": []
+}
+"
+`;
