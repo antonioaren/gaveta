@@ -50,4 +50,8 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · T1.21 · If only GitGuardian appears on a PR, check for merge conflicts first. · Rebase on `main` until `mergeable_state` is clean; GitHub skips the CI workflow on conflicting PRs.
 =======
 - 2026-10-22 · T2.13 · ESLint `no-misleading-character-class` rejects calendar emojis inside `[…]` in task-date regexes. · Match `\u{1F4C5}` / `\u{1F5D3}` explicitly instead of literal emoji in a class.
+<<<<<<< HEAD
 >>>>>>> 3d9d30d (feat(core): add Markdown to HTML converter (T2.13))
+=======
+- 2026-10-22 · T2.13 · CodeQL `js/polynomial-redos` flags `CALLOUT_LINE.exec(line)` on Obsidian callout prefixes. · Parse `> [!kind]` with `startsWith` and a short kind scan instead of a regex on the whole line.
+>>>>>>> 0a63038 (docs: add T2.13 CodeQL callout parsing learning)
