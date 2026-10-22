@@ -45,5 +45,9 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · T1.28 · Artifact srcdoc CSP must be the first element in `<head>` (parse5 inject + strict `srcdocContainsCsp`); string `indexOf('<head')` matches `<header>`.
 - 2026-10-22 · T2.12 · Scanning for `[[…]]` also matches `![[…]]` image and transclusion embeds. · Skip a wikilink when the character before `[[` is `!`.
 - 2026-10-22 · T2.12 · A CI job can show every step green yet stay `in_progress` on the check (ubuntu `typecheck`); `pnpm typecheck` locally finishes in seconds and `fixtures/tsconfig` only includes `src`. · Rebase and push to re-run; keep `exclude: ["markdown"]` on the fixtures package so `.md` trees never join `tsc`.
+<<<<<<< HEAD
 - 2026-10-22 · T1.21 · `guide` must not import `commands` from `registry.ts` (circular load). · Register with `createGuideCommand(peerCommands)` so the guide lists peers plus itself without importing the full registry.
 - 2026-10-22 · T1.21 · If only GitGuardian appears on a PR, check for merge conflicts first. · Rebase on `main` until `mergeable_state` is clean; GitHub skips the CI workflow on conflicting PRs.
+=======
+- 2026-10-22 · T2.13 · ESLint `no-misleading-character-class` rejects calendar emojis inside `[…]` in task-date regexes. · Match `\u{1F4C5}` / `\u{1F5D3}` explicitly instead of literal emoji in a class.
+>>>>>>> 3d9d30d (feat(core): add Markdown to HTML converter (T2.13))

@@ -134,6 +134,16 @@ export { adoptNote } from './adopt.ts';
 
 export { convertClaudeHtml } from './convert/claude.ts';
 
+export { convertMarkdownToHtml, finalizeMarkdownHtml } from './convert/md-to-html.ts';
+
+export type {
+  FinalizeMarkdownOptions,
+  FinalizeMarkdownResult,
+  MarkdownConvertOptions,
+  MarkdownConvertResult,
+  MarkdownConvertWarning,
+} from './convert/md-to-html.ts';
+
 export type {
   ClaudeConvertOptions,
   ClaudeConvertResult,
