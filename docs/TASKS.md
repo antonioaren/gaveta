@@ -61,7 +61,7 @@ flowchart TB
 ## Fase 0 — Fundaciones
 
 - [x] **T0.1 Aprobar las decisiones.** DEC-01 a DEC-08 aprobadas el 2026-10-22 y registradas en `REQUIREMENTS.md`.
-- [ ] **T0.2 Monorepo.** pnpm workspaces, TypeScript estricto, ESLint y Prettier, Vitest, y los paquetes vacíos `core`, `cli`, `server` y `web`. Depende de: T0.1.
+- [x] **T0.2 Monorepo.** pnpm workspaces, TypeScript estricto, ESLint y Prettier, Vitest, y los paquetes vacíos `core`, `cli`, `server` y `web`. Depende de: T0.1.
 - [ ] **T0.3 CI.** GitHub Actions con lint, typecheck y tests en Linux, macOS y Windows (REQ-NFR-05). Depende de: T0.2.
 - [ ] **T0.4 Vaults de prueba.** En `fixtures/`: un vault vacío, uno con 20 notas que enlazan a X (para REQ-LINK-09), uno con un problema de cada tipo (para REQ-LINK-11), notas maliciosas (para REQ-SEC-01 y 02) y un generador de vaults de 1000 y 5000 notas (para REQ-NFR). Depende de: T0.2.
 
