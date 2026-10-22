@@ -186,3 +186,18 @@ it('adopts a note into the index and refuses traversal', async () => {
     });
   });
 });
+
+it('initializes the given directory when GAVETA_VAULT points to a vault that does not exist yet', async () => {
+  await withTemp(async (parent) => {
+    const root = join(parent, 'nuevo');
+
+    const created = capture({ cwd: parent, env: { GAVETA_VAULT: root } });
+    expect(await runCli(argv('init', root, '--json'), created.io)).toBe(EXIT_CODES.ok);
+
+    expect(JSON.parse(created.stdout())).toMatchObject({
+      ok: true,
+      command: 'init',
+      data: { root: await realpath(root) },
+    });
+  });
+});

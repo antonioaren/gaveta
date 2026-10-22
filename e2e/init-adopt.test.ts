@@ -186,3 +186,23 @@ it('writes one agent block and adopts hostile HTML into the index', () => {
     rmSync(parent, { recursive: true, force: true });
   }
 });
+
+it('initializes a new vault while GAVETA_VAULT already points to it', () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-init-env-'));
+  const directory = join(parent, 'demo');
+  try {
+    const created = run(['init', directory, '--json'], {
+      cwd: parent,
+      env: { ...process.env, GAVETA_VAULT: directory },
+    });
+    expect(created.stderr).toBe('');
+    expect(created.status).toBe(0);
+    expect(JSON.parse(created.stdout)).toMatchObject({
+      ok: true,
+      command: 'init',
+      data: { root: realpathSync(directory) },
+    });
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+});

@@ -310,6 +310,9 @@ async function resolveVault(
   cwd: string,
   env: NodeJS.ProcessEnv,
 ): Promise<VaultLocation | null> {
+  if (spec.skipsVaultDiscovery === true) {
+    return null;
+  }
   try {
     return await discoverVault({
       vaultOption: globals.vault,

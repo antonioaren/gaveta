@@ -49,6 +49,8 @@ export interface CommandSpec {
   readonly summary: string;
   readonly example: string;
   readonly requiresVault: boolean;
+  /** Skip vault discovery entirely, for commands that create the vault. */
+  readonly skipsVaultDiscovery?: boolean;
   readonly input: CommandInputMode;
   readonly contentArgument?: {
     readonly name: string;
