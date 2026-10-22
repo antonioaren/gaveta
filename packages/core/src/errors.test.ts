@@ -215,6 +215,20 @@ const expected = {
     message: 'Parte de la nota no se puede representar en Markdown y se ha degradado.',
     hint: 'La salida JSON lista, por archivo, qué se ha degradado.',
   },
+  E_INDEX_CORRUPT: {
+    severity: 'error',
+    exitCode: 5,
+    escalatesToError: false,
+    message: 'El índice SQLite está dañado y no se ha podido rehacer.',
+    hint: 'Borra .gaveta/index.sqlite y ejecuta gaveta reindex. Los archivos de las notas no cambian.',
+  },
+  W_INDEX_RECOVERED: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'El índice estaba dañado o era incompatible y se ha creado de nuevo.',
+    hint: 'Los archivos no se han modificado. gaveta reindex lo vuelve a llenar.',
+  },
 } as const;
 
 it('lists every stable code in catalog order with its Spanish text', () => {
@@ -259,6 +273,8 @@ it('maps exit codes and escalates an unknown rel only when the vault is strict',
   expect(exitCodeFor('W_REL_UNKNOWN', { strictRel: true })).toBe(EXIT_CODES.validation);
   expect(exitCodeFor('W_LINK_PENDING', { strictRel: true })).toBeNull();
   expect(exitCodeFor('E_CONFLICT', { strictRel: true })).toBe(EXIT_CODES.conflict);
+  expect(exitCodeFor('E_INDEX_CORRUPT')).toBe(EXIT_CODES.internal);
+  expect(exitCodeFor('W_INDEX_RECOVERED')).toBeNull();
 });
 
 it('fills the message templates used by the CLI contract', () => {

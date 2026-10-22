@@ -54,7 +54,7 @@ describe('T0.3 local check', () => {
     expect(asString(scripts['test:coverage'], 'scripts.test:coverage')).toContain('--coverage');
     expect(asString(scripts['test:e2e'], 'scripts.test:e2e')).toContain('vitest.e2e.config.ts');
     const engines = asRecord(manifest.engines, 'package.json engines');
-    expect(engines.node).toBe('>=22');
+    expect(engines.node).toBe('>=22.13.0');
     const devDependencies = asRecord(manifest.devDependencies, 'package.json devDependencies');
     expect(devDependencies['@vitest/coverage-v8']).toBeTruthy();
   });

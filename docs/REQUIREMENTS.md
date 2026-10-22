@@ -282,6 +282,8 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `W_IMPORT_UNSUPPORTED` | Sintaxis Markdown sin equivalente en el contrato; se conserva como bloque HTML |
 | `W_IMPORT_SKIPPED` | Archivo omitido por `--on-conflict skip` o por `--exclude` |
 | `W_EXPORT_LOSSY` | Información que Markdown no puede representar y que se ha degradado |
+| `E_INDEX_CORRUPT` | El índice SQLite está dañado y no se ha podido rehacer |
+| `W_INDEX_RECOVERED` | El índice estaba dañado o era de una versión incompatible y se ha creado de nuevo |
 
 **Localización del vault:** `--vault <dir>`, después la variable de entorno `GAVETA_VAULT` y, por último, una búsqueda ascendente de `.gaveta/` desde el directorio actual.
 
