@@ -224,6 +224,20 @@ export const DIAGNOSTICS = {
     message: 'Parte de la nota no se puede representar en Markdown y se ha degradado.',
     hint: 'La salida JSON lista, por archivo, qué se ha degradado.',
   },
+  E_INDEX_CORRUPT: {
+    severity: 'error',
+    exitCode: 5,
+    escalatesToError: false,
+    message: 'El índice SQLite está dañado y no se ha podido rehacer.',
+    hint: 'Borra .gaveta/index.sqlite y ejecuta gaveta reindex. Los archivos de las notas no cambian.',
+  },
+  W_INDEX_RECOVERED: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'El índice estaba dañado o era incompatible y se ha creado de nuevo.',
+    hint: 'Los archivos no se han modificado. gaveta reindex lo vuelve a llenar.',
+  },
 } as const satisfies Record<string, DiagnosticSpec>;
 
 export type DiagnosticCode = keyof typeof DIAGNOSTICS;

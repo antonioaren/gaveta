@@ -2,7 +2,7 @@
   "name": "@gaveta/core",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared core: authoring contract, error catalog, HTML note parser, note validator, vault I/O, and the default theme.",
+  "description": "Shared core: authoring contract, error catalog, HTML note parser, note validator, vault I/O, the default theme, and SQLite index.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@gaveta/fixtures": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

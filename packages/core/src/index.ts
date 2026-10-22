@@ -1,4 +1,6 @@
-/** Package id. The SQLite index lands in a later phase-1 task. */
+import './sqlite/warning.ts';
+
+/** Package id. */
 export const CORE_PACKAGE_ID = '@gaveta/core';
 
 export {
@@ -108,3 +110,28 @@ export {
 } from './vault/config.ts';
 
 export { DEFAULT_THEME_CSS } from './theme/theme.ts';
+
+export {
+  INDEX_RELATIVE_PATH,
+  INDEX_SCHEMA_VERSION,
+  SEARCH_DEFAULT_LIMIT,
+  SEARCH_MAX_LIMIT,
+  SEARCH_SNIPPET_END,
+  SEARCH_SNIPPET_START,
+  foldMatchKey,
+  openVaultIndex,
+} from './sqlite/store.ts';
+
+export type {
+  DuplicateId,
+  IndexProblem,
+  IndexedAlias,
+  IndexedLink,
+  IndexedNote,
+  IndexedSection,
+  IndexedTask,
+  ReindexReport,
+  SearchHit,
+  SearchOptions,
+  VaultIndex,
+} from './sqlite/store.ts';
