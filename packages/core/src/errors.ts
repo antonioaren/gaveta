@@ -126,6 +126,13 @@ export const DIAGNOSTICS = {
     message: 'La ruta sale del vault.',
     hint: 'Hay que usar una ruta dentro del vault, sin .. ni enlaces simbólicos que salgan de él.',
   },
+  E_CONFIG_INVALID: {
+    severity: 'error',
+    exitCode: 2,
+    escalatesToError: false,
+    message: 'config.json no es válido: {detail}.',
+    hint: 'Corrige .gaveta/config.json. Las claves desconocidas y los tipos incorrectos se rechazan.',
+  },
   E_PATH_EXISTS: {
     severity: 'error',
     exitCode: 1,
@@ -271,6 +278,19 @@ export function formatDiagnostic(
     message: fill(spec.message, params),
     hint: fill(spec.hint, params),
   };
+}
+
+export class GavetaError extends Error {
+  readonly code: ErrorCode;
+  readonly hint: string;
+
+  constructor(code: ErrorCode, params: Readonly<Record<string, string | number>> = {}) {
+    const formatted = formatDiagnostic(code, params);
+    super(formatted.message);
+    this.name = 'GavetaError';
+    this.code = code;
+    this.hint = formatted.hint;
+  }
 }
 
 function fill(template: string, params: Readonly<Record<string, string | number>>): string {

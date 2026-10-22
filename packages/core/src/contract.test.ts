@@ -507,6 +507,13 @@ describe('slug and value rules', () => {
     expect(slugify('Árbol')).toBe('arbol');
     expect(slugify('ÁRBOL')).toBe('arbol');
     expect(slugify('Ñandú')).toBe('nandu');
+    expect(slugify('Canción')).toBe('cancion');
+    expect(slugify('niño')).toBe('nino');
+    expect(slugify('nin\u0303o')).toBe('nino');
+    expect(slugify('¿Qué es la canción?')).toBe('que-es-la-cancion');
+    expect(slugify('El niño comió piñata en la reunión')).toBe(
+      'el-nino-comio-pinata-en-la-reunion',
+    );
     expect(slugify('  Hola   Mundo  ')).toBe('hola-mundo');
     expect(slugify('foo--bar')).toBe('foo-bar');
     expect(slugify('-foo-')).toBe('foo');
@@ -527,6 +534,15 @@ describe('slug and value rules', () => {
     expect(allocateSlug('nota', new Set(['nota-2']))).toBe('nota');
     expect(allocateSlug('nota-2', new Set(['nota-2']))).toBe('nota-2-2');
     expect(allocateSlug('', new Set(['']))).toBe('');
+    const taken = new Set<string>();
+    const allocate = (title: string): string => {
+      const slug = allocateSlug(slugify(title), taken);
+      taken.add(slug);
+      return slug;
+    };
+    expect(allocate('Canción del niño')).toBe('cancion-del-nino');
+    expect(allocate('Cancion del niño')).toBe('cancion-del-nino-2');
+    expect(allocate('CANCIÓN DEL NIÑO')).toBe('cancion-del-nino-3');
   });
 
   it('accepts calendar dates and timezone-qualified timestamps', () => {

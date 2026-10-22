@@ -268,6 +268,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_TASK_INVALID` | Tarea con atributos incorrectos |
 | `E_UNSAFE_SCRIPT`, `E_UNSAFE_HANDLER`, `E_UNSAFE_URL`, `E_UNSAFE_ELEMENT` | Contenido inseguro |
 | `E_PATH_OUTSIDE_VAULT` | La ruta sale del vault |
+| `E_CONFIG_INVALID` | `.gaveta/config.json` no existe, no es JSON o no cumple el esquema |
 | `E_PATH_EXISTS` | El destino de `new` o `mv` ya existe |
 | `E_HAS_BACKLINKS` | `rm` sin `--force` de una nota con backlinks |
 | `E_CONFLICT` | `--if-match` no coincide |
