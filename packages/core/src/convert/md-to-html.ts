@@ -54,8 +54,6 @@ export interface FinalizeMarkdownResult {
   readonly diagnostics: readonly NoteDiagnostic[];
 }
 
-const CALLOUT_LINE = /^> \[!([A-Za-z-]+)\]([+-])?\s*(.*)$/;
-
 const CALLOUT_KIND_MAP: Readonly<Record<string, string>> = {
   note: 'note',
   abstract: 'info',
@@ -337,26 +335,63 @@ function collapseText(fragment: string): string {
     .trim();
 }
 
+interface ParsedCalloutStart {
+  readonly rawKind: string;
+  readonly fold: '+' | '-' | null;
+  readonly titleRest: string;
+}
+
+function parseCalloutStartLine(line: string): ParsedCalloutStart | null {
+  if (!line.startsWith('> [!')) {
+    return null;
+  }
+  let cursor = 4;
+  let rawKind = '';
+  while (cursor < line.length) {
+    const code = line.charCodeAt(cursor);
+    const isLetter =
+      (code >= 65 && code <= 90) || (code >= 97 && code <= 122) || line.charAt(cursor) === '-';
+    if (!isLetter) {
+      break;
+    }
+    rawKind += line.charAt(cursor);
+    cursor += 1;
+  }
+  if (rawKind.length === 0 || line.charAt(cursor) !== ']') {
+    return null;
+  }
+  cursor += 1;
+  let fold: '+' | '-' | null = null;
+  const marker = line.charAt(cursor);
+  if (marker === '+' || marker === '-') {
+    fold = marker;
+    cursor += 1;
+  }
+  while (cursor < line.length && line.charAt(cursor) === ' ') {
+    cursor += 1;
+  }
+  return { rawKind, fold, titleRest: line.slice(cursor) };
+}
+
 function preprocessCallouts(input: string, warnings: MarkdownConvertWarning[]): string {
   const lines = input.split('\n');
   const out: string[] = [];
   let index = 0;
   while (index < lines.length) {
     const line = lines[index] ?? '';
-    const start = CALLOUT_LINE.exec(line);
+    const start = parseCalloutStartLine(line);
     if (start === null) {
       out.push(line);
       index += 1;
       continue;
     }
-    const [, rawKind, fold, titleRest] = start;
-    if (fold !== undefined) {
+    if (start.fold !== null) {
       warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'callout-fold' } });
     }
-    const kind = mapCalloutKind(rawKind ?? 'note', warnings);
+    const kind = mapCalloutKind(start.rawKind, warnings);
     const bodyLines: string[] = [];
-    if ((titleRest ?? '').trim().length > 0) {
-      bodyLines.push((titleRest ?? '').trim());
+    if (start.titleRest.trim().length > 0) {
+      bodyLines.push(start.titleRest.trim());
     }
     index += 1;
     while (index < lines.length) {
