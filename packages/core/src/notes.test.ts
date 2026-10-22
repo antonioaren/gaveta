@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { buildArtifactBody, readArtifactSrcdoc } from './artifact.ts';
 import {
   GAVETA_DIRECTORY,
   GavetaError,
@@ -576,6 +577,12 @@ describe('linkNote', () => {
         vaultRoot: root,
         title: 'Demo',
         type: 'artifact',
+        html: buildArtifactBody({
+          title: 'Demo',
+          description: 'Demo',
+          originalHtml: '<p>Vacío</p>',
+          allowCdn: false,
+        }),
         now: NOW,
         id: ID_ARTIFACT,
       });
@@ -590,9 +597,10 @@ describe('linkNote', () => {
       expect(linked.ok).toBe(true);
       const after = await readVaultText(root, artifact.path);
       expect(readArtifactSrcdoc(after)).toBe(srcdocBefore);
+      const embedded = readArtifactSrcdoc(after);
+      expect(embedded?.includes('data-g-to') ?? false).toBe(false);
       expect(after).toContain(`data-g-to="${ID_B}"`);
-      expect(after.indexOf('data-g-to')).toBeLessThan(after.indexOf('<iframe'));
-      expect(after.lastIndexOf('data-g-to')).toBeLessThan(after.indexOf('<iframe'));
+      expect(after.indexOf('data-g-to')).toBeGreaterThan(after.indexOf('<iframe'));
     });
   });
 

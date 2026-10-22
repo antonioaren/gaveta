@@ -604,12 +604,15 @@ function spliceNote(
     }
     return html.slice(0, spans.startTag.startOffset) + article + html.slice(spans.endTag.endOffset);
   }
-  const article = collectElements(document, (element) => elementName(element) === 'article')[0];
-  if (article === undefined) {
+  const articleElement = collectElements(
+    document,
+    (element) => elementName(element) === 'article',
+  )[0];
+  if (articleElement === undefined) {
     throw new GavetaError('E_SECTION_NOT_FOUND');
   }
   const matches = collectElements(
-    article,
+    articleElement,
     (element) => elementName(element) === 'section' && attr(element, 'id') === section,
   );
   if (matches.length === 0) {
