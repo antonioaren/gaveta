@@ -49,6 +49,7 @@ export type {
 export {
   DIAGNOSTICS,
   EXIT_CODES,
+  GavetaError,
   diagnosticCodes,
   exitCodeFor,
   formatDiagnostic,
@@ -58,3 +59,23 @@ export {
 } from './errors.ts';
 
 export type { DiagnosticCode, DiagnosticSpec, ErrorCode, WarningCode } from './errors.ts';
+
+export {
+  GAVETA_DIRECTORY,
+  GAVETA_VAULT_ENV,
+  discoverVault,
+  type DiscoverVaultOptions,
+  type VaultLocation,
+} from './vault/discover.ts';
+
+export { readVaultText, resolveInsideVault, writeVaultText } from './vault/paths.ts';
+
+export { writeAtomic } from './vault/atomic.ts';
+
+export {
+  createDefaultVaultConfig,
+  parseVaultConfig,
+  readVaultConfig,
+  writeVaultConfig,
+  type VaultConfig,
+} from './vault/config.ts';

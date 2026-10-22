@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import {
   DIAGNOSTICS,
   EXIT_CODES,
+  GavetaError,
   diagnosticCodes,
   exitCodeFor,
   formatDiagnostic,
@@ -115,6 +116,13 @@ const expected = {
     escalatesToError: false,
     message: 'La ruta sale del vault.',
     hint: 'Hay que usar una ruta dentro del vault, sin .. ni enlaces simbólicos que salgan de él.',
+  },
+  E_CONFIG_INVALID: {
+    severity: 'error',
+    exitCode: 2,
+    escalatesToError: false,
+    message: 'config.json no es válido: {detail}.',
+    hint: 'Corrige .gaveta/config.json. Las claves desconocidas y los tipos incorrectos se rechazan.',
   },
   E_PATH_EXISTS: {
     severity: 'error',
@@ -271,4 +279,17 @@ it('fills the message templates used by the CLI contract', () => {
   expect(formatDiagnostic('E_LINK_UNRESOLVED', { title: 'Roadmap' }).hint).toBe(
     "¿Quisiste decir '{suggestion}'?",
   );
+  expect(formatDiagnostic('E_CONFIG_INVALID', { detail: 'no es JSON' })).toEqual({
+    message: 'config.json no es válido: no es JSON.',
+    hint: expected.E_CONFIG_INVALID.hint,
+  });
+});
+
+it('builds a GavetaError from the catalog', () => {
+  const error = new GavetaError('E_VAULT_NOT_FOUND');
+  expect(error).toBeInstanceOf(Error);
+  expect(error.name).toBe('GavetaError');
+  expect(error.code).toBe('E_VAULT_NOT_FOUND');
+  expect(error.message).toBe(expected.E_VAULT_NOT_FOUND.message);
+  expect(error.hint).toBe(expected.E_VAULT_NOT_FOUND.hint);
 });
