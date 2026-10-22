@@ -1,6 +1,7 @@
 import { mkdir, readFile, readdir, realpath, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
+import { readWorkspaceVersion } from '../workspace-version.ts';
 import { createDefaultVaultConfig, parseVaultConfig, writeVaultConfig } from './config.ts';
 import { withTemp } from './fixture.ts';
 import { initVault } from './init.ts';
@@ -45,7 +46,7 @@ it('creates config, theme, and an empty index without touching existing html', a
     expect(created.agentInstructions).toEqual([]);
     expect(
       parseVaultConfig(JSON.parse(await readFile(join(root, '.gaveta/config.json'), 'utf8'))),
-    ).toEqual(createDefaultVaultConfig());
+    ).toEqual(createDefaultVaultConfig(readWorkspaceVersion()));
     expect(await readFile(join(root, '.gaveta/theme.css'), 'utf8')).toBe(DEFAULT_THEME_CSS);
     expect(await readFile(join(root, '.gaveta/mermaid.min.js'), 'utf8')).toBe(
       DEFAULT_MERMAID_MIN_JS,

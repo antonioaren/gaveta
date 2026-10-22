@@ -1,7 +1,7 @@
 ---
 name: gaveta
 description: 'Documenta un vault de Gaveta con la CLI: buscar, leer contexto, escribir notas HTML enlazadas y validar. Remite a gaveta guide para el contrato.'
-gaveta-cli-version: 0.0.0
+gaveta-cli-version: 0.1.0
 ---
 
 # Gaveta

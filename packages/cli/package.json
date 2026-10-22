@@ -1,6 +1,6 @@
 {
   "name": "@gaveta/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "gaveta / gv binary. Command registry, versioned JSON envelope, global options, and init, adopt, new, read, edit, and search.",
   "type": "module",

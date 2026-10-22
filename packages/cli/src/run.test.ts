@@ -72,24 +72,18 @@ it('prints the human version by default and the JSON envelope with --json', asyn
   await withTemp(async (directory) => {
     const human = capture({ cwd: directory, env: {} });
     expect(await runCli(argv('version'), human.io)).toBe(EXIT_CODES.ok);
-    expect(human.stdout()).toBe(`gaveta ${cliVersion.version}\n`);
+    expect(human.stdout()).toContain(`gaveta ${cliVersion.version}`);
+    expect(human.stdout()).toContain('install git');
     expect(human.stderr()).toBe('');
 
     const json = capture({ cwd: directory, env: {} });
     expect(await runCli(argv('version', '--json'), json.io)).toBe(EXIT_CODES.ok);
     expect(json.stderr()).toBe('');
-    expect(JSON.parse(json.stdout())).toEqual({
-      ok: true,
-      schemaVersion: 1,
-      command: 'version',
-      data: {
-        name: 'gaveta',
-        version: cliVersion.version,
-        vault: null,
-        input: null,
-      },
-      warnings: [],
-    });
+    const envelope = JSON.parse(json.stdout()) as {
+      data: { version: string; install: { method: string } };
+    };
+    expect(envelope.data.version).toBe(cliVersion.version);
+    expect(envelope.data.install.method).toBe('git');
     expect(await runCli(argv('--json', 'version'), capture({ cwd: directory, env: {} }).io)).toBe(
       EXIT_CODES.ok,
     );
@@ -227,7 +221,7 @@ it('still prints the version when the discovered vault has a broken config', asy
     await writeFile(join(vault, GAVETA_DIRECTORY, 'config.json'), '{', 'utf8');
     const captured = capture({ cwd: vault, env: {} });
     expect(await runCli(argv('version'), captured.io)).toBe(EXIT_CODES.ok);
-    expect(captured.stdout()).toBe(`gaveta ${cliVersion.version}\n`);
+    expect(captured.stdout()).toContain(`gaveta ${cliVersion.version}`);
   });
 });
 

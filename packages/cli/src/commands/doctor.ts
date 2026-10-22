@@ -6,6 +6,7 @@ import {
   type DoctorFix,
 } from '@gaveta/core';
 import type { CommandResult, CommandSpec } from '../types.ts';
+import { cliVersion } from './version.ts';
 
 interface FindingView {
   readonly code: string;
@@ -41,6 +42,7 @@ export const doctorCommand: CommandSpec = {
     const report = await doctorVault(context.vault.root, {
       fix: context.options.fix === 'true',
       strictRel: context.strictRel,
+      cliVersion: cliVersion(),
     });
     const data = {
       ok: report.ok,

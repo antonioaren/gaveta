@@ -107,6 +107,7 @@ flowchart TB
 
 ## Mejoras
 
+- [x] **T1.29 Versionado y `gaveta update`.** SemVer 0.1.0, `gaveta version` con commit git y método de instalación, `gaveta update` para checkouts git (fast-forward, assets del vault), `docs/releasing.md` y workflow de release en tag `v*`. Depende de: T1.13, T1.14, T1.20.
 - [x] **T1.27 Refresco visual del tema.** Paleta más rica (acento, acentos por tipo `doc`/`slides`/`todo`, semánticos info/tip/warning/danger/success), tipografía y espaciado, modo oscuro automático y override `data-theme`, componentes pulidos (callouts Obsidian, tablas, código, blockquotes, badges, tareas, enlaces pendientes, cabecera de nota, índice, diapositivas), contrato ampliado en `contract.ts`, contraste AA con test automatizado, vitrina en `fixtures/showcase/` y E2E Playwright en claro/oscuro. Cubre: REQ-VAULT-05, REQ-NFR-10. Depende de: T1.5.
 
 ## Fase 2 — Visor de solo lectura e importación y exportación de Markdown

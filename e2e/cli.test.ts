@@ -75,7 +75,11 @@ it('snapshots the version JSON envelope', () => {
     const result = run(['version', '--json'], { cwd: directory });
     expect(result.status).toBe(0);
     expect(result.stderr).toBe('');
-    expect(result.stdout).toMatchSnapshot();
+    const envelope = JSON.parse(result.stdout) as {
+      data: { version: string; install: { method: string } };
+    };
+    expect(envelope.data.version).toBe(manifest.version);
+    expect(envelope.data.install.method).toBe('git');
 
     const reordered = run(['--json', 'version'], { cwd: directory });
     expect(reordered.status).toBe(0);
@@ -90,7 +94,8 @@ it('prints a human version and Spanish help', () => {
   try {
     const version = run(['version'], { cwd: directory });
     expect(version.status).toBe(0);
-    expect(version.stdout).toBe(`gaveta ${manifest.version}\n`);
+    expect(version.stdout).toContain(`gaveta ${manifest.version}`);
+    expect(version.stdout).toContain('install git');
     expect(version.stderr).toBe('');
     expect(version.stdout.startsWith('{')).toBe(false);
 

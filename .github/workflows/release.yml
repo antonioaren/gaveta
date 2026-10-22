@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+      - name: Verify tag matches VERSION and package manifests
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="$(tr -d ' \n' < VERSION)"
+          test "$TAG" = "$VERSION"
+          export TAG
+          node --input-type=module -e "
+          import { readFileSync } from 'node:fs';
+          const tag = process.env.TAG;
+          const root = process.cwd();
+          const expected = readFileSync(\`\${root}/VERSION\`, 'utf8').trim();
+          if (tag !== expected) throw new Error(\`Tag \${tag} does not match VERSION \${expected}\`);
+          for (const path of [
+            'package.json',
+            'packages/cli/package.json',
+            'packages/core/package.json',
+            'packages/server/package.json',
+            'apps/web/package.json',
+            'fixtures/package.json',
+          ]) {
+            const json = JSON.parse(readFileSync(\`\${root}/\${path}\`, 'utf8'));
+            if (json.version !== expected) throw new Error(\`\${path} version \${json.version} != \${expected}\`);
+          }
+          "
+      - name: Extract changelog section
+        id: notes
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          awk -v ver="$TAG" '
+            $0 ~ "^## \\[" ver "\\]" { capture=1; next }
+            capture && $0 ~ "^## \\[" { exit }
+            capture { print }
+          ' CHANGELOG.md > release-notes.md
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          generate_release_notes: false

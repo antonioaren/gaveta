@@ -141,6 +141,7 @@ it('runs registry command examples against a prepared vault', () => {
       'todo',
       'validate',
       'link',
+      'update',
     ]);
     for (const command of commands) {
       if (skip.has(command.name)) {
