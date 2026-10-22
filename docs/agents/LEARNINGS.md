@@ -43,3 +43,5 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · T1.28 · Passing `html: null` into `createNote` is not the same as omitting `html`: `optionalBody(null)` throws `E_ARG_INVALID` and the note can be created without resolving `[[…]]`. · Keep `undefined` when stdin is empty.
 - 2026-10-22 · T1.28 · `readCommandOptions` only accepts keys listed in `CommandSpec.options[].name`; Commander stores `--source` as `source`, so the spec name must be `source`, not a different internal alias.
 - 2026-10-22 · T1.28 · Artifact srcdoc CSP must be the first element in `<head>` (parse5 inject + strict `srcdocContainsCsp`); string `indexOf('<head')` matches `<header>`.
+- 2026-10-22 · T2.12 · Scanning for `[[…]]` also matches `![[…]]` image and transclusion embeds. · Skip a wikilink when the character before `[[` is `!`.
+- 2026-10-22 · T2.12 · A CI job can show every step green yet stay `in_progress` on the check (ubuntu `typecheck`); `pnpm typecheck` locally finishes in seconds and `fixtures/tsconfig` only includes `src`. · Rebase and push to re-run; keep `exclude: ["markdown"]` on the fixtures package so `.md` trees never join `tsc`.

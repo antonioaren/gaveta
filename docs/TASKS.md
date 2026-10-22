@@ -127,7 +127,7 @@ flowchart TB
 
 Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que ya existen. Solo depende del núcleo de la fase 1, no del visor, así que se puede desarrollar en paralelo a las tareas T2.1 a T2.10.
 
-- [ ] **T2.12 Fixtures Markdown.** DEC-07 (unified/remark/rehype) ya está aprobada. Preparar `fixtures/markdown/`: un vault de Obsidian de prueba con 50 notas y subcarpetas, wikilinks con alias y sección, enlaces relativos, tareas, callouts, tablas, mermaid, imágenes compartidas, una presentación Marp y casos no soportados. Depende de: fase 1.
+- [x] **T2.12 Fixtures Markdown.** DEC-07 (unified/remark/rehype) ya está aprobada. Preparar `fixtures/markdown/`: un vault de Obsidian de prueba con 50 notas y subcarpetas, wikilinks con alias y sección, enlaces relativos, tareas, callouts, tablas, mermaid, imágenes compartidas, una presentación Marp y casos no soportados. Depende de: fase 1.
 - [ ] **T2.13 Conversor Markdown → HTML** en `core/convert/md-to-html.ts`, con plugins para wikilinks, callouts, tareas, mermaid y slides. La salida pasa por el normalizador y el validador del núcleo. Cubre: REQ-MIG-04, REQ-MIG-01. Depende de: T2.12.
 - [ ] **T2.14 Importación de carpetas.** Recorrido recursivo con exclusiones, asignación de ids y resolución de enlaces en dos pasadas, copia de adjuntos deduplicada, `--dry-run`, `--on-conflict` y escritura atómica del lote (`--continue-on-error`). Cubre: REQ-MIG-02, 03, 05, 06 y 07. Depende de: T2.13, T1.10.
 - [ ] **T2.15 Conversor HTML → Markdown** en `core/convert/html-to-md.ts`, con `--links wiki|relative`, front matter, tareas, callouts, slides y `W_EXPORT_LOSSY` para lo que no se puede representar. Cubre: REQ-MIG-09 y 10. Depende de: T2.12.

@@ -71,6 +71,14 @@ Each file is still a full note (id, type, created, title, local theme). The payl
 
 `srcset` is outside the authoring contract, so the remote image is also `E_HTML_INVALID`. `svg`, the text input, `rel="preload"`, and `http-equiv="refresh"` are outside the shell too. CSS `expression()` is not executed; the inline style is `W_INLINE_STYLE_REMOVED` (the normalizer removes it in T1.4). A remote `https` URL on an anchor is a link, not `W_REMOTE_RESOURCE`.
 
+## `markdown/` (REQ-MIG-02, T2.12)
+
+Obsidian-style `.md` vault for Markdown import and export (not HTML). Fifty-two notes in subfolders, plus two tiny attachments under `attachments/`. The machine-readable index is `markdown/manifest.json`; use `markdownVaultPath()` and `loadMarkdownManifest()` from `@gaveta/fixtures`.
+
+Feature coverage includes wikilinks (plain, alias, section), relative `.md` links, GFM tasks (nested and dated), every standard Obsidian callout (including foldable `+`/`-`), tables, fenced code, `mermaid`, shared images via `![[…]]` and `![](…)`, YAML front matter, a Marp slide deck, and a `no-soportado/` area documented in its README. Two broken links are intentional and listed in the manifest.
+
+`fixtures/src/markdown.test.ts` checks the manifest against the files on disk.
+
 ## Generator (REQ-NFR-01, REQ-NFR-02, REQ-NFR-03, REQ-NFR-04)
 
 `generateVault({ noteCount: 1000 | 5000, seed })` returns the file list. `writeVault(dir, files)` writes it and refuses `..`, absolute paths, and symlinks that would leave `dir`.

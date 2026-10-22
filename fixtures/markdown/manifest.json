@@ -1,0 +1,271 @@
+{
+  "version": 1,
+  "description": "Obsidian-style Markdown vault for REQ-MIG import/export tests (T2.12).",
+  "noteCount": 52,
+  "notePaths": [
+    "contenido/callouts-completos.md",
+    "contenido/callouts-plegables.md",
+    "contenido/codigo.md",
+    "contenido/imagenes.md",
+    "contenido/mermaid.md",
+    "contenido/tablas.md",
+    "corpus/grupo-a/nota-001.md",
+    "corpus/grupo-a/nota-002.md",
+    "corpus/grupo-a/nota-003.md",
+    "corpus/grupo-a/nota-004.md",
+    "corpus/grupo-a/nota-005.md",
+    "corpus/grupo-a/nota-006.md",
+    "corpus/grupo-a/nota-007.md",
+    "corpus/grupo-a/nota-008.md",
+    "corpus/grupo-a/nota-009.md",
+    "corpus/grupo-a/nota-010.md",
+    "corpus/grupo-b/nota-011.md",
+    "corpus/grupo-b/nota-012.md",
+    "corpus/grupo-b/nota-013.md",
+    "corpus/grupo-b/nota-014.md",
+    "corpus/grupo-b/nota-015.md",
+    "corpus/grupo-b/nota-016.md",
+    "corpus/grupo-b/nota-017.md",
+    "corpus/grupo-b/nota-018.md",
+    "corpus/grupo-b/nota-019.md",
+    "corpus/grupo-b/nota-020.md",
+    "corpus/grupo-c/nota-021.md",
+    "corpus/grupo-c/nota-022.md",
+    "corpus/grupo-c/nota-023.md",
+    "corpus/grupo-c/nota-024.md",
+    "corpus/grupo-c/nota-025.md",
+    "corpus/grupo-c/nota-026.md",
+    "corpus/grupo-c/nota-027.md",
+    "corpus/grupo-c/nota-028.md",
+    "corpus/grupo-c/nota-029.md",
+    "corpus/grupo-c/nota-030.md",
+    "enlaces/destino-wikilinks.md",
+    "enlaces/enlaces-relativos.md",
+    "enlaces/wikilinks.md",
+    "indice.md",
+    "metadatos/front-matter-completo.md",
+    "metadatos/solo-nombre-archivo.md",
+    "metadatos/titulo-desde-encabezado.md",
+    "no-soportado/bloques-html.md",
+    "no-soportado/dataview.md",
+    "no-soportado/embed-nota.md",
+    "no-soportado/enlace-remoto.md",
+    "no-soportado/notas-al-pie.md",
+    "presentacion/diapositivas-marp.md",
+    "tareas/tareas-anidadas.md",
+    "tareas/tareas-basicas.md",
+    "tareas/tareas-fechas.md"
+  ],
+  "attachments": ["attachments/pixel.png", "attachments/icono.svg"],
+  "ignoredOnImport": [".obsidian/"],
+  "features": {
+    "wikilink-plain": {
+      "description": "Wikilink to note title without alias or section",
+      "files": ["enlaces/wikilinks.md"],
+      "mustContain": ["[[Destino Wikilinks]]"]
+    },
+    "wikilink-alias": {
+      "description": "Wikilink with display alias",
+      "files": ["enlaces/wikilinks.md"],
+      "mustContain": ["[[Destino Wikilinks|alias visible]]"]
+    },
+    "wikilink-section": {
+      "description": "Wikilink with section heading",
+      "files": ["enlaces/wikilinks.md"],
+      "mustContain": ["[[Destino Wikilinks#Resumen]]"]
+    },
+    "wikilink-section-alias": {
+      "description": "Wikilink with section and alias",
+      "files": ["enlaces/wikilinks.md"],
+      "mustContain": ["[[Destino Wikilinks#Detalle|alias de sección]]"]
+    },
+    "wikilink-pending": {
+      "description": "Wikilink to a note that does not exist in the vault",
+      "files": ["enlaces/wikilinks.md"],
+      "mustContain": ["[[Nota fantasma inexistente]]"]
+    },
+    "relative-same-folder": {
+      "description": "Relative Markdown link within the same directory",
+      "files": ["enlaces/enlaces-relativos.md"],
+      "mustContain": ["](destino-wikilinks.md)"]
+    },
+    "relative-parent": {
+      "description": "Relative Markdown link with parent directories",
+      "files": ["enlaces/enlaces-relativos.md"],
+      "mustContain": ["](../corpus/grupo-a/nota-005.md)", "](../indice.md)"]
+    },
+    "relative-fragment": {
+      "description": "Relative link with URL fragment",
+      "files": ["enlaces/enlaces-relativos.md"],
+      "mustContain": ["](destino-wikilinks.md#resumen)"]
+    },
+    "relative-broken": {
+      "description": "Relative link to a missing file (listed in intentionalBrokenLinks)",
+      "files": ["enlaces/enlaces-relativos.md"],
+      "mustContain": ["](no-existe.md)"]
+    },
+    "tasks-basic": {
+      "description": "Open and completed GFM tasks",
+      "files": ["tareas/tareas-basicas.md"],
+      "mustContain": ["- [ ]", "- [x]"]
+    },
+    "tasks-nested": {
+      "description": "Nested task lists",
+      "files": ["tareas/tareas-anidadas.md"],
+      "mustContain": ["  - [ ] Subtarea A", "    - [ ] Nivel tres"]
+    },
+    "tasks-dates": {
+      "description": "Obsidian-style due dates and inline task metadata",
+      "files": ["tareas/tareas-fechas.md"],
+      "mustContain": ["📅 2026-10-22", "[due:: 2026-11-01]", "[completion:: 2026-10-22]"]
+    },
+    "callouts-all-kinds": {
+      "description": "One Obsidian callout per standard type",
+      "files": ["contenido/callouts-completos.md"],
+      "mustContain": [
+        "> [!note]",
+        "> [!abstract]",
+        "> [!info]",
+        "> [!tip]",
+        "> [!success]",
+        "> [!question]",
+        "> [!warning]",
+        "> [!failure]",
+        "> [!danger]",
+        "> [!bug]",
+        "> [!example]",
+        "> [!quote]"
+      ]
+    },
+    "callouts-foldable": {
+      "description": "Foldable callouts with + and - markers",
+      "files": ["contenido/callouts-plegables.md"],
+      "mustContain": ["> [!note]+", "> [!warning]-", "> [!tip]-"]
+    },
+    "table-gfm": {
+      "description": "GitHub-flavored Markdown tables",
+      "files": ["contenido/tablas.md"],
+      "mustContain": ["| Columna |", "| :-------- |"]
+    },
+    "code-fenced": {
+      "description": "Fenced code blocks with and without language",
+      "files": ["contenido/codigo.md"],
+      "mustContain": ["```typescript", "```\ntexto plano"]
+    },
+    "mermaid-block": {
+      "description": "Fenced mermaid diagrams",
+      "files": ["contenido/mermaid.md", "presentacion/diapositivas-marp.md"],
+      "mustContain": ["```mermaid"]
+    },
+    "image-wiki-embed": {
+      "description": "Wikilink embed for a shared attachment",
+      "files": ["contenido/imagenes.md"],
+      "mustContain": ["![[pixel.png]]"]
+    },
+    "image-markdown-relative": {
+      "description": "Classic Markdown image with relative path",
+      "files": ["contenido/imagenes.md"],
+      "mustContain": ["](../attachments/pixel.png)", "](../attachments/icono.svg)"]
+    },
+    "front-matter-full": {
+      "description": "YAML front matter with title, tags, aliases, created, type",
+      "files": ["metadatos/front-matter-completo.md"],
+      "mustContain": ["aliases:", "created: 2026-09-01", "type: doc"]
+    },
+    "front-matter-title-from-h1": {
+      "description": "Title taken from first h1 when title key is absent",
+      "files": ["metadatos/titulo-desde-encabezado.md"],
+      "mustContain": ["# Título desde encabezado"]
+    },
+    "front-matter-title-from-filename": {
+      "description": "Note without h1; title defaults from filename",
+      "files": ["metadatos/solo-nombre-archivo.md"],
+      "mustContain": ["solo-nombre-archivo"]
+    },
+    "marp-slides": {
+      "description": "Marp presentation with slide separators",
+      "files": ["presentacion/diapositivas-marp.md"],
+      "mustContain": ["marp: true", "type: slides", "\n---\n"]
+    },
+    "corpus-graph": {
+      "description": "Thirty interconnected notes in subfolders for folder import",
+      "files": [
+        "corpus/grupo-a/nota-001.md",
+        "corpus/grupo-a/nota-002.md",
+        "corpus/grupo-a/nota-003.md",
+        "corpus/grupo-a/nota-004.md",
+        "corpus/grupo-a/nota-005.md",
+        "corpus/grupo-a/nota-006.md",
+        "corpus/grupo-a/nota-007.md",
+        "corpus/grupo-a/nota-008.md",
+        "corpus/grupo-a/nota-009.md",
+        "corpus/grupo-a/nota-010.md",
+        "corpus/grupo-b/nota-011.md",
+        "corpus/grupo-b/nota-012.md",
+        "corpus/grupo-b/nota-013.md",
+        "corpus/grupo-b/nota-014.md",
+        "corpus/grupo-b/nota-015.md",
+        "corpus/grupo-b/nota-016.md",
+        "corpus/grupo-b/nota-017.md",
+        "corpus/grupo-b/nota-018.md",
+        "corpus/grupo-b/nota-019.md",
+        "corpus/grupo-b/nota-020.md",
+        "corpus/grupo-c/nota-021.md",
+        "corpus/grupo-c/nota-022.md",
+        "corpus/grupo-c/nota-023.md",
+        "corpus/grupo-c/nota-024.md",
+        "corpus/grupo-c/nota-025.md",
+        "corpus/grupo-c/nota-026.md",
+        "corpus/grupo-c/nota-027.md",
+        "corpus/grupo-c/nota-028.md",
+        "corpus/grupo-c/nota-029.md",
+        "corpus/grupo-c/nota-030.md"
+      ],
+      "mustContain": ["[[Nota 001]]"]
+    },
+    "vault-index": {
+      "description": "Hub note linking to feature areas",
+      "files": ["indice.md"],
+      "mustContain": ["[[Wikilinks de prueba]]", "[[Diapositivas Marp]]"]
+    },
+    "unsupported-embed": {
+      "description": "Transclusion embed of another note (unsupported subset)",
+      "files": ["no-soportado/embed-nota.md"],
+      "mustContain": ["![[../enlaces/destino-wikilinks.md]]"]
+    },
+    "unsupported-dataview": {
+      "description": "Dataview code fence",
+      "files": ["no-soportado/dataview.md"],
+      "mustContain": ["```dataview"]
+    },
+    "unsupported-html": {
+      "description": "Raw HTML block",
+      "files": ["no-soportado/bloques-html.md"],
+      "mustContain": ["<div class=\"custom\">"]
+    },
+    "unsupported-footnotes": {
+      "description": "GFM footnotes",
+      "files": ["no-soportado/notas-al-pie.md"],
+      "mustContain": ["[^pie-1]", "[^pie-1]:"]
+    },
+    "unsupported-remote-image": {
+      "description": "Remote image URL",
+      "files": ["no-soportado/enlace-remoto.md"],
+      "mustContain": ["https://evil.example/fixtures/remote.png"]
+    }
+  },
+  "intentionalBrokenLinks": [
+    {
+      "from": "enlaces/wikilinks.md",
+      "kind": "wikilink",
+      "target": "Nota fantasma inexistente",
+      "reason": "Ghost wikilink; should stay pending after two-pass import."
+    },
+    {
+      "from": "enlaces/enlaces-relativos.md",
+      "kind": "relative",
+      "target": "no-existe.md",
+      "reason": "Missing relative target file."
+    }
+  ]
+}
