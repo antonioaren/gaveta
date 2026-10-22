@@ -1,0 +1,7 @@
+{
+  "rel": {
+    "vocabulary": ["related", "depends-on", "part-of", "supersedes", "references"],
+    "strict": false
+  },
+  "remoteAllowlist": []
+}
