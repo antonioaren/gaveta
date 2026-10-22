@@ -366,30 +366,118 @@ function isAllowedClassName(tag: string, className: string): boolean {
 }
 
 function readTitle(source: string): string | null {
-  const match = /<title[^>]*>([^<]*)<\/title>/i.exec(source);
-  const title = match?.[1]?.trim();
-  if (title !== undefined && title.length > 0) {
-    return title;
+  const document = parseClaudeDocument(source);
+  if (document === null) {
+    return null;
   }
-  const h1 = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(source);
-  const heading = h1?.[1];
-  if (heading !== undefined) {
-    return collapseTextFromHtml(heading);
+  const fromHead = readHeadTitle(document);
+  if (fromHead !== null) {
+    return fromHead;
+  }
+  const body = findBody(document);
+  if (body === null) {
+    return null;
+  }
+  const h1 = findFirstElementByTag(body, 'h1');
+  if (h1 === null) {
+    return null;
+  }
+  const heading = collapseText(h1);
+  return heading.length > 0 ? heading : null;
+}
+
+function readDescription(source: string): string | null {
+  const document = parseClaudeDocument(source);
+  if (document === null) {
+    return null;
+  }
+  const fromMeta = readMetaDescription(document);
+  if (fromMeta !== null) {
+    return fromMeta;
+  }
+  const body = findBody(document);
+  if (body === null) {
+    return null;
+  }
+  const paragraph = findFirstElementByTag(body, 'p');
+  if (paragraph === null) {
+    return null;
+  }
+  const text = collapseText(paragraph);
+  return text.length > 0 ? text : null;
+}
+
+function parseClaudeDocument(source: string): ParseDocument | null {
+  try {
+    return parse(source, { scriptingEnabled: false });
+  } catch {
+    return null;
+  }
+}
+
+function readHeadTitle(document: ParseDocument): string | null {
+  const head = findHead(document);
+  if (head === null) {
+    return null;
+  }
+  const title = findFirstElementByTag(head, 'title');
+  if (title === null) {
+    return null;
+  }
+  const text = collapseText(title);
+  return text.length > 0 ? text : null;
+}
+
+function readMetaDescription(document: ParseDocument): string | null {
+  const head = findHead(document);
+  if (head === null) {
+    return null;
+  }
+  for (const child of head.childNodes) {
+    if (!isElement(child) || child.tagName.toLowerCase() !== 'meta') {
+      continue;
+    }
+    const name = attribute(child, 'name');
+    if (name?.trim().toLowerCase() !== 'description') {
+      continue;
+    }
+    const content = attribute(child, 'content')?.trim() ?? '';
+    return content.length > 0 ? content : null;
   }
   return null;
 }
 
-function readDescription(source: string): string | null {
-  const meta = /<meta\s+name="description"\s+content="([^"]*)"/i.exec(source);
-  const description = meta?.[1]?.trim();
-  if (description !== undefined && description.length > 0) {
-    return description;
+function findHead(document: ParseDocument): ParseElement | null {
+  const stack: ParseChild[] = [...document.childNodes];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node === undefined || !isElement(node)) {
+      continue;
+    }
+    if (node.tagName.toLowerCase() === 'head') {
+      return node;
+    }
+    for (const child of node.childNodes) {
+      stack.push(child);
+    }
   }
-  const p = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(source);
-  const paragraph = p?.[1];
-  if (paragraph !== undefined) {
-    const text = collapseTextFromHtml(paragraph);
-    return text.length > 0 ? text : null;
+  return null;
+}
+
+function findFirstElementByTag(root: ParseElement, tag: string): ParseElement | null {
+  const wanted = tag.toLowerCase();
+  const stack: ParseChild[] = [...root.childNodes];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node === undefined || !isElement(node)) {
+      continue;
+    }
+    if (node.tagName.toLowerCase() === wanted) {
+      return node;
+    }
+    for (const child of node.childNodes) {
+      stack.push(child);
+    }
   }
   return null;
 }
@@ -497,13 +585,6 @@ function walkText(nodes: readonly ParseChild[], parts: string[]): void {
       walkText(node.childNodes, parts);
     }
   }
-}
-
-function collapseTextFromHtml(fragment: string): string {
-  return fragment
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function guessDevice(classes: readonly string[]): string {
