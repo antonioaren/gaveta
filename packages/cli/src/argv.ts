@@ -1,6 +1,6 @@
-const OPTIONS_WITH_VALUES = new Set(['--vault', '--from']);
+const OPTIONS_WITH_VALUES = new Set(['--vault', '--from', '--type', '--tag', '--limit']);
 
-/** First positional token, skipping flags and the values of `--vault` and `--from`. */
+/** First positional token, skipping flags and the values of options that take one. */
 export function firstPositional(args: readonly string[]): string {
   for (let index = 0; index < args.length; index += 1) {
     const token = args[index];

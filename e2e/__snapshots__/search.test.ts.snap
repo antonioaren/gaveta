@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`snapshots search JSON and returns the sqlite note first 1`] = `
+"{
+  "ok": true,
+  "schemaVersion": 1,
+  "command": "search",
+  "data": {
+    "query": "sqlite",
+    "type": null,
+    "tag": null,
+    "limit": 20,
+    "hits": [
+      {
+        "path": "motor.html",
+        "id": "01JB7Z3K9QX4T5M2N8V6R0WYHC",
+        "title": "Motor",
+        "type": "doc",
+        "tags": [
+          "indice"
+        ],
+        "snippet": "Motor\\nEl cuerpo menciona <mark>sqlite</mark>."
+      }
+    ]
+  },
+  "warnings": []
+}
+"
+`;

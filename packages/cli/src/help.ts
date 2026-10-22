@@ -14,14 +14,13 @@ export function renderHelp(registry: readonly CommandSpec[], commandName?: strin
     const command = registry.find((item) => item.name === commandName);
     if (command !== undefined) {
       return [
-        `Uso: gaveta ${command.name} [opciones]`,
+        usageLine(command),
         '',
         command.summary,
         '',
         `Ejemplo: ${command.example}`,
         '',
-        'Opciones:',
-        ...OPTION_LINES,
+        ...optionBlock(command),
         '',
       ].join('\n');
     }
@@ -46,4 +45,31 @@ export function renderHelp(registry: readonly CommandSpec[], commandName?: strin
     ...registry.map((command) => `  ${command.example}`),
     '',
   ].join('\n');
+}
+
+function usageLine(command: CommandSpec): string {
+  const args = (command.args ?? [])
+    .map((argument) => (argument.required ? `<${argument.name}>` : `[${argument.name}]`))
+    .join(' ');
+  if (args.length === 0) {
+    return `Uso: gaveta ${command.name} [opciones]`;
+  }
+  return `Uso: gaveta ${command.name} ${args} [opciones]`;
+}
+
+function optionBlock(command: CommandSpec): string[] {
+  const specific = commandOptionLines(command);
+  if (specific.length === 0) {
+    return ['Opciones:', ...OPTION_LINES];
+  }
+  return ['Opciones:', ...OPTION_LINES, '', 'Opciones del comando:', ...specific];
+}
+
+function commandOptionLines(command: CommandSpec): string[] {
+  const options = command.options ?? [];
+  if (options.length === 0) {
+    return [];
+  }
+  const width = options.reduce((longest, option) => Math.max(longest, option.flags.length), 0);
+  return options.map((option) => `  ${option.flags.padEnd(width)}  ${option.description}`);
 }

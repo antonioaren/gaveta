@@ -46,6 +46,7 @@ interface Globals {
 interface ParsedCommand {
   readonly spec: CommandSpec;
   readonly positionals: readonly string[];
+  readonly options: Readonly<Record<string, string>>;
 }
 
 interface Writers {
@@ -151,7 +152,12 @@ async function execute(
   },
 ): Promise<number> {
   const { spec, positionals } = parsed;
-  if (spec.input === 'none' && (globals.from !== undefined || positionals.length > 0)) {
+  if (spec.input === 'none' && globals.from !== undefined) {
+    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Este comando no admite contenido.' });
+  }
+  const acceptsPositionals =
+    spec.contentArgument !== undefined || (spec.args !== undefined && spec.args.length > 0);
+  if (spec.input === 'none' && !acceptsPositionals && positionals.length > 0) {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Este comando no admite contenido.' });
   }
   const vault = await resolveVault(spec, globals, io.cwd, io.env);
@@ -181,6 +187,7 @@ async function execute(
       strictRel,
       input,
       positionals,
+      options: parsed.options,
     });
   } catch (error) {
     return reportCaught(io.writers, io.json, spec.name, error, strictRel);
@@ -377,12 +384,23 @@ function createProgram(
         : `[${spec.contentArgument.name}]`;
       command.argument(syntax, spec.contentArgument.description);
     }
+    for (const argument of spec.args ?? []) {
+      const syntax = argument.required ? `<${argument.name}>` : `[${argument.name}]`;
+      command.argument(syntax, argument.description);
+    }
+    for (const option of spec.options ?? []) {
+      command.option(option.flags, option.description);
+    }
     command.action((...params: unknown[]) => {
-      const last = params.at(-1);
-      if (!(last instanceof Command)) {
+      const commandObject = params.at(-1);
+      if (!(commandObject instanceof Command)) {
         throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
       }
-      onRun({ spec, positionals: [...last.args] });
+      onRun({
+        spec,
+        positionals: [...commandObject.args],
+        options: readCommandOptions(params.at(-2), spec),
+      });
     });
   }
   return program;
@@ -414,6 +432,24 @@ function readStringOption(value: unknown): string | undefined {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
   }
   return value;
+}
+
+function readCommandOptions(value: unknown, spec: CommandSpec): Readonly<Record<string, string>> {
+  if (!isRecord(value)) {
+    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
+  }
+  const allowed = new Set((spec.options ?? []).map((option) => option.name));
+  const options: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (!allowed.has(key)) {
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'La opción no existe.' });
+    }
+    if (typeof entry !== 'string' || entry.length === 0) {
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });
+    }
+    options[key] = entry;
+  }
+  return options;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

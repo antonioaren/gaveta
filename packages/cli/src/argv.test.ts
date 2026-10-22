@@ -22,4 +22,8 @@ it('finds the command token and skips option values', () => {
   expect(firstPositional(['--from=nota.html', '--json'])).toBe('');
   expect(firstPositional(['nope'])).toBe('nope');
   expect(firstPositional(['--help'])).toBe('');
+  expect(firstPositional(['--type', 'doc', '--tag', 'indice', '--limit', '5', 'search'])).toBe(
+    'search',
+  );
+  expect(firstPositional(['search', '--limit', '5', 'sqlite'])).toBe('search');
 });
