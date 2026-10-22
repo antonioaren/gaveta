@@ -1,5 +1,7 @@
 export const AGENT_BLOCK_START = '<!-- gaveta:start -->';
 
+import { AGENT_WORKFLOW_BULLETS } from '../agent-workflow.ts';
+
 export const AGENT_BLOCK_END = '<!-- gaveta:end -->';
 
 /**
@@ -11,11 +13,7 @@ export const AGENT_INSTRUCTION_BODY = [
   '',
   'Este directorio es un vault de Gaveta. Las notas son archivos HTML y los enlaces entre ellas son el producto.',
   '',
-  '- Busca antes de crear (`gaveta search`).',
-  '- Lee el contexto con `gaveta backlinks` y `gaveta graph --depth 1`.',
-  '- Escribe con `gaveta new` o `gaveta edit --from -` y enlaza con `[[Título]]`.',
-  '- Usa `--json` y `--if-match` al escribir.',
-  '- El contrato completo está en `gaveta guide`. No lo copies aquí.',
+  ...AGENT_WORKFLOW_BULLETS.map((line) => `- ${line}`),
 ].join('\n');
 
 /** Insert or replace the delimited block. A second call with the same body is a no-op. */

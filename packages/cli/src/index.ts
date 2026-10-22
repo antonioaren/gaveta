@@ -10,6 +10,8 @@ export { INTERNAL_ERROR_CODE, SCHEMA_VERSION } from './envelope.ts';
 export type { FailureEnvelope, JsonErrorBody, JsonWarning, SuccessEnvelope } from './envelope.ts';
 
 export { commands } from './registry.ts';
+export { GLOBAL_CLI_FLAGS, buildCliSurface, type CliSurface } from './cli-surface.ts';
+export { tokensFromGavetaExample, tokenizeShellLine } from './example-tokens.ts';
 export type {
   CommandArgument,
   CommandContext,
