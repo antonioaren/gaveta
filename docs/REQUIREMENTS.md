@@ -202,7 +202,7 @@ Son P1 en el PRD, pero la parte de CLI se adelanta a la fase 2 porque facilita a
 | Id | Prioridad | Fase | Requisito | Criterio de aceptación |
 | --- | --- | --- | --- | --- |
 | REQ-FMT-01 | P0 | 1 | Formateo canónico al guardar: orden fijo de metadatos, indentación de 2 espacios, atributos en orden estable y un salto de línea final. | Formatear dos veces produce el mismo resultado (idempotencia). |
-| REQ-FMT-02 | P0 | 1 | El normalizador elimina estilos inline y clases fuera del contrato (con aviso) y conserva el contenido. | `W_INLINE_STYLE_REMOVED` informa cuántos estilos inline se han eliminado. |
+| REQ-FMT-02 | P0 | 1 | El normalizador elimina estilos inline y clases fuera del contrato (con aviso) y conserva el contenido. | `W_INLINE_STYLE_REMOVED` informa cuántos estilos inline se han eliminado. `W_CLASS_REMOVED` informa cuántas clases fuera del contrato se han eliminado. |
 
 ## Contrato de autoría
 
@@ -276,6 +276,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `W_REL_UNKNOWN` | `rel` fuera del vocabulario |
 | `W_REMOTE_RESOURCE` | Recurso remoto bloqueado |
 | `W_INLINE_STYLE_REMOVED` | Estilos inline eliminados por el normalizador |
+| `W_CLASS_REMOVED` | Clases fuera del contrato eliminadas por el normalizador |
 | `W_UNSAFE_REMOVED` | Contenido inseguro eliminado al guardar |
 | `E_IMPORT_PARSE` | Un `.md` no se puede parsear (por ejemplo, front matter YAML no válido) |
 | `E_IMPORT_ABORTED` | La importación de una carpeta se ha abortado por un error (no se escribió nada) |
