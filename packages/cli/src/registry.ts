@@ -7,6 +7,7 @@ import {
 } from './commands/connections.ts';
 import { doctorCommand } from './commands/doctor.ts';
 import { createGuideCommand } from './commands/guide.ts';
+import { createSkillCommand } from './commands/skill.ts';
 import { initCommand } from './commands/init.ts';
 import { mvCommand, rmCommand } from './commands/move-remove.ts';
 import { editCommand, newCommand, readCommand } from './commands/notes.ts';
@@ -37,5 +38,11 @@ const peerCommands: readonly CommandSpec[] = [
   reindexCommand,
 ];
 
+const skillCommand = createSkillCommand(peerCommands);
+const guidePeerCommands: readonly CommandSpec[] = [...peerCommands, skillCommand];
+
 /** Commands the binary exposes. Later tasks append here; `guide` reads this list. */
-export const commands: readonly CommandSpec[] = [...peerCommands, createGuideCommand(peerCommands)];
+export const commands: readonly CommandSpec[] = [
+  ...guidePeerCommands,
+  createGuideCommand(guidePeerCommands),
+];

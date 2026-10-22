@@ -19,8 +19,9 @@ export const initCommand: CommandSpec = {
     {
       name: 'agentInstructions',
       flags: '--agent-instructions <destino>',
-      description: 'Escribe un bloque idempotente en CLAUDE.md (claude) o AGENTS.md (agents).',
-      choices: ['claude', 'agents'],
+      description:
+        'Escribe un bloque idempotente en CLAUDE.md, AGENTS.md, .cursor/rules/gaveta.mdc o .github/copilot-instructions.md.',
+      choices: ['claude', 'agents', 'cursor', 'copilot', 'all'],
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -40,11 +41,11 @@ export const initCommand: CommandSpec = {
         ? `Vault creado en ${result.root}.`
         : `El vault ya existe en ${result.root}.`,
     ];
-    if (result.agentInstructions !== null) {
+    for (const entry of result.agentInstructions) {
       lines.push(
-        result.agentInstructions.changed
-          ? `Instrucciones actualizadas en ${result.agentInstructions.path}.`
-          : `Las instrucciones de ${result.agentInstructions.path} ya estaban al día.`,
+        entry.changed
+          ? `Instrucciones actualizadas en ${entry.path}.`
+          : `Las instrucciones de ${entry.path} ya estaban al día.`,
       );
     }
     return { data: result, human: `${lines.join('\n')}\n` };

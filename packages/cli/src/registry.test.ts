@@ -21,6 +21,7 @@ it('registers version, init, adopt, search, new, read, edit, mv, rm, connection,
     'validate',
     'doctor',
     'reindex',
+    'skill',
     'guide',
   ]);
   const names = new Set(commands.map((command) => command.name));
@@ -44,8 +45,8 @@ it('documents init targets and the adopt path in Spanish help', () => {
   expect(initHelp).toContain('--agent-instructions');
   expect(initHelp).toContain('CLAUDE.md');
   expect(initHelp).toContain('AGENTS.md');
-  expect(initHelp).toContain('claude');
-  expect(initHelp).toContain('agents');
+  expect(initHelp).toContain('.cursor/rules/gaveta.mdc');
+  expect(initHelp).toContain('.github/copilot-instructions.md');
   expect(initHelp).not.toContain('Usage:');
   expect(renderHelp(commands, 'adopt')).toContain('<ruta>');
   expect(renderHelp(commands, 'adopt')).toContain('gaveta adopt nota.html');

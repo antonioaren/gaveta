@@ -3,7 +3,13 @@ import path from 'node:path';
 import { GavetaError } from '../errors.ts';
 import { openVaultIndex } from '../sqlite/store.ts';
 import { DEFAULT_THEME_CSS } from '../theme/theme.ts';
-import { AGENT_INSTRUCTION_BODY, upsertAgentBlock } from './agent-block.ts';
+import {
+  agentInstructionRelativePath,
+  expandAgentInstructionTargets,
+  isAgentInstructionTarget,
+  mergeAgentInstructionFile,
+  type AgentInstructionTarget,
+} from './agent-instructions.ts';
 import { createDefaultVaultConfig, writeVaultConfig } from './config.ts';
 import { GAVETA_DIRECTORY, VAULT_CONFIG_PATH } from './constants.ts';
 import { pathOutsideVault } from './errors.ts';
@@ -15,10 +21,6 @@ const INDEX_RELATIVE_PATH = `${GAVETA_DIRECTORY}/index.sqlite`;
 
 const VAULT_FILES = [VAULT_CONFIG_PATH, THEME_RELATIVE_PATH, INDEX_RELATIVE_PATH] as const;
 
-const AGENT_TARGETS = ['claude', 'agents'] as const;
-
-type AgentTarget = (typeof AGENT_TARGETS)[number];
-
 export interface InitVaultOptions {
   readonly cwd: string;
   readonly directory?: string;
@@ -26,7 +28,7 @@ export interface InitVaultOptions {
 }
 
 export interface AgentInstructionResult {
-  readonly target: AgentTarget;
+  readonly target: Exclude<AgentInstructionTarget, 'all'>;
   readonly path: string;
   readonly changed: boolean;
 }
@@ -35,7 +37,7 @@ export interface InitVaultResult {
   readonly root: string;
   readonly created: readonly string[];
   readonly preserved: readonly string[];
-  readonly agentInstructions: AgentInstructionResult | null;
+  readonly agentInstructions: readonly AgentInstructionResult[];
 }
 
 interface FilePlan {
@@ -63,27 +65,19 @@ export async function initVault(options: InitVaultOptions): Promise<InitVaultRes
     await writeMissing(root, plan.relative);
     created.push(plan.relative);
   }
-  const agentInstructions = target === null ? null : await writeAgentFile(root, target);
+  const agentInstructions =
+    target === null ? [] : await writeAgentFiles(root, expandAgentInstructionTargets(target));
   return { root, created, preserved, agentInstructions };
 }
 
-function readAgentTarget(value: string | undefined): AgentTarget | null {
+function readAgentTarget(value: string | undefined): AgentInstructionTarget | null {
   if (value === undefined) {
     return null;
   }
-  if (isAgentTarget(value)) {
+  if (isAgentInstructionTarget(value)) {
     return value;
   }
   throw new GavetaError('E_ARG_INVALID');
-}
-
-function isAgentTarget(value: string): value is AgentTarget {
-  for (const target of AGENT_TARGETS) {
-    if (target === value) {
-      return true;
-    }
-  }
-  return false;
 }
 
 async function resolveInitRoot(cwd: string, directory: string | undefined): Promise<string> {
@@ -222,18 +216,26 @@ async function writeMissing(root: string, relative: string): Promise<void> {
   index.close();
 }
 
-async function writeAgentFile(root: string, target: AgentTarget): Promise<AgentInstructionResult> {
-  const relative = target === 'claude' ? 'CLAUDE.md' : 'AGENTS.md';
-  const absolute = path.join(root, relative);
-  let existing = '';
-  if ((await lstatOrNull(absolute)) !== null) {
-    existing = await readVaultText(root, relative);
+async function writeAgentFiles(
+  root: string,
+  targets: readonly Exclude<AgentInstructionTarget, 'all'>[],
+): Promise<AgentInstructionResult[]> {
+  const results: AgentInstructionResult[] = [];
+  for (const target of targets) {
+    const relative = agentInstructionRelativePath(target);
+    const absolute = path.join(root, relative);
+    let existing = '';
+    if ((await lstatOrNull(absolute)) !== null) {
+      existing = await readVaultText(root, relative);
+    }
+    const next = mergeAgentInstructionFile(target, existing);
+    if (next !== existing) {
+      await mkdir(path.dirname(absolute), { recursive: true });
+      await writeVaultText(root, relative, next);
+    }
+    results.push({ target, path: relative, changed: next !== existing });
   }
-  const next = upsertAgentBlock(existing, AGENT_INSTRUCTION_BODY);
-  if (next !== existing) {
-    await writeVaultText(root, relative, next);
-  }
-  return { target, path: relative, changed: next !== existing };
+  return results;
 }
 
 function isSafePathInput(value: string): boolean {
