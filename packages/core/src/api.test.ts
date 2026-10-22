@@ -18,8 +18,10 @@ import {
   BACKLINK_CONTEXT_LIMIT,
   GRAPH_DEPTH_MAX,
   GRAPH_DEPTH_MIN,
+  adoptNote,
   backlinks,
   globalGraph,
+  initVault,
   graphGhostKey,
   localGraph,
   outgoingLinks,
@@ -69,4 +71,6 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(typeof assessRel).toBe('function');
   expect(GavetaRefError.prototype).toBeInstanceOf(GavetaError);
   expect(SUGGESTION_LIMIT).toBe(5);
+  expect(typeof initVault).toBe('function');
+  expect(typeof adoptNote).toBe('function');
 });

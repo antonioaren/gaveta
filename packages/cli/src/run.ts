@@ -8,7 +8,7 @@ import {
   readVaultConfig,
   type VaultLocation,
 } from '@gaveta/core';
-import { Command, CommanderError } from 'commander';
+import { Command, CommanderError, Option } from 'commander';
 import type { Readable } from 'node:stream';
 import { firstPositional, normalizeArgv } from './argv.ts';
 import {
@@ -155,10 +155,17 @@ async function execute(
   if (spec.input === 'none' && globals.from !== undefined) {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Este comando no admite contenido.' });
   }
-  const acceptsPositionals =
-    spec.contentArgument !== undefined || (spec.args !== undefined && spec.args.length > 0);
-  if (spec.input === 'none' && !acceptsPositionals && positionals.length > 0) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Este comando no admite contenido.' });
+  const allowedPositionals =
+    (spec.args?.length ?? 0) + (spec.contentArgument === undefined ? 0 : 1);
+  if (spec.input === 'none' && positionals.length > allowedPositionals) {
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      {
+        problem:
+          allowedPositionals === 0 ? 'Este comando no admite contenido.' : 'Sobran argumentos.',
+      },
+    );
   }
   const vault = await resolveVault(spec, globals, io.cwd, io.env);
   let strictRel = false;
@@ -378,19 +385,23 @@ function createProgram(
 
   for (const spec of registry) {
     const command = program.command(spec.name).description(spec.summary);
+    for (const arg of spec.args ?? []) {
+      command.argument(arg.required ? `<${arg.name}>` : `[${arg.name}]`, arg.description);
+    }
     if (spec.contentArgument !== undefined) {
       const syntax = spec.contentArgument.required
         ? `<${spec.contentArgument.name}>`
         : `[${spec.contentArgument.name}]`;
       command.argument(syntax, spec.contentArgument.description);
     }
-    for (const argument of spec.args ?? []) {
-      const syntax = argument.required ? `<${argument.name}>` : `[${argument.name}]`;
-      command.argument(syntax, argument.description);
-    }
     for (const option of spec.options ?? []) {
-      command.option(option.flags, option.description);
+      const built = new Option(option.flags, option.description);
+      if (option.choices !== undefined) {
+        built.choices([...option.choices]);
+      }
+      command.addOption(built);
     }
+    command.allowExcessArguments(false);
     command.action((...params: unknown[]) => {
       const commandObject = params.at(-1);
       if (!(commandObject instanceof Command)) {
