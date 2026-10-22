@@ -15,12 +15,17 @@ export const REL_VOCABULARY = [
 
 export type Rel = (typeof REL_VOCABULARY)[number];
 
-/** Codes from the CLI contract that the malicious vault is meant to provoke. */
+/**
+ * Codes `validateNote` reports for the malicious vault.
+ * Confirmed in T1.3. `E_TASK_INVALID` belongs to the problems vault, not this list.
+ */
 export const VALIDATOR_CODES = [
   'E_UNSAFE_SCRIPT',
   'E_UNSAFE_HANDLER',
   'E_UNSAFE_URL',
   'E_UNSAFE_ELEMENT',
+  'E_HTML_INVALID',
+  'E_PATH_OUTSIDE_VAULT',
   'W_REMOTE_RESOURCE',
   'W_INLINE_STYLE_REMOVED',
 ] as const;

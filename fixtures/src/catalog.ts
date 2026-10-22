@@ -197,7 +197,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Script',
     tags: 'malicioso',
     caseId: 'script',
-    codes: ['E_UNSAFE_SCRIPT'],
+    codes: ['E_UNSAFE_SCRIPT', 'W_REMOTE_RESOURCE'],
     payloads: ['<script>', 'alert(1);', 'src="https://evil.example/hook.js"'],
   },
   {
@@ -207,7 +207,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Handler',
     tags: 'malicioso',
     caseId: 'handler',
-    codes: ['E_UNSAFE_HANDLER'],
+    codes: ['E_UNSAFE_HANDLER', 'E_HTML_INVALID'],
     payloads: ['onerror="alert(1)"', 'onclick="alert(1)"', 'onload="alert(1)"'],
   },
   {
@@ -231,7 +231,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Iframe',
     tags: 'malicioso',
     caseId: 'iframe',
-    codes: ['E_UNSAFE_ELEMENT'],
+    codes: ['E_UNSAFE_ELEMENT', 'W_REMOTE_RESOURCE'],
     payloads: ['<iframe', 'src="https://evil.example/frame.html"', 'src="data:text/html,hello"'],
   },
   {
@@ -241,7 +241,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Object',
     tags: 'malicioso',
     caseId: 'object',
-    codes: ['E_UNSAFE_ELEMENT'],
+    codes: ['E_UNSAFE_ELEMENT', 'W_REMOTE_RESOURCE'],
     payloads: ['<object', 'data="https://evil.example/plugin.swf"'],
   },
   {
@@ -251,7 +251,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Embed',
     tags: 'malicioso',
     caseId: 'embed',
-    codes: ['E_UNSAFE_ELEMENT'],
+    codes: ['E_UNSAFE_ELEMENT', 'W_REMOTE_RESOURCE'],
     payloads: ['<embed', 'src="https://evil.example/plugin.swf"'],
   },
   {
@@ -261,7 +261,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Formulario',
     tags: 'malicioso',
     caseId: 'form',
-    codes: ['E_UNSAFE_ELEMENT'],
+    codes: ['E_UNSAFE_ELEMENT', 'E_HTML_INVALID', 'W_REMOTE_RESOURCE'],
     payloads: ['<form', 'action="https://evil.example/collect"'],
   },
   {
@@ -271,7 +271,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Base',
     tags: 'malicioso',
     caseId: 'base',
-    codes: ['E_UNSAFE_ELEMENT'],
+    codes: ['E_UNSAFE_ELEMENT', 'W_REMOTE_RESOURCE'],
     payloads: ['<base', 'href="https://evil.example/"'],
   },
   {
@@ -281,7 +281,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Imagen remota',
     tags: 'malicioso',
     caseId: 'remote-image',
-    codes: ['W_REMOTE_RESOURCE'],
+    codes: ['E_HTML_INVALID', 'W_REMOTE_RESOURCE'],
     payloads: [
       'src="https://evil.example/pixel.png"',
       'src="http://evil.example/pixel.png"',
@@ -296,7 +296,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Hoja remota',
     tags: 'malicioso',
     caseId: 'remote-stylesheet',
-    codes: ['W_REMOTE_RESOURCE'],
+    codes: ['E_HTML_INVALID', 'W_REMOTE_RESOURCE'],
     payloads: ['href="https://evil.example/evil.css"', 'href="https://evil.example/font.woff2"'],
   },
   {
@@ -306,7 +306,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Path traversal',
     tags: 'malicioso',
     caseId: 'path-traversal',
-    codes: [],
+    codes: ['E_PATH_OUTSIDE_VAULT'],
     payloads: [
       'href="../../fuera.html"',
       'href="/etc/passwd"',
@@ -322,7 +322,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     title: 'Meta refresh',
     tags: 'malicioso',
     caseId: 'meta-refresh',
-    codes: [],
+    codes: ['E_HTML_INVALID', 'W_REMOTE_RESOURCE'],
     payloads: ['http-equiv="refresh"', 'content="0;url=https://evil.example/"'],
   },
   {
