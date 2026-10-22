@@ -41,3 +41,5 @@ gaveta update --check
 ```
 
 By default `gaveta update` follows the latest `v*` tag when tags exist (`--channel stable`); use `--channel main` to track `origin/main` instead.
+
+Forks can point `gaveta update` at a different `origin` by setting `GAVETA_UPDATE_REMOTE` to the same URL as `remote.origin.url` (must match exactly after normalization). `gaveta version` always reports the detected git remote and does not enforce the allowlist.
