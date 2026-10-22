@@ -2,7 +2,7 @@
   "name": "@gaveta/core",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared core: authoring contract, error catalog, and vault I/O.",
+  "description": "Shared core: authoring contract, error catalog, HTML note parser, and vault I/O.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -14,5 +14,8 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "parse5": "8.0.1"
   }
 }

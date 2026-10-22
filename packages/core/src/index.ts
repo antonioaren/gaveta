@@ -1,4 +1,4 @@
-/** Package id. Parser and vault operations land in later phase-1 tasks. */
+/** Package id. The SQLite index lands in a later phase-1 task. */
 export const CORE_PACKAGE_ID = '@gaveta/core';
 
 export {
@@ -59,6 +59,22 @@ export {
 } from './errors.ts';
 
 export type { DiagnosticCode, DiagnosticSpec, ErrorCode, WarningCode } from './errors.ts';
+
+export { MAX_NOTE_DEPTH, MAX_NOTE_HTML_CHARS, parseNote } from './parser.ts';
+
+export type {
+  NoteDiagnostic,
+  NoteHeading,
+  NoteLink,
+  NoteLinkKind,
+  NoteMetadata,
+  NoteModel,
+  NoteSection,
+  NoteTask,
+  ParseResult,
+  SourceLocation,
+  WikilinkParts,
+} from './parser.ts';
 
 export {
   GAVETA_DIRECTORY,

@@ -13,3 +13,4 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · T0.4 · Prettier printWidth 100 wraps `[[Title with spaces]]` onto the next line and splits the wikilink. · Put each wikilink in its own short paragraph.
 - 2026-10-22 · T0.4 · Prettier puts the closing `>` of a long `</a>` on the next line, so a `</a>` regex misses the anchor. · Match `</a\s*>` when reading fixture HTML.
 - 2026-10-22 · T0.4 · CodeQL treats fixture HTML as library input: `.replace(/<[^>]+>/g)` is incomplete sanitization, and `/\[\[[^\]\r\n]+\]\]/g` is polynomial ReDoS. · Scan for tags and `[[…]]` with `indexOf` instead of those regexes.
+- 2026-10-22 · T1.2 · parse5 defaults `scriptingEnabled` to true (a script inside `<noscript>` stays text) and a leading U+FEFF is reported as `missing-doctype`. · Parse with `scriptingEnabled: false` and strip one leading BOM.

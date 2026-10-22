@@ -70,7 +70,7 @@ flowchart TB
 ### 1A. Contrato y formato
 
 - [x] **T1.1 Módulo de contrato.** `core/contract.ts` como fuente única de los elementos, atributos, clases y componentes permitidos, y de la estructura de cada tipo. Cubre: el contrato de autoría, REQ-TYPE-01 a 05. Depende de: T0.2.
-- [ ] **T1.2 Parser y modelo de nota.** Leer el HTML con `parse5` y extraer metadatos, título, secciones, enlaces (canónicos, pendientes y `[[…]]`), tareas y texto plano. Cubre: REQ-VAULT-03. Depende de: T1.1.
+- [x] **T1.2 Parser y modelo de nota.** Leer el HTML con `parse5` y extraer metadatos, título, secciones, enlaces (canónicos, pendientes y `[[…]]`), tareas y texto plano. Cubre: REQ-VAULT-03. Depende de: T1.1.
 - [ ] **T1.3 Validador.** Reglas del contrato, seguridad y estructura por tipo, con códigos estables. Cubre: REQ-CLI-11, REQ-SEC-02, REQ-SEC-04, REQ-TYPE-02 y 03. Depende de: T1.2.
 - [ ] **T1.4 Normalizador y formateo canónico.** Saneado de lo inseguro, eliminación de estilos inline, ids de sección y de tarea que falten, ruta del tema según la profundidad y serialización determinista e idempotente. Cubre: REQ-FMT-01 y 02, REQ-SEC-03, REQ-VAULT-04, REQ-NFR-08. Depende de: T1.3.
 - [ ] **T1.5 Tema por defecto.** `theme.css` con los estilos de los tres tipos y de los componentes P0, que se vea bien con `file://` y cumpla el contraste AA. Cubre: REQ-VAULT-05, REQ-NFR-10. Depende de: T1.1.
