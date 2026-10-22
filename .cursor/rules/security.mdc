@@ -1,0 +1,14 @@
+---
+description: Input validation, injection, path, HTML, and dependency guardrails
+alwaysApply: true
+---
+
+# Security
+
+- Validate input at the boundary. Reject unknown shapes instead of coercing them.
+- Do not use `eval` or `new Function`.
+- Do not build shell command strings from input. Spawn processes with an argument array (`execFile`), never a shell.
+- Keep filesystem paths inside the vault. Resolve them, reject `..` escapes, and do not follow a symlink that leaves the vault.
+- Sanitize note HTML before it is stored or rendered. Unsafe elements, `on*` handlers, and `javascript:` URLs are errors. Rendered notes stay under the CSP from REQ-SEC-01.
+- The server binds to `127.0.0.1` only. Do not add telemetry or calls to remote hosts.
+- Commit `pnpm-lock.yaml`. Do not add a dependency you can do without. `pnpm audit --audit-level=high` must pass. Never commit secrets, tokens, or credentials.

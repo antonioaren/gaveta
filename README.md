@@ -5,7 +5,7 @@ Base de conocimiento local, al estilo Obsidian, donde cada nota es un archivo HT
 ## Documentación
 
 - [PRD](docs/PRD.md): qué es Gaveta y por qué.
-- [Requisitos](docs/REQUIREMENTS.md): requisitos verificables, decisiones propuestas y contratos de autoría y de la CLI.
+- [Requisitos](docs/REQUIREMENTS.md): requisitos verificables, decisiones aprobadas y contratos de autoría y de la CLI.
 - [Tareas](docs/TASKS.md): plan de ejecución por fases.
 
 ## Desarrollo
@@ -14,13 +14,12 @@ Requisito: Node.js ≥ 22. pnpm 10 está fijado en `packageManager`.
 
 ```bash
 pnpm install
-pnpm typecheck
-pnpm lint
-pnpm format:check
-pnpm test
+pnpm check
 pnpm dev
 pnpm exec gaveta
 ```
+
+`pnpm check` ejecuta format, lint, typecheck, tests con cobertura, e2e y `pnpm audit --audit-level=high`. Es el mismo conjunto que la CI local. El flujo de trabajo de los agentes está en [AGENTS.md](AGENTS.md).
 
 `gaveta` y `gv` son el mismo binario. Todavía no tiene comandos: imprime la versión. El núcleo, la API y el visor llegan en las fases 1 y 2.
 

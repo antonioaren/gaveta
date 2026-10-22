@@ -1,0 +1,13 @@
+---
+description: Unit, e2e, and security test expectations
+globs: "**/*.{test,spec}.ts"
+alwaysApply: false
+---
+
+# Testing
+
+- Unit tests cover core logic. Put them next to the code in `packages/*/src` or `apps/*/src`.
+- CLI e2e tests spawn the `gaveta` binary against a fixture vault (a temp copy of `fixtures/`). Web e2e uses Playwright once the app has behaviour to test.
+- Security tests are required when a change touches paths, HTML, or the network: path traversal, unsafe HTML, and CSP.
+- `pnpm test:coverage` fails if `packages/core` line coverage drops below 80. Do not lower that threshold.
+- Do not use `.skip`, `.only`, or disabled CI jobs to make a red check pass.

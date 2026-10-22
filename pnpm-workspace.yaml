@@ -5,4 +5,5 @@ packages:
 catalog:
   typescript: 5.9.3
   vitest: 4.1.12
+  '@vitest/coverage-v8': 4.1.12
   '@types/node': 22.20.5

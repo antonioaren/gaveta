@@ -54,7 +54,7 @@ flowchart TB
   Agents["Claude Code, Cursor, Codex, Copilot"] -->|"cargan"| Skill
 ```
 
-**Stack propuesto (DEC-01):** TypeScript, Node ≥ 20, pnpm workspaces, `parse5` (parser HTML según el estándar), `better-sqlite3` (índice con FTS5), `ulid`, `commander`, `chokidar`, Fastify, React + Vite, TipTap y CodeMirror 6 (fase 3), Vitest y Playwright.
+**Stack (DEC-01, enmienda 2026-10-22):** TypeScript, Node ≥ 22, pnpm workspaces, `parse5` (parser HTML según el estándar), `node:sqlite` (índice con FTS5), `ulid`, `commander`, `chokidar`, Fastify, React + Vite, TipTap y CodeMirror 6 (fase 3), Vitest y Playwright.
 
 ---
 
@@ -62,7 +62,7 @@ flowchart TB
 
 - [x] **T0.1 Aprobar las decisiones.** DEC-01 a DEC-08 aprobadas el 2026-10-22 y registradas en `REQUIREMENTS.md`.
 - [x] **T0.2 Monorepo.** pnpm workspaces, TypeScript estricto, ESLint y Prettier, Vitest, y los paquetes vacíos `core`, `cli`, `server` y `web`. Depende de: T0.1.
-- [ ] **T0.3 CI.** GitHub Actions con lint, typecheck y tests en Linux, macOS y Windows (REQ-NFR-05). Depende de: T0.2.
+- [x] **T0.3 CI.** GitHub Actions con lint, typecheck, tests con cobertura y análisis de seguridad en Linux y macOS (REQ-NFR-05). Windows queda para T4.8. Depende de: T0.2.
 - [ ] **T0.4 Vaults de prueba.** En `fixtures/`: un vault vacío, uno con 20 notas que enlazan a X (para REQ-LINK-09), uno con un problema de cada tipo (para REQ-LINK-11), notas maliciosas (para REQ-SEC-01 y 02) y un generador de vaults de 1000 y 5000 notas (para REQ-NFR). Depende de: T0.2.
 
 ## Fase 1 — Núcleo y CLI
@@ -123,7 +123,7 @@ flowchart TB
 
 Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que ya existen. Solo depende del núcleo de la fase 1, no del visor, así que se puede desarrollar en paralelo a las tareas T2.1 a T2.10.
 
-- [ ] **T2.12 Aprobar DEC-07** (unified/remark/rehype) y preparar `fixtures/markdown/`: un vault de Obsidian de prueba con 50 notas y subcarpetas, wikilinks con alias y sección, enlaces relativos, tareas, callouts, tablas, mermaid, imágenes compartidas, una presentación Marp y casos no soportados. Depende de: fase 1.
+- [ ] **T2.12 Fixtures Markdown.** DEC-07 (unified/remark/rehype) ya está aprobada. Preparar `fixtures/markdown/`: un vault de Obsidian de prueba con 50 notas y subcarpetas, wikilinks con alias y sección, enlaces relativos, tareas, callouts, tablas, mermaid, imágenes compartidas, una presentación Marp y casos no soportados. Depende de: fase 1.
 - [ ] **T2.13 Conversor Markdown → HTML** en `core/convert/md-to-html.ts`, con plugins para wikilinks, callouts, tareas, mermaid y slides. La salida pasa por el normalizador y el validador del núcleo. Cubre: REQ-MIG-04, REQ-MIG-01. Depende de: T2.12.
 - [ ] **T2.14 Importación de carpetas.** Recorrido recursivo con exclusiones, asignación de ids y resolución de enlaces en dos pasadas, copia de adjuntos deduplicada, `--dry-run`, `--on-conflict` y escritura atómica del lote (`--continue-on-error`). Cubre: REQ-MIG-02, 03, 05, 06 y 07. Depende de: T2.13, T1.10.
 - [ ] **T2.15 Conversor HTML → Markdown** en `core/convert/html-to-md.ts`, con `--links wiki|relative`, front matter, tareas, callouts, slides y `W_EXPORT_LOSSY` para lo que no se puede representar. Cubre: REQ-MIG-09 y 10. Depende de: T2.12.
@@ -138,7 +138,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 
 ## Fase 3 — Editor visual y de código
 
-- [ ] **T3.1 Aprobar DEC-02** y prototipar el esquema de TipTap generado desde `contract.ts`, con el nodo `htmlBlock` para lo desconocido. Depende de: puerta 2.
+- [ ] **T3.1 Esquema de TipTap.** DEC-02 ya está aprobada. Prototipar el esquema generado desde `contract.ts`, con el nodo `htmlBlock` para lo desconocido. Depende de: puerta 2.
 - [ ] **T3.2 API de escritura.** Endpoints de escritura en el servidor que llaman a las mismas operaciones del núcleo que la CLI, siempre con `if-match`. Cubre: REQ-APP-13. Depende de: T3.1.
 - [ ] **T3.3 Tareas interactivas.** Marcar y desmarcar desde la vista persiste `checked`. Cubre: REQ-APP-08. Depende de: T3.2.
 - [ ] **T3.4 Editor visual.** Componentes P0 y bloques HTML desconocidos conservados byte a byte. Abrir y guardar sin cambios no altera el archivo. Cubre: REQ-APP-09 y 10. Depende de: T3.1, T3.2.
@@ -161,6 +161,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [ ] **T4.5 Mermaid y exportación de presentaciones a PDF.** Cubre: REQ-TYPE-06, REQ-APP-16.
 - [ ] **T4.6 Plantillas por tipo.** Cubre: REQ-TYPE-07.
 - [ ] **T4.7 `gaveta stats`** con un log local opcional. Cubre: REQ-CLI-15.
+- [ ] **T4.8 CI en Windows.** Añadir `windows-latest` a la matriz de GitHub Actions (REQ-NFR-05). Aplazado al final del proyecto.
 
 ---
 
@@ -194,4 +195,4 @@ Se pueden trabajar en paralelo al camino crítico: T1.5 (tema), T1.11 (consultas
 - [x] `docs/REQUIREMENTS.md`: requisitos trazables, decisiones aprobadas (DEC-01 a DEC-08), contrato de autoría y contrato de la CLI.
 - [x] `docs/TASKS.md`: este plan.
 - [x] T0.1: decisiones aprobadas.
-- [ ] Siguiente paso: T0.2 (monorepo).
+- [ ] Siguiente paso: T0.4 (vaults de prueba).
