@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { clearSessionToken, setSessionToken } from '../auth/session-token.ts';
 import { resetVaultSocketHubForTests } from '../live/vault-socket-hub.ts';
@@ -24,9 +24,9 @@ function doctorBody(findingsCount: number): unknown {
       ok: findingsCount === 0,
       findings: Array.from({ length: findingsCount }, (_, index) => ({
         code: 'W_LINK_PENDING',
-        message: `Hallazgo ${index + 1}`,
+        message: `Hallazgo ${String(index + 1)}`,
         hint: 'hint',
-        path: `nota-${index + 1}.html`,
+        path: `nota-${String(index + 1)}.html`,
         details: null,
         severity: 'warning',
         noteId: '01M5HGV8800000000000000002',
@@ -130,7 +130,7 @@ it('coalesces burst live note events into one debounced doctor fetch', async () 
   for (let index = 0; index < 8; index += 1) {
     emitMessage(socket, {
       type: 'note:changed',
-      path: `nota-${index}.html`,
+      path: `nota-${String(index)}.html`,
       id: '01M5HGV8800000000000000002',
     });
   }
@@ -171,15 +171,16 @@ it('does not apply a stale doctor response when a newer fetch finishes first', a
     }),
   );
 
-  const { result, rerender } = renderHook(() => useHealthData());
+  const { result } = renderHook(() => useHealthData());
 
   await vi.advanceTimersByTimeAsync(0);
   await vi.waitFor(() => {
     expect(doctorCalls).toBe(1);
   });
 
-  rerender();
-  result.current.reload();
+  act(() => {
+    result.current.reload();
+  });
   await vi.advanceTimersByTimeAsync(0);
 
   await vi.waitFor(() => {

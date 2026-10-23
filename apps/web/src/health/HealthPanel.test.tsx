@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { clearSessionToken, setSessionToken } from '../auth/session-token.ts';
 import { TabProvider } from '../tabs/TabContext.tsx';
+import { TabBar } from '../tabs/TabBar.tsx';
 import { HealthPanel } from './HealthPanel.tsx';
 
 beforeEach(() => {
@@ -29,7 +30,7 @@ it('groups doctor findings by severity and opens a note by ULID', async () => {
           status: 200,
           json: () =>
             Promise.resolve({
-              ok: false,
+              ok: true,
               schemaVersion: 1,
               data: {
                 ok: false,
@@ -53,6 +54,7 @@ it('groups doctor findings by severity and opens a note by ULID', async () => {
                     noteId: '01M5HGV8800000000000000003',
                   },
                 ],
+                fixed: [],
               },
             }),
         } as Response);
@@ -64,6 +66,7 @@ it('groups doctor findings by severity and opens a note by ULID', async () => {
   render(
     <MemoryRouter>
       <TabProvider>
+        <TabBar />
         <HealthPanel />
       </TabProvider>
     </MemoryRouter>,
