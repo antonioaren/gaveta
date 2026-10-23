@@ -112,7 +112,11 @@ function copyBacklinksVault(): string {
 
 async function openMaliciousShell(page: Page, url: string, noteButton: string): Promise<void> {
   await page.goto(url, { waitUntil: 'networkidle' });
-  await page.getByRole('button', { name: noteButton }).click();
+  await page
+    .locator('.explorer__note')
+    .filter({ hasText: noteButton })
+    .first()
+    .click();
   await page.locator('[data-testid="note-render-frame"]').waitFor({ state: 'visible' });
 }
 
@@ -552,10 +556,10 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
         { vault, input: `<p id="latency-probe">${marker}</p>` },
       );
       expect(edit.status).toBe(0);
-      await page.evaluate(() => {
-        (globalThis as { __gavetaWriteFinishedAt?: number }).__gavetaWriteFinishedAt =
-          performance.now();
-      });
+      const writeFinishedAt = Date.now();
+      await page.evaluate((stamp: number) => {
+        Reflect.set(globalThis, '__gavetaWriteFinishedAt', stamp);
+      }, writeFinishedAt);
       await frame
         .locator('#latency-probe')
         .filter({ hasText: marker })
@@ -563,19 +567,7 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
       const elapsed = performance.now() - startedAt;
       samples.push(elapsed);
       const pipeline = await page.evaluate(() => {
-        const sample = (
-          globalThis as {
-            __gavetaLastPipeline?: {
-              serverStages: {
-                chokidar?: number;
-                debounceFlush?: number;
-                indexUpdated?: number;
-                wsSent?: number;
-              };
-              wsReceivedMs: number;
-            };
-          }
-        ).__gavetaLastPipeline;
+        const sample = globalThis.__gavetaLastPipeline;
         return sample ?? null;
       });
       if (pipeline !== null) {
