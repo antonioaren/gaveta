@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm test:e2e && pnpm audit --audit-level=high",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build:web && pnpm test:e2e && pnpm audit --audit-level=high",
     "dev": "pnpm --filter @gaveta/web dev",
     "build:web": "pnpm --filter @gaveta/web build"
   },

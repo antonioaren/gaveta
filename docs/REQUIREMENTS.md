@@ -317,6 +317,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `W_SKILL_OUTDATED` | La copia instalada de la skill es más antigua que la CLI actual |
 | `W_VAULT_ASSET_MODIFIED` | Un archivo de .gaveta/ difiere del tema de la CLI y no se ha sobrescrito |
 | `W_VAULT_ASSETS_OUTDATED` | Los assets de .gaveta/ son más antiguos que la CLI actual |
+| `W_WEB_VIEWER_MISSING` | El visor web no está compilado; `gaveta serve` solo expone la API |
 
 **Localización del vault:** `--vault <dir>`, después la variable de entorno `GAVETA_VAULT` y, por último, una búsqueda ascendente de `.gaveta/` desde el directorio actual.
 

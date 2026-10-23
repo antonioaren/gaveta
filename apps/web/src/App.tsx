@@ -1,7 +1,13 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { ShellLayout } from './layout/ShellLayout.tsx';
+
 export function App() {
   return (
-    <main>
-      <h1>Gaveta</h1>
-    </main>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ShellLayout />} />
+        <Route path="/nota/:ref" element={<ShellLayout />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

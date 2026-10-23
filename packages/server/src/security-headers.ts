@@ -1,16 +1,35 @@
 import type { FastifyReply } from 'fastify';
 
-export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
+const SHARED_HEADERS: Readonly<Record<string, string>> = {
   'cache-control': 'no-store',
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
   'x-frame-options': 'DENY',
-  'content-security-policy': "frame-ancestors 'none'",
   'cross-origin-resource-policy': 'same-origin',
+};
+
+export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
+  ...SHARED_HEADERS,
+  'content-security-policy': "frame-ancestors 'none'",
+};
+
+/** CSP for the React shell (REQ-SEC-06): no remote origins. */
+export const APP_SHELL_CSP =
+  "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'; frame-src 'self'; frame-ancestors 'none'";
+
+export const APP_SHELL_HEADERS: Readonly<Record<string, string>> = {
+  ...SHARED_HEADERS,
+  'content-security-policy': APP_SHELL_CSP,
 };
 
 export function applySecurityHeaders(reply: FastifyReply): void {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    reply.header(name, value);
+  }
+}
+
+export function applyAppShellHeaders(reply: FastifyReply): void {
+  for (const [name, value] of Object.entries(APP_SHELL_HEADERS)) {
     reply.header(name, value);
   }
 }

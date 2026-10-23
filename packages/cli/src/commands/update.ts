@@ -1,4 +1,4 @@
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,6 +6,7 @@ import {
   applyGitUpdate,
   checkGitUpdate,
   defaultUpdateChannel,
+  GavetaError,
   resolveInstallInfo,
   upgradeVaultAssets,
 } from '@gaveta/core';
@@ -104,6 +105,13 @@ export const updateCommand: CommandSpec = {
     }
     const applied = await applyGitUpdate(options);
     const warnings: CommandWarning[] = [];
+    let webBuildRan = false;
+    if (applied.applied) {
+      webBuildRan = runWebBuild(updateRepoRoot);
+      if (!webBuildRan) {
+        throw new GavetaError('E_UPDATE_FAILED');
+      }
+    }
     let vaultAssets: Awaited<ReturnType<typeof upgradeVaultAssets>> | null = null;
     if (applied.applied && context.vault !== null) {
       vaultAssets = await reexecVaultAssetUpgrade(
@@ -128,6 +136,9 @@ export const updateCommand: CommandSpec = {
       if (applied.pnpmInstallRan) {
         lines.push('\nDependencias actualizadas con pnpm install --frozen-lockfile.');
       }
+      if (webBuildRan) {
+        lines.push('Visor web compilado con pnpm build:web.');
+      }
     } else if (check.upToDate) {
       lines.push(
         `Gaveta ${check.currentVersion} (${check.currentShortCommit}) ya está al día (${channel}).`,
@@ -142,6 +153,7 @@ export const updateCommand: CommandSpec = {
         ...applied,
         channel,
         vaultAssets,
+        webBuildRan,
       },
       ...(warnings.length > 0 ? { warnings } : {}),
     };
@@ -198,6 +210,29 @@ async function reexecVaultAssetUpgrade(
     // fall through
   }
   return await upgradeVaultAssets(vaultRoot, cliVersion());
+}
+
+function runWebBuild(repoRoot: string): boolean {
+  const webApp = join(repoRoot, 'apps', 'web', 'package.json');
+  if (!existsSync(webApp)) {
+    return true;
+  }
+  if (!existsSync(join(repoRoot, 'node_modules'))) {
+    const install = spawnSync('pnpm', ['install', '--frozen-lockfile'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
+    if ((install.status ?? 1) !== 0) {
+      return false;
+    }
+  }
+  const result = spawnSync('pnpm', ['build:web'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  });
+  return (result.status ?? 1) === 0;
 }
 
 function manualUpdateResult(method: string): CommandResult {
