@@ -1,17 +1,23 @@
-import path from 'node:path';
+export interface RecentUnlink {
+  readonly id: string | null;
+  readonly at: number;
+}
 
-export function pairMoveEvent(
-  addPath: string,
-  recentUnlinks: ReadonlyMap<string, number>,
+export function pairMoveByNoteId(
+  noteId: string | null,
+  recentUnlinks: ReadonlyMap<string, RecentUnlink>,
   nowMs: number,
   windowMs: number,
-): { readonly from: string; readonly to: string } | null {
-  for (const [from, at] of recentUnlinks) {
-    if (nowMs - at > windowMs) {
+): string | null {
+  if (noteId === null) {
+    return null;
+  }
+  for (const [fromPath, meta] of recentUnlinks) {
+    if (nowMs - meta.at > windowMs) {
       continue;
     }
-    if (path.dirname(from) === path.dirname(addPath)) {
-      return { from, to: addPath };
+    if (meta.id === noteId) {
+      return fromPath;
     }
   }
   return null;

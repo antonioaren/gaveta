@@ -7,8 +7,11 @@ import {
   WS_AUTH_TIMEOUT_MS,
   WS_MAX_CONNECTIONS,
   WS_MAX_MESSAGE_BYTES,
+  WS_MAX_PENDING_CONNECTIONS,
 } from './constants.ts';
 import type { VaultEventBus, VaultNoteEvent } from './vault-events.ts';
+import { rawDataByteLength } from './ws-bytes.ts';
+import { wsMessageText } from './ws-message.ts';
 
 const AUTH_MESSAGE = 'auth';
 const AUTH_OK = 'auth:ok';
@@ -25,15 +28,19 @@ export async function registerVaultWebSocket(
   bus: VaultEventBus,
   authTimeoutMs: number = WS_AUTH_TIMEOUT_MS,
 ): Promise<void> {
-  await app.register(websocket);
-  let openConnections = 0;
+  await app.register(websocket, {
+    options: { maxPayload: WS_MAX_MESSAGE_BYTES },
+  });
+  let authenticatedConnections = 0;
+  let pendingConnections = 0;
 
   app.get(GAVETA_WS_PATH, { websocket: true }, (socket) => {
-    if (openConnections >= WS_MAX_CONNECTIONS) {
+    if (pendingConnections >= WS_MAX_PENDING_CONNECTIONS) {
+      sendError(socket, 'E_ARG_INVALID', 'Demasiadas conexiones en vivo');
       socket.close(1013, 'Demasiadas conexiones en vivo');
       return;
     }
-    openConnections += 1;
+    pendingConnections += 1;
     let authed = false;
     let unsubscribe: (() => void) | null = null;
     const authTimer = setTimeout(() => {
@@ -49,19 +56,24 @@ export async function registerVaultWebSocket(
         unsubscribe();
         unsubscribe = null;
       }
-      openConnections = Math.max(0, openConnections - 1);
+      if (authed) {
+        authenticatedConnections = Math.max(0, authenticatedConnections - 1);
+        authed = false;
+      } else {
+        pendingConnections = Math.max(0, pendingConnections - 1);
+      }
     };
 
     socket.on('close', cleanup);
     socket.on('error', cleanup);
 
     socket.on('message', (raw: RawData) => {
-      const text = rawDataToString(raw);
-      if (text.length > WS_MAX_MESSAGE_BYTES) {
+      if (rawDataByteLength(raw) > WS_MAX_MESSAGE_BYTES) {
         sendError(socket, 'E_ARG_INVALID', 'Mensaje demasiado grande');
         socket.close(1009, 'Mensaje demasiado grande');
         return;
       }
+      const text = wsMessageText(raw);
       if (!authed) {
         const message = parseAuthMessage(text);
         if (message === null || !tokensMatch(message.token, token)) {
@@ -69,7 +81,14 @@ export async function registerVaultWebSocket(
           socket.close(4401, 'Autenticación requerida');
           return;
         }
+        if (authenticatedConnections >= WS_MAX_CONNECTIONS) {
+          sendError(socket, 'E_ARG_INVALID', 'Demasiadas conexiones en vivo');
+          socket.close(1013, 'Demasiadas conexiones en vivo');
+          return;
+        }
+        pendingConnections = Math.max(0, pendingConnections - 1);
         authed = true;
+        authenticatedConnections += 1;
         clearTimeout(authTimer);
         socket.send(JSON.stringify({ type: AUTH_OK }));
         unsubscribe = bus.onNote((event) => {
@@ -84,7 +103,7 @@ export async function registerVaultWebSocket(
 
 function sendVaultEvent(socket: WebSocket, event: VaultNoteEvent): void {
   const payload = JSON.stringify(event);
-  if (payload.length > WS_MAX_MESSAGE_BYTES) {
+  if (Buffer.byteLength(payload, 'utf8') > WS_MAX_MESSAGE_BYTES) {
     return;
   }
   if (socket.readyState === socket.OPEN) {
@@ -96,7 +115,11 @@ function sendError(socket: WebSocket, code: string, message: string): void {
   if (socket.readyState !== socket.OPEN) {
     return;
   }
-  socket.send(JSON.stringify({ type: ERROR_MESSAGE, code, message }));
+  const payload = JSON.stringify({ type: ERROR_MESSAGE, code, message });
+  if (Buffer.byteLength(payload, 'utf8') > WS_MAX_MESSAGE_BYTES) {
+    return;
+  }
+  socket.send(payload);
 }
 
 function parseAuthMessage(text: string): ClientAuthMessage | null {
@@ -117,19 +140,6 @@ function parseAuthMessage(text: string): ClientAuthMessage | null {
     return null;
   }
   return { type: AUTH_MESSAGE, token: record.token };
-}
-
-function rawDataToString(raw: RawData): string {
-  if (typeof raw === 'string') {
-    return raw;
-  }
-  if (Buffer.isBuffer(raw)) {
-    return raw.toString('utf8');
-  }
-  if (Array.isArray(raw)) {
-    return Buffer.concat(raw).toString('utf8');
-  }
-  return Buffer.from(raw).toString('utf8');
 }
 
 export function readWebSocketTokenFromMessage(text: string, expected: string): boolean {

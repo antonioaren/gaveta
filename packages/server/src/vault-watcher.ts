@@ -1,7 +1,8 @@
 import chokidar, { type FSWatcher } from 'chokidar';
 import path from 'node:path';
 import type { VaultEventBus, VaultNoteEvent } from './vault-events.ts';
-import { coalescePendingChanges } from './vault-batch.ts';
+import { coalesceMovesByNoteId, coalescePendingChanges } from './vault-batch.ts';
+import type { RecentUnlink } from './vault-move.ts';
 import {
   isAtomicTempRelativePath,
   isGavetaInternalRelativePath,
@@ -32,7 +33,7 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
   const debounceMs = options.debounceMs ?? 75;
   const movePairWindowMs = options.movePairWindowMs ?? 200;
   const pending = new Map<string, PendingChange>();
-  const recentUnlinks = new Map<string, number>();
+  const recentUnlinks = new Map<string, RecentUnlink>();
   let flushTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
 
@@ -50,8 +51,9 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
     if (pending.size === 0) {
       return;
     }
-    const batch = coalescePendingChanges([...pending.values()]);
+    const deduped = coalescePendingChanges([...pending.values()]);
     pending.clear();
+    const batch = await coalesceMovesByNoteId(deduped, options.vaultRoot, options.session);
     for (const change of batch) {
       const event = await options.session.applyFileChange(change, recentUnlinks, movePairWindowMs);
       if (event !== null) {
@@ -103,9 +105,6 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
     const relative = toVaultRelativePath(options.vaultRoot, absolutePath);
     if (relative === null) {
       return;
-    }
-    if (kind === 'unlink') {
-      recentUnlinks.set(relative, Date.now());
     }
     queue({ kind, relativePath: relative });
   };

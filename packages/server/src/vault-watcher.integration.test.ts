@@ -1,5 +1,4 @@
-import { writeAtomic } from '@gaveta/core';
-import { rename } from 'node:fs/promises';
+import { copyFile, mkdir, rename } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, it } from 'vitest';
 import WebSocket from 'ws';
@@ -9,7 +8,7 @@ import { GAVETA_WS_PATH } from './constants.ts';
 import { createGavetaServer } from './index.ts';
 import { withVaultCopy } from './test-helpers.ts';
 
-it('handles atomic replace as note:changed and rename as note:moved', async () => {
+it('emits note:moved when a note is renamed across folders with the same ULID', async () => {
   await withVaultCopy(async (vaultRoot) => {
     const token = 'watcher-rename-token';
     const server = createGavetaServer({ vaultRoot, port: 0, token });
@@ -31,43 +30,41 @@ it('handles atomic replace as note:changed and rename as note:moved', async () =
       });
     });
 
-    const events: string[] = [];
-    socket.on('message', (data) => {
-      const body = JSON.parse(wsMessageText(data)) as { type?: string };
-      if (body.type?.startsWith('note:')) {
-        events.push(body.type);
-      }
-    });
+    const from = path.join(vaultRoot, 'folder-a', 'destino.html');
+    const to = path.join(vaultRoot, 'folder-b', 'destino.html');
+    await mkdir(path.join(vaultRoot, 'folder-a'), { recursive: true });
+    await mkdir(path.join(vaultRoot, 'folder-b'), { recursive: true });
 
-    const from = path.join(vaultRoot, 'renamed-from.html');
-    const to = path.join(vaultRoot, 'renamed-to.html');
-    await writeAtomic(
-      from,
-      '<!DOCTYPE html><html><head><meta charset="utf-8"><title>From</title></head><body><p>a</p></body></html>',
-    );
-    await new Promise<void>((resolve) => {
-      const onMessage = (): void => {
-        if (events.includes('note:added')) {
+    const waitFor = (type: string, notePath?: string): Promise<void> =>
+      new Promise((resolve) => {
+        const onMessage = (data: WebSocket.RawData): void => {
+          const body = JSON.parse(wsMessageText(data)) as { type?: string; path?: string };
+          if (body.type === type && (notePath === undefined || body.path === notePath)) {
+            socket.off('message', onMessage);
+            resolve();
+          }
+        };
+        socket.on('message', onMessage);
+      });
+
+    await copyFile(path.join(vaultRoot, 'destino-enlace.html'), from);
+    await waitFor('note:added', 'folder-a/destino.html');
+
+    const moved = new Promise<{ readonly type: string; readonly from: string }>((resolve) => {
+      const onMessage = (data: WebSocket.RawData): void => {
+        const body = JSON.parse(wsMessageText(data)) as { type?: string; from?: string };
+        if (body.type === 'note:moved' && body.from === 'folder-a/destino.html') {
           socket.off('message', onMessage);
-          resolve();
+          resolve({ type: body.type, from: body.from });
         }
       };
       socket.on('message', onMessage);
     });
 
     await rename(from, to);
-    await new Promise<void>((resolve) => {
-      const onMessage = (): void => {
-        if (events.includes('note:moved')) {
-          socket.off('message', onMessage);
-          resolve();
-        }
-      };
-      socket.on('message', onMessage);
-    });
-
-    expect(events).toContain('note:moved');
+    const event = await moved;
+    expect(event.type).toBe('note:moved');
     socket.close();
     await server.close();
   });
-});
+}, 15_000);

@@ -10,6 +10,10 @@ export interface VaultNoteEvent {
 }
 
 export class VaultEventBus extends EventEmitter {
+  constructor() {
+    super();
+    this.setMaxListeners(64);
+  }
   emitNote(event: VaultNoteEvent): void {
     this.emit('note', event);
   }

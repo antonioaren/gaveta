@@ -7,7 +7,7 @@ import { TabBar } from '../tabs/TabBar.tsx';
 import { TabProvider } from '../tabs/TabContext.tsx';
 
 export function ShellLayout() {
-  const { notes, loading, error } = useVaultNotes();
+  const { notes, loading, error, liveError } = useVaultNotes();
   const navigate = useNavigate();
 
   return (
@@ -43,7 +43,7 @@ export function ShellLayout() {
         </header>
         <TabBar />
         <div className="shell__columns">
-          <NoteExplorer notes={notes} loading={loading} error={error} />
+          <NoteExplorer notes={notes} loading={loading} error={liveError ?? error} />
           <main className="shell__main">
             <NotePane />
           </main>

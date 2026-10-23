@@ -1,8 +1,10 @@
 import { GavetaError } from '@gaveta/core';
 import { expect, it } from 'vitest';
+import { GAVETA_WS_PATH } from './constants.ts';
 import {
   isPublicShellRoute,
   isRenderRoute,
+  isWebSocketUpgradeRoute,
   normalizeServePath,
   requiresSessionToken,
   rewriteServeUrl,
@@ -32,6 +34,12 @@ it('rejects traversal segments in the path', () => {
 it('rewrites encoded and collapsed-slash URLs before routing', () => {
   expect(rewriteServeUrl('//render/01NOTE')).toBe('/render/01NOTE');
   expect(rewriteServeUrl('/%72ender/01NOTE?t=abc')).toBe('/render/01NOTE?t=abc');
+});
+
+it('classifies the live WebSocket upgrade without a session token', () => {
+  expect(isWebSocketUpgradeRoute('GET', GAVETA_WS_PATH)).toBe(true);
+  expect(isWebSocketUpgradeRoute('GET', '/api/ws-extra')).toBe(false);
+  expect(requiresSessionToken('GET', GAVETA_WS_PATH)).toBe(false);
 });
 
 it('classifies render routes as ticket-only without a session token', () => {

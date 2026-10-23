@@ -1,10 +1,12 @@
 import { expect, it } from 'vitest';
-import { coalescePendingChanges } from './vault-batch.ts';
+import { coalescePendingChanges, sortPendingChanges } from './vault-batch.ts';
 
-it('coalesces unlink+add in the same folder into moved', () => {
+it('dedupes pending paths and orders unlink before add', () => {
   const batch = coalescePendingChanges([
+    { kind: 'add', relativePath: 'other/new.html' },
     { kind: 'unlink', relativePath: 'notes/old.html' },
-    { kind: 'add', relativePath: 'notes/new.html' },
+    { kind: 'unlink', relativePath: 'notes/old.html' },
   ]);
-  expect(batch).toEqual([{ kind: 'moved', from: 'notes/old.html', to: 'notes/new.html' }]);
+  const sorted = sortPendingChanges(batch);
+  expect(sorted.map((item) => item.kind)).toEqual(['unlink', 'add']);
 });

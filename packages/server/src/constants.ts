@@ -15,4 +15,5 @@ export const GAVETA_WS_PATH = '/api/ws';
 
 export const WS_MAX_MESSAGE_BYTES = 4096;
 export const WS_MAX_CONNECTIONS = 32;
-export const WS_AUTH_TIMEOUT_MS = 10_000;
+export const WS_MAX_PENDING_CONNECTIONS = 16;
+export const WS_AUTH_TIMEOUT_MS = 5_000;

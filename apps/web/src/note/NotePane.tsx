@@ -3,11 +3,12 @@ import { useParams } from 'react-router-dom';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
 import { useTabs } from '../tabs/useTabs.ts';
 import { isGavetaNavigateMessage } from './navigate-message.ts';
-import { useNoteReloadKey } from '../live/useNoteReloadKey.ts';
+import { useNoteLiveState } from '../live/useNoteLiveState.ts';
 import { NoteRenderFrame } from './NoteRenderFrame.tsx';
 
 const NO_RENDER_ID_MESSAGE =
   'Esta nota aún no tiene un id en el índice; no se puede previsualizar hasta que se reindexe.';
+const NOTE_DELETED_MESSAGE = 'Esta nota fue eliminada del vault.';
 
 export function NotePane() {
   const { ref: encodedRef } = useParams();
@@ -52,7 +53,7 @@ export function NotePane() {
   }, [tabState]);
 
   const noteId = activeTab?.noteId ?? null;
-  const reloadKey = useNoteReloadKey(noteId);
+  const { reloadKey, deleted } = useNoteLiveState(noteId);
 
   if (activeTab === null) {
     return (
@@ -68,7 +69,9 @@ export function NotePane() {
         <h1 className="note-pane__title">{activeTab.title}</h1>
         <p className="note-pane__path">{activeTab.path}</p>
       </header>
-      {noteId === null ? (
+      {deleted ? (
+        <p className="note-pane__placeholder">{NOTE_DELETED_MESSAGE}</p>
+      ) : noteId === null ? (
         <p className="note-pane__placeholder">{NO_RENDER_ID_MESSAGE}</p>
       ) : (
         <NoteRenderFrame

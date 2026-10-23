@@ -26,7 +26,7 @@ export function normalizeServePath(rawUrl: string): string {
 
   const segments = decoded.split('/').filter((segment) => segment.length > 0);
   for (const segment of segments) {
-    if (segment === '.' || segment === '..'') {
+    if (segment === '.' || segment === '..') {
       throw new GavetaError('E_ARG_INVALID');
     }
   }
