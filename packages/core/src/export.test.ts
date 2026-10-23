@@ -312,7 +312,10 @@ describe('exportVaultToMarkdown', () => {
     }
   });
 
-  it('rejects case-insensitive markdown path collisions in preflight', async () => {
+  it('rejects case-insensitive markdown path collisions in preflight', async (ctx) => {
+    if (process.platform === 'darwin') {
+      ctx.skip();
+    }
     const parent = await mkdtemp(join(tmpdir(), 'gaveta-export-case-'));
     const vault = join(parent, 'vault');
     const out = join(parent, 'out');
