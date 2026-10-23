@@ -1,15 +1,16 @@
-import type {
-  Backlink,
-  DoctorFinding,
-  DoctorFix,
-  Graph,
-  GraphFilters,
-  IndexedNote,
-  NoteOutline,
-  NoteType,
-  OutgoingLink,
-  ReadNoteResult,
-  SearchHit,
+import {
+  isErrorCode,
+  type Backlink,
+  type DoctorFinding,
+  type DoctorFix,
+  type Graph,
+  type GraphFilters,
+  type IndexedNote,
+  type NoteOutline,
+  type NoteType,
+  type OutgoingLink,
+  type ReadNoteResult,
+  type SearchHit,
 } from '@gaveta/core';
 
 export interface NoteListItem {
@@ -73,6 +74,8 @@ export interface FindingView {
   readonly hint: string;
   readonly path: string;
   readonly details: Readonly<Record<string, string | number>> | null;
+  readonly severity: 'error' | 'warning';
+  readonly noteId: string | null;
 }
 
 export interface FixView {
@@ -184,13 +187,15 @@ export function presentHit(hit: SearchHit): SearchHitView {
   };
 }
 
-export function presentFinding(finding: DoctorFinding): FindingView {
+export function presentFinding(finding: DoctorFinding, noteId: string | null): FindingView {
   return {
     code: finding.code,
     message: finding.message,
     hint: finding.hint,
     path: finding.path,
     details: finding.details,
+    severity: isErrorCode(finding.code) ? 'error' : 'warning',
+    noteId,
   };
 }
 
