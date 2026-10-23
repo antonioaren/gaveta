@@ -338,9 +338,12 @@ function addVaultResource(
   }
   const resolved = resolveVaultHref(notePath, src);
   if (resolved === null) {
+    if (src.startsWith('#')) {
+      return;
+    }
     throw pathOutsideVault();
   }
-  if (!allowHtml && resolved.endsWith('.html')) {
+  if (!allowHtml && (resolved.endsWith('.html') || resolved.endsWith('.md'))) {
     return;
   }
   found.add(resolved);

@@ -367,6 +367,38 @@ describe('exportVaultToMarkdown', () => {
     });
   });
 
+  it('ignores fragment-only hrefs and note links when collecting attachments', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'gaveta-export-footnotes-'));
+    const vault = join(parent, 'vault');
+    const out = join(parent, 'out');
+    try {
+      await initVault({ cwd: parent, directory: 'vault' });
+      const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Fn</title>
+<meta name="gaveta:id" content="01JBP7EXPORTFN000000000001">
+<meta name="gaveta:type" content="doc">
+<meta name="gaveta:created" content="2026-10-22T10:00:00Z">
+</head><body><article><p><a href="#fn-1">1</a> <a href="otra.html">Otra</a></p></article></body></html>`;
+      await writeFile(join(vault, 'fn.html'), html);
+      const index = await openVaultIndex(vault);
+      try {
+        await index.rebuild();
+      } finally {
+        index.close();
+      }
+      const report = await exportVaultToMarkdown({
+        vaultRoot: vault,
+        cwd: parent,
+        ref: 'fn.html',
+        outDir: out,
+        format: 'md',
+      });
+      expect(report.notes).toHaveLength(1);
+      expect(report.attachments).toEqual([]);
+    } finally {
+      await rm(parent, { recursive: true, force: true });
+    }
+  });
+
   it('requires md format and a target', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'gaveta-export-empty-'));
     const vault = join(parent, 'vault');

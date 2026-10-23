@@ -4,10 +4,14 @@ import { describe, expect, it } from 'vitest';
 import { parseJson, runGaveta, withTempVault, type JsonEnvelope } from './helpers.ts';
 
 interface ExportPayload {
+  readonly ok: boolean;
   readonly dryRun: boolean;
+  readonly blocked: boolean;
   readonly outDir: string;
+  readonly summary: { readonly created: number; readonly attachments: number };
   readonly notes: { readonly path: string; readonly source: string }[];
   readonly attachments: string[];
+  readonly conflicts: unknown[];
 }
 
 describe('gaveta export', () => {
@@ -23,6 +27,7 @@ describe('gaveta export', () => {
         expect(wiki.stderr).toBe('');
         const wikiBody = parseJson<ExportPayload>(wiki.stdout);
         expect(wikiBody.ok).toBe(true);
+        expect(wikiBody.data.summary.created).toBeGreaterThan(20);
         expect(wikiBody.data.notes.length).toBeGreaterThan(20);
         expect(wikiBody.data.attachments).toContain('attachments/pixel.png');
         expect(existsSync(join(out, 'enlaces', 'enlace-01.md'))).toBe(true);
@@ -64,6 +69,7 @@ describe('gaveta export', () => {
         expect(dry.status).toBe(0);
         const body = parseJson<ExportPayload>(dry.stdout);
         expect(body.data.dryRun).toBe(true);
+        expect(body.data.summary.created).toBe(1);
         expect(body.data.notes[0]?.path).toBe('nota-x.md');
         expect(existsSync(join(out, 'nota-x.md'))).toBe(false);
       },

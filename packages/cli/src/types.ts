@@ -39,8 +39,11 @@ export interface CommandOption {
   readonly description: string;
   readonly choices?: readonly string[];
   /** Boolean flags are stored as `'true'` only when the user passes them. */
-  readonly kind?: 'string' | 'boolean';
+  readonly kind?: 'string' | 'boolean' | 'stringList';
 }
+
+/** Separator for repeatable string options in `CommandContext.options`. */
+export const STRING_LIST_SEPARATOR = '\u001e';
 
 /** A subcommand of a parent CLI command (for example `todo add`). */
 export interface CommandSubSpec {

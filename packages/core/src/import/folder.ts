@@ -31,10 +31,10 @@ import { hasNodeErrorCode } from '../vault/node-error.ts';
 import { readVaultText, resolveInsideVault } from '../vault/paths.ts';
 import { validateNote } from '../validate.ts';
 import { collectNoteAttachments, writeVaultBytes, type AttachmentPlan } from './attachments.ts';
-import { vaultPathFromMarkdown } from './exclude.ts';
+import { mergeExcludePatterns, shouldExcludeImportPath, vaultPathFromMarkdown } from './exclude.ts';
 import { withImportOverlay } from './overlay.ts';
 import { rewriteImportedMarkdownLinks } from './relative.ts';
-import { walkMarkdownFolder } from './walk.ts';
+import { walkMarkdownFolder, type WalkedMarkdownFile } from './walk.ts';
 
 export type ImportOnConflict = 'skip' | 'rename' | 'overwrite';
 
@@ -121,12 +121,11 @@ export async function importMarkdownFolder(
   const createId = options.createId ?? (() => createUlid());
   const now = options.now?.() ?? new Date().toISOString();
   const config = await readVaultConfig(input.vaultRoot);
-  const sourceReal = await resolveSourceDirectory(input.sourcePath);
-  const walked = await walkMarkdownFolder(sourceReal, input.exclude);
+  const { root: sourceReal, walked } = await resolveImportSource(input.sourcePath, input.exclude);
   const index = await openVaultIndex(input.vaultRoot);
   try {
     const planned = await planImport({
-      walked,
+      walked: [...walked],
       vaultRoot: input.vaultRoot,
       inFolder: input.inFolder,
       config,
@@ -579,18 +578,43 @@ async function readConflict(
   }
 }
 
-async function resolveSourceDirectory(sourcePath: string): Promise<string> {
+async function resolveImportSource(
+  sourcePath: string,
+  exclude: readonly string[] | undefined,
+): Promise<{ readonly root: string; readonly walked: readonly WalkedMarkdownFile[] }> {
   const absolute = path.resolve(sourcePath);
+  let real: string;
   try {
-    const real = await realpath(absolute);
-    const listed = await lstat(real);
-    if (!listed.isDirectory()) {
-      throw new GavetaError('E_ARG_INVALID');
-    }
-    return real;
+    real = await realpath(absolute);
   } catch {
     throw new GavetaError('E_ARG_INVALID');
   }
+  let listed;
+  try {
+    listed = await lstat(real);
+  } catch {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  if (listed.isDirectory()) {
+    const walked = await walkMarkdownFolder(real, exclude);
+    return { root: real, walked };
+  }
+  if (!listed.isFile()) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  if (!real.toLowerCase().endsWith('.md')) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  const relativePath = path.basename(real);
+  const patterns = mergeExcludePatterns(exclude);
+  if (shouldExcludeImportPath(relativePath, patterns)) {
+    return { root: path.dirname(real), walked: [] };
+  }
+  const markdown = await readFile(real, 'utf8');
+  return {
+    root: path.dirname(real),
+    walked: [{ relativePath, absolutePath: real, markdown }],
+  };
 }
 
 async function allocateImportPath(

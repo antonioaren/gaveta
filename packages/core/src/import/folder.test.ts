@@ -347,6 +347,29 @@ describe('importMarkdownFolder', { timeout: 60_000 }, () => {
     });
   });
 
+  it('imports a single markdown file into --in', async () => {
+    await withVault(async (root) => {
+      const source = await mkdtemp(join(tmpdir(), 'gaveta-import-single-'));
+      try {
+        await writeFile(join(source, 'solo.md'), '# Solo\n\nTexto.\n');
+        const result = await importMarkdownFolder({
+          vaultRoot: root,
+          sourcePath: join(source, 'solo.md'),
+          in: 'importado',
+          now: () => NOW,
+          createId: nextId,
+        });
+        expect(result.ok).toBe(true);
+        expect(result.notes).toHaveLength(1);
+        expect(result.notes[0]?.path).toBe('importado/solo.html');
+        expect(result.notes[0]?.action).toBe('create');
+        await stat(join(root, 'importado/solo.html'));
+      } finally {
+        await rm(source, { recursive: true, force: true });
+      }
+    });
+  });
+
   it('imports under --in while preserving relative structure', async () => {
     await withVault(async (root) => {
       const result = await importMarkdownFolder({
