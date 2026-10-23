@@ -112,11 +112,7 @@ function copyBacklinksVault(): string {
 
 async function openMaliciousShell(page: Page, url: string, noteButton: string): Promise<void> {
   await page.goto(url, { waitUntil: 'networkidle' });
-  await page
-    .locator('.explorer__note')
-    .filter({ hasText: noteButton })
-    .first()
-    .click();
+  await page.locator('.explorer__note').filter({ hasText: noteButton }).first().click();
   await page.locator('[data-testid="note-render-frame"]').waitFor({ state: 'visible' });
 }
 
