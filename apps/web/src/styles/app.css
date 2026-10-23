@@ -180,8 +180,24 @@ select {
   background: var(--color-bg);
 }
 
+.shell__rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-surface);
+  border-inline-start: 1px solid var(--color-border);
+}
+
+.shell__rail .connections,
+.shell__rail .health {
+  flex: 1 1 50%;
+  min-height: 0;
+}
+
 .explorer,
-.connections {
+.connections,
+.health {
   min-height: 0;
   overflow: auto;
   background: var(--color-surface);
@@ -592,6 +608,150 @@ select {
   padding: var(--space-3);
   color: var(--color-danger);
   font-size: var(--font-size-sm);
+}
+
+.health__header {
+  margin-bottom: var(--space-2);
+}
+
+.health__title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.health__hint {
+  margin: var(--space-1) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.health__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.health__alert {
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-warn-bg);
+  border: 1px solid var(--color-border);
+}
+
+.health__alert-text {
+  margin: 0 0 var(--space-2);
+  font-size: 0.9rem;
+}
+
+.health__alert-dismiss {
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.health__group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  font-size: 0.95rem;
+}
+
+.health__group-count {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.health__code-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.health__code-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-sm);
+}
+
+.health__code-badge--danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.health__code-badge--warn {
+  background: var(--color-warn-bg);
+  color: var(--color-pending);
+}
+
+.health__code-badge--pending {
+  background: color-mix(in srgb, var(--color-pending) 12%, var(--color-surface));
+  color: var(--color-pending);
+}
+
+.health__code-badge--info {
+  background: var(--color-info-bg);
+  color: var(--color-accent);
+}
+
+.health__code-count {
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.health__list {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+}
+
+.health__finding {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: start;
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+}
+
+.health__finding:hover:not(:disabled) {
+  background: var(--color-notes-bg);
+}
+
+.health__finding:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.health__finding-path {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.health__finding-message {
+  font-size: 0.9rem;
+}
+
+.health__empty,
+.health__status {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.health__status--error {
+  color: var(--color-danger);
+}
+
+.shell__rail .connections {
+  border-bottom: 1px solid var(--color-border);
 }
 
 @media (max-width: 960px) {

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ConnectionsPanel } from '../connections/ConnectionsPanel.tsx';
+import { HealthPanel } from '../health/HealthPanel.tsx';
 import { NoteExplorer } from '../explorer/NoteExplorer.tsx';
 import { useVaultNotes } from '../hooks/useVaultNotes.ts';
 import { NotePane } from '../note/NotePane.tsx';
@@ -49,7 +50,10 @@ export function ShellLayout() {
           <main className="shell__main">
             <NotePane />
           </main>
-          <ConnectionsPanel />
+          <div className="shell__rail">
+            <ConnectionsPanel />
+            <HealthPanel />
+          </div>
         </div>
       </div>
     </TabProvider>

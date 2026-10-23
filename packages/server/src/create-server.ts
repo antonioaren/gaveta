@@ -353,11 +353,15 @@ function registerReadRoutes(
       strictRel: config.rel.strict,
       cliVersion: options.cliVersion ?? '0.0.0',
     });
-    const data = {
-      ok: report.ok,
-      findings: report.findings.map(presentFinding),
-      fixed: report.fixed.map(presentFix),
-    };
+    const { result: enriched } = await vaultSession.withIndex((index) => {
+      const noteIdByPath = new Map(index.notes().map((note) => [note.path, note.id]));
+      const findings = report.findings.map((finding) =>
+        presentFinding(finding, noteIdByPath.get(finding.path) ?? null),
+      );
+      const fixed = report.fixed.map(presentFix);
+      return Promise.resolve({ findings, fixed });
+    });
+    const data = { ok: report.ok, findings: enriched.findings, fixed: enriched.fixed };
     return reply.send(apiSuccess(data));
   });
 }
