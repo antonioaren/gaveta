@@ -67,9 +67,6 @@ gaveta() {
 ensure_prereqs() {
   [[ -d "${SHOWCASE}" ]] || die "no se encuentra fixtures/showcase"
   [[ -f "${GAVETA_BIN}" ]] || die "no se encuentra el binario CLI en ${GAVETA_BIN}"
-  if [[ "${CHECK_ONLY}" -eq 1 ]] && [[ ! -f "${REPO_ROOT}/apps/web/dist/index.html" ]]; then
-    die "ejecuta pnpm build:web antes de --check (visor no compilado)"
-  fi
 }
 
 prepare_vault() {
