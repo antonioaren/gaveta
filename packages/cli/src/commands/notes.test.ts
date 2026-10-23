@@ -118,6 +118,14 @@ describe('new, read and edit', () => {
       });
       expect(created.data?.links?.resolved.some((link) => link.path === 'other.html')).toBe(true);
       expect(created.data?.hash?.startsWith('sha256:')).toBe(true);
+
+      const hyphenTitle = capture(root);
+      expect(
+        await runCli(argv('new', '--type', 'doc', '--json', '--', '-evil'), hyphenTitle.io),
+      ).toBe(EXIT_CODES.ok);
+      const hyphenCreated = parseEnvelope(hyphenTitle.stdout());
+      expect(hyphenCreated.data?.title).toBe('-evil');
+      expect(hyphenCreated.data?.path).toBe('evil.html');
       const file = await readVaultText(root, 'origen.html');
       expect(file.includes('data-g-to=')).toBe(true);
       expect(file.includes('[[Other]]')).toBe(false);

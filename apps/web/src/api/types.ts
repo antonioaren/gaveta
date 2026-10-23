@@ -71,6 +71,7 @@ export interface GraphResponse {
   readonly type: string | null;
   readonly tag: string | null;
   readonly rel: string | null;
+  readonly folder: string | null;
   readonly nodes: readonly GraphNodeView[];
   readonly edges: readonly GraphEdgeView[];
 }

@@ -51,6 +51,9 @@ export function isPublicShellRoute(method: string, normalizedPath: string): bool
   if (normalizedPath === '/nota' || normalizedPath.startsWith('/nota/')) {
     return true;
   }
+  if (normalizedPath === '/grafo') {
+    return true;
+  }
   return false;
 }
 

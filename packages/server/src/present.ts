@@ -151,6 +151,7 @@ export function presentGraph(
   readonly type: NoteType | null;
   readonly tag: string | null;
   readonly rel: string | null;
+  readonly folder: string | null;
   readonly nodes: readonly GraphNodeView[];
   readonly edges: readonly GraphEdgeView[];
 } {
@@ -160,6 +161,7 @@ export function presentGraph(
     type: filters.type ?? null,
     tag: filters.tag ?? null,
     rel: filters.rel ?? null,
+    folder: filters.folder ?? null,
     nodes: graph.nodes.map((node) => ({
       id: node.id,
       title: node.title,

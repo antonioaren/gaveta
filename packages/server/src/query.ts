@@ -38,8 +38,9 @@ export function readGraphFilters(query: {
   type?: string;
   tag?: string;
   rel?: string;
+  folder?: string;
 }): GraphFilters {
-  const filters: { type?: NoteType; tag?: string; rel?: string } = {};
+  const filters: { type?: NoteType; tag?: string; rel?: string; folder?: string } = {};
   if (query.type !== undefined) {
     if (!isNoteType(query.type)) {
       throw new GavetaError('E_ARG_INVALID');
@@ -57,6 +58,16 @@ export function readGraphFilters(query: {
       throw new GavetaError('E_ARG_INVALID');
     }
     filters.rel = query.rel.trim();
+  }
+  if (query.folder !== undefined) {
+    const folder = query.folder.trim();
+    if (folder.length === 0 || query.folder !== folder) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    if (folder.startsWith('/') || folder.includes('\\') || folder.includes('..')) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    filters.folder = folder;
   }
   return filters;
 }

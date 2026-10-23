@@ -27,6 +27,7 @@ import {
   backlinks,
   globalGraph,
   graphGhostKey,
+  notePathInFolder,
   localGraph,
   openVaultIndex,
   outgoingLinks,
@@ -437,6 +438,12 @@ it('dedupes repeated edges, keeps a self-loop, and omits broken targets', async 
   });
 });
 
+it('folder filter uses a path segment prefix (not a string prefix)', () => {
+  expect(notePathInFolder('enlaces/a.html', 'enlaces')).toBe(true);
+  expect(notePathInFolder('enlaces-otros/a.html', 'enlaces')).toBe(false);
+  expect(notePathInFolder('enlaces.html', 'enlaces')).toBe(false);
+});
+
 it('filters by type, tag, folder, and rel, including combined filters', async () => {
   await withTemp(async (parent) => {
     const root = await makeVault(parent);
@@ -485,6 +492,16 @@ it('filters by type, tag, folder, and rel, including combined filters', async ()
       'enlaces.html',
       noteHtml({ title: 'Archivo', id: idAt(4), tags: 'alpha', body: '<p>No es carpeta</p>' }),
     );
+    await writeNote(
+      root,
+      'enlaces/real.html',
+      noteHtml({ title: 'Real', id: idAt(5), tags: 'alpha', body: '<p>Dentro</p>' }),
+    );
+    await writeNote(
+      root,
+      'enlaces-otros/vecino.html',
+      noteHtml({ title: 'Vecino', id: idAt(6), tags: 'alpha', body: '<p>Otra carpeta</p>' }),
+    );
     await indexed(root, (index) => {
       const ghost = graphGhostKey('Fantasma');
       const folder = globalGraph(index, { folder: 'docs' });
@@ -494,15 +511,22 @@ it('filters by type, tag, folder, and rel, including combined filters', async ()
       expect(hasEdge(folder, 'docs/a.html', ghost, 'depends-on')).toBe(true);
       expect(hasEdge(folder, 'docs/a.html', 'other/c.html', 'depends-on')).toBe(false);
       expect(pathsOf(globalGraph(index, { folder: 'docs/' }))).toEqual(pathsOf(folder));
-      expect(pathsOf(globalGraph(index, { folder: 'enlaces' }))).toEqual([]);
+      expect(pathsOf(globalGraph(index, { folder: 'enlaces' }))).toEqual(['enlaces/real.html']);
+      expect(pathsOf(globalGraph(index, { folder: 'enlaces-otros' }))).toEqual([
+        'enlaces-otros/vecino.html',
+      ]);
 
       const docsOnly = globalGraph(index, { type: 'doc' });
-      expect(pathsOf(docsOnly)).toEqual([
-        'docs/a.html',
-        'docs/b.html',
-        'enlaces.html',
-        'other/d.html',
-      ]);
+      expect(pathsOf(docsOnly).sort()).toEqual(
+        [
+          'docs/a.html',
+          'docs/b.html',
+          'enlaces.html',
+          'enlaces/real.html',
+          'enlaces-otros/vecino.html',
+          'other/d.html',
+        ].sort(),
+      );
       expect(docsOnly.nodes.some((node) => node.key === ghost)).toBe(true);
       expect(hasEdge(docsOnly, 'docs/a.html', 'other/c.html', 'depends-on')).toBe(false);
 
@@ -511,24 +535,32 @@ it('filters by type, tag, folder, and rel, including combined filters', async ()
       expect(slides.edges).toEqual([]);
 
       const alpha = globalGraph(index, { tag: 'alpha' });
-      expect(pathsOf(alpha)).toEqual([
-        'docs/a.html',
-        'enlaces.html',
-        'other/c.html',
-        'other/d.html',
-      ]);
+      expect(pathsOf(alpha).sort()).toEqual(
+        [
+          'docs/a.html',
+          'enlaces.html',
+          'enlaces/real.html',
+          'enlaces-otros/vecino.html',
+          'other/c.html',
+          'other/d.html',
+        ].sort(),
+      );
       expect(hasEdge(alpha, 'docs/a.html', 'other/c.html', 'depends-on')).toBe(true);
       expect(hasEdge(alpha, 'docs/a.html', 'docs/b.html', 'related')).toBe(false);
       expect(alpha.nodes.some((node) => node.key === ghost)).toBe(true);
 
       const depends = globalGraph(index, { rel: 'depends-on' });
-      expect(pathsOf(depends)).toEqual([
-        'docs/a.html',
-        'docs/b.html',
-        'enlaces.html',
-        'other/c.html',
-        'other/d.html',
-      ]);
+      expect(pathsOf(depends).sort()).toEqual(
+        [
+          'docs/a.html',
+          'docs/b.html',
+          'enlaces.html',
+          'enlaces/real.html',
+          'enlaces-otros/vecino.html',
+          'other/c.html',
+          'other/d.html',
+        ].sort(),
+      );
       expect(depends.edges.every((edge) => edge.rel === 'depends-on')).toBe(true);
       expect(hasEdge(depends, 'docs/a.html', 'other/c.html', 'depends-on')).toBe(true);
       expect(hasEdge(depends, 'docs/a.html', ghost, 'depends-on')).toBe(true);

@@ -7,6 +7,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<ShellLayout />} />
         <Route path="/nota/:ref" element={<ShellLayout />} />
+        <Route path="/grafo" element={<ShellLayout />} />
       </Routes>
     </BrowserRouter>
   );

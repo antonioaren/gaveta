@@ -401,6 +401,7 @@ export {
   globalGraph,
   graphGhostKey,
   localGraph,
+  notePathInFolder,
   outgoingLinks,
 } from './graph.ts';
 

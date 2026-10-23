@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { GlobalGraphView } from '../graph/GlobalGraphView.tsx';
 import { ConnectionsPanel } from '../connections/ConnectionsPanel.tsx';
 import { HealthPanel } from '../health/HealthPanel.tsx';
 import { NoteExplorer } from '../explorer/NoteExplorer.tsx';
@@ -11,6 +12,8 @@ import { TabProvider } from '../tabs/TabContext.tsx';
 export function ShellLayout() {
   const { notes, loading, error, liveError } = useVaultNotes();
   const navigate = useNavigate();
+  const location = useLocation();
+  const graphMode = location.pathname === '/grafo';
 
   return (
     <TabProvider>
@@ -24,6 +27,15 @@ export function ShellLayout() {
             <span className="topbar__name">Gaveta</span>
           </div>
           <div className="topbar__nav">
+            <button
+              type="button"
+              className="topbar__button"
+              onClick={() => {
+                void navigate(graphMode ? '/' : '/grafo');
+              }}
+            >
+              {graphMode ? 'Notas' : 'Grafo'}
+            </button>
             <button
               type="button"
               className="topbar__button"
@@ -45,16 +57,22 @@ export function ShellLayout() {
           </div>
         </header>
         <TabBar />
-        <div className="shell__columns">
-          <NoteExplorer notes={notes} loading={loading} error={liveError ?? error} />
-          <main className="shell__main">
-            <NotePane />
+        {graphMode ? (
+          <main className="shell__main shell__main--graph">
+            <GlobalGraphView />
           </main>
-          <div className="shell__rail">
-            <ConnectionsPanel />
-            <HealthPanel />
+        ) : (
+          <div className="shell__columns">
+            <NoteExplorer notes={notes} loading={loading} error={liveError ?? error} />
+            <main className="shell__main">
+              <NotePane />
+            </main>
+            <div className="shell__rail">
+              <ConnectionsPanel />
+              <HealthPanel />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </TabProvider>
   );

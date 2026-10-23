@@ -20,6 +20,7 @@ it('treats only the shell allowlist as public', () => {
   expect(isPublicShellRoute('GET', '/')).toBe(true);
   expect(isPublicShellRoute('HEAD', '/assets/app.js')).toBe(true);
   expect(isPublicShellRoute('GET', '/nota/demo.html')).toBe(true);
+  expect(isPublicShellRoute('GET', '/grafo')).toBe(true);
   expect(isPublicShellRoute('GET', '/api/notes')).toBe(false);
   expect(isPublicShellRoute('GET', '/api')).toBe(false);
   expect(isPublicShellRoute('GET', '/API/notes')).toBe(false);

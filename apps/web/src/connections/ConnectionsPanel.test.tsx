@@ -75,6 +75,7 @@ it('renders backlink context as plain text without HTML', async () => {
                 type: null,
                 tag: null,
                 rel: null,
+                folder: null,
                 nodes: [],
                 edges: [],
               },

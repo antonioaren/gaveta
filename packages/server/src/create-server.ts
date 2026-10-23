@@ -307,10 +307,11 @@ function registerReadRoutes(
     const ref = readOptionalRefQuery(readQueryParam(request, 'ref'));
     const depthParam = readQueryParam(request, 'depth');
     rejectDepthWithoutRef(depthParam, ref);
-    const graphQuery: { type?: string; tag?: string; rel?: string } = {};
+    const graphQuery: { type?: string; tag?: string; rel?: string; folder?: string } = {};
     const graphType = readQueryParam(request, 'type');
     const graphTag = readQueryParam(request, 'tag');
     const graphRel = readQueryParam(request, 'rel');
+    const graphFolder = readQueryParam(request, 'folder');
     if (graphType !== undefined) {
       graphQuery.type = graphType;
     }
@@ -319,6 +320,9 @@ function registerReadRoutes(
     }
     if (graphRel !== undefined) {
       graphQuery.rel = graphRel;
+    }
+    if (graphFolder !== undefined) {
+      graphQuery.folder = graphFolder;
     }
     const filters = readGraphFilters(graphQuery);
     const { result, warnings } = await vaultSession.withIndex((index) => {
