@@ -148,14 +148,23 @@ function splitOrBuildDocToc(bodyInner: string): { readonly toc: string; readonly
     return { toc: built, main: bodyInner };
   }
   const toc = serializeOuter(tocElement);
+  detachElement(tocElement);
   const mainParts: string[] = [];
   for (const child of body.childNodes) {
-    if ('tagName' in child && child === tocElement) {
-      continue;
-    }
     mainParts.push(serializeOuter(child));
   }
   return { toc, main: mainParts.join('').trim() };
+}
+
+function detachElement(element: ParseElement): void {
+  const parent = element.parentNode;
+  if (parent === null || !('childNodes' in parent)) {
+    return;
+  }
+  const index = parent.childNodes.indexOf(element);
+  if (index !== -1) {
+    parent.childNodes.splice(index, 1);
+  }
 }
 
 function findDocTocNav(body: ParseElement): ParseElement | null {

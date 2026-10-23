@@ -87,7 +87,7 @@ it('REQ-APP-01 / REQ-SEC-06: gaveta serve loads the viewer shell and bootstraps 
       .getByRole('navigation', { name: 'Explorador de notas' })
       .waitFor({ state: 'visible' });
     await page.getByLabel('Panel de conexiones').waitFor({ state: 'visible' });
-    await page.getByText('Conexiones').waitFor({ state: 'visible' });
+    await page.getByRole('heading', { name: 'Conexiones' }).waitFor({ state: 'visible' });
 
     const notesResponse = await page.evaluate(async (headerToken) => {
       const response = await fetch('/api/notes', {

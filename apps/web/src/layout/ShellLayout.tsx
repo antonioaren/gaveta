@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ConnectionsPlaceholder } from '../connections/ConnectionsPlaceholder.tsx';
+import { ConnectionsPanel } from '../connections/ConnectionsPanel.tsx';
 import { NoteExplorer } from '../explorer/NoteExplorer.tsx';
 import { useVaultNotes } from '../hooks/useVaultNotes.ts';
 import { NotePane } from '../note/NotePane.tsx';
@@ -47,7 +47,7 @@ export function ShellLayout() {
           <main className="shell__main">
             <NotePane />
           </main>
-          <ConnectionsPlaceholder />
+          <ConnectionsPanel />
         </div>
       </div>
     </TabProvider>

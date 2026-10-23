@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Viewer connections panel: outgoing links, backlinks with plain-text context snippets, and a local force-layout graph with per-type node colors; navigation uses ULID refs via the shell router (REQ-APP-01).
 - Type-specific render views for `doc` (lateral outline), `slides` (thumbnails and sandboxed presentation mode with keyboard navigation), and `todo` (read-only filters), plus wide layouts for Claude artifact types `dashboard`, `design`, and `artifact` (REQ-APP-06).
+
+### Fixed
+
+- Doc render layout no longer duplicates a nested `nav.toc` in the main column when the TOC sits below the top level.
 
 - `gaveta import` and polished `gaveta export`: CLI migration commands with shared `--json` summaries (`created`, `overwritten`, `renamed`, `skipped`, `failed`, `attachments`), Spanish human output, and `gaveta guide` examples (REQ-MIG-01–10, REQ-CLI-09).
 - `gaveta export` and `exportVaultToMarkdown`: export one note, a folder, or `--all` to Markdown with folder hierarchy, attachment copy, `--links wiki|relative`, `--dry-run`, `--force`, and per-file `W_EXPORT_LOSSY` reporting (REQ-MIG-08).
