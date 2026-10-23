@@ -171,11 +171,11 @@ function defineElement(
 }
 
 export const BODY_ELEMENTS: readonly BodyElement[] = [
-  defineElement('article', 'structure'),
+  defineElement('article', 'structure', ['data-g-import-losses']),
   defineElement('section', 'structure'),
   defineElement('header', 'structure'),
   defineElement('footer', 'structure'),
-  defineElement('aside', 'structure', ['data-kind']),
+  defineElement('aside', 'structure', ['data-kind', 'data-g-callout-fold']),
   defineElement('nav', 'structure'),
   defineElement('h1', 'heading'),
   defineElement('h2', 'heading'),

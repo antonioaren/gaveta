@@ -27,6 +27,8 @@ export interface SkillBundle {
 
 const AGENT_COMMAND_NAMES = [
   'search',
+  'import',
+  'export',
   'new',
   'edit',
   'read',
@@ -137,6 +139,14 @@ function renderSkillMarkdown(options: SkillBuildOptions): string {
     ...AGENT_WORKFLOW_BULLETS.map((bullet) => `- ${bullet}`),
     '',
     'Detalle paso a paso: [`references/flujo.md`](references/flujo.md).',
+    '',
+    '## Importar y exportar Markdown',
+    '',
+    '- `gaveta import <archivo.md|carpeta>` convierte Markdown del disco en notas HTML enlazadas (misma validación que `new`).',
+    '- Antes de escribir, usa `--dry-run` y `--json` para ver el resumen (`created`, `failed`, avisos por archivo).',
+    '- `--in <carpeta>` coloca las notas bajo esa carpeta del vault; un solo `.md` se importa como `carpeta/nombre.html`.',
+    '- `gaveta export <ref|--all> --to md --out <dir>` escribe `.md` y adjuntos fuera del vault; `--links wiki` (por defecto) o `relative`.',
+    '- Detalle de equivalencia en ida y vuelta: `docs/migration-round-trip.md` en el repositorio.',
     '',
     '## Salida JSON y escrituras seguras',
     '',

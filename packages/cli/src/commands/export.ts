@@ -5,6 +5,7 @@ import {
   renderMigrationSummary,
   type ExportCliData,
 } from './migration-report.ts';
+import { renderExportConflictLines } from './migration-human.ts';
 
 function aggregateWarnings(data: ExportCliData): CommandWarning[] {
   const warnings: CommandWarning[] = [];
@@ -29,17 +30,23 @@ function renderHuman(data: ExportCliData): string {
     attachments: 'adjuntos',
   };
   const summary = renderMigrationSummary(data.summary, labels);
+  const lines: string[] = [];
   if (data.dryRun) {
     if (data.blocked) {
-      const lines = [`Vista previa bloqueada: ${summary}.`, 'Conflictos:'];
-      for (const conflict of data.conflicts) {
-        lines.push(`- ${conflict.path} (${conflict.detail})`);
-      }
-      return `${lines.join('\n')}\n`;
+      lines.push(`Vista previa bloqueada: ${summary}.`);
+      lines.push('Conflictos:');
+      lines.push(...renderExportConflictLines(data.conflicts));
+    } else {
+      lines.push(`Vista previa de exportación a ${data.outDir}: ${summary}.`);
     }
-    return `Vista previa de exportación a ${data.outDir}: ${summary}.\n`;
+  } else {
+    lines.push(`Exportación completada en ${data.outDir}: ${summary}.`);
   }
-  return `Exportación completada en ${data.outDir}: ${summary}.\n`;
+  if (!data.dryRun && data.conflicts.length > 0) {
+    lines.push('Conflictos:');
+    lines.push(...renderExportConflictLines(data.conflicts));
+  }
+  return `${lines.join('\n')}\n`;
 }
 
 export const exportCommand: CommandSpec = {

@@ -7,9 +7,11 @@ Usa este orden al documentar con la CLI. El contrato HTML (elementos, componente
 1. Busca antes de crear (`gaveta search`).
 2. Lee el contexto con `gaveta backlinks` y `gaveta graph --depth 1`.
 3. Escribe con `gaveta new` o `gaveta edit --from -` y enlaza con `[[Título]]`.
-4. Comprueba con `gaveta validate` antes de dar por cerrado un lote de cambios.
-5. Usa `--json` y `--if-match` al escribir.
-6. El contrato completo está en `gaveta guide`. No lo copies en las notas ni en el chat.
+4. Para traer Markdown existente: `gaveta import <archivo.md|carpeta> --dry-run`, revisa el resumen y luego importa sin `--dry-run` (usa `--in` si hace falta).
+5. Para sacar notas a Markdown: `gaveta export <ref|--all> --to md --out <dir>` (prueba `--dry-run` antes).
+6. Comprueba con `gaveta validate` antes de dar por cerrado un lote de cambios.
+7. Usa `--json` y `--if-match` al escribir.
+8. El contrato completo está en `gaveta guide`. No lo copies en las notas ni en el chat.
 
 ## Vault fuera del directorio actual
 
@@ -22,6 +24,16 @@ Usa este orden al documentar con la CLI. El contrato HTML (elementos, componente
 
 Busca texto en el título, los alias, los encabezados y el cuerpo.
 `gaveta search "base de datos" --json`
+
+### import
+
+Importa Markdown desde un archivo o una carpeta al vault.
+`gaveta import ./docs --in proyectos --dry-run --on-conflict skip --continue-on-error --json`
+
+### export
+
+Exporta notas del vault a Markdown.
+`gaveta export --all --to md --out ./export-md --links wiki --dry-run --json`
 
 ### new
 

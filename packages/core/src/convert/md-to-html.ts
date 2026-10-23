@@ -133,7 +133,8 @@ export function finalizeMarkdownHtml(
   }
   head.push(`<meta name="gaveta:created" content="${escapeAttr(created)}">`);
   head.push(`<meta name="gaveta:updated" content="${escapeAttr(options.now)}">`);
-  const shell = `<!doctype html><html lang="es"><head>${head.join('')}</head><body>${converted.body}</body></html>`;
+  const body = stampImportLossesOnContent(converted.body, converted.warnings);
+  const shell = `<!doctype html><html lang="es"><head>${head.join('')}</head><body>${body}</body></html>`;
   const normalizeOptions =
     options.remoteAllowlist === undefined
       ? { notePath: options.notePath }
@@ -276,9 +277,97 @@ function renderMarkdownChunk(
   sourcePath: string,
   warnings: MarkdownConvertWarning[],
 ): string {
-  const withCallouts = preprocessCallouts(chunk, warnings);
+  const withHtmlBlocks = preprocessEmbeddedHtmlBlocks(chunk, warnings);
+  const withTables = preprocessTableColumnAlignment(withHtmlBlocks, warnings);
+  const withRemote = preprocessRemoteImages(withTables, warnings);
+  const withCallouts = preprocessCallouts(withRemote, warnings);
   const withEmbeds = preprocessWikiEmbeds(withCallouts, sourcePath, warnings);
   return markdownToHtmlFragment(withEmbeds);
+}
+
+function preprocessTableColumnAlignment(input: string, warnings: MarkdownConvertWarning[]): string {
+  for (const line of input.split('\n')) {
+    if (!line.includes('|') || !line.includes(':')) {
+      continue;
+    }
+    if (lineHasGfmColumnAlignment(line)) {
+      warnings.push({
+        code: 'W_IMPORT_UNSUPPORTED',
+        params: { detail: 'table-column-alignment' },
+      });
+      break;
+    }
+  }
+  return input;
+}
+
+function lineHasGfmColumnAlignment(line: string): boolean {
+  let index = 0;
+  while (index < line.length) {
+    const pipe = line.indexOf('|', index);
+    if (pipe === -1) {
+      return false;
+    }
+    const nextPipe = line.indexOf('|', pipe + 1);
+    if (nextPipe === -1) {
+      return false;
+    }
+    const cell = line.slice(pipe + 1, nextPipe).trim();
+    if (cell.length >= 3 && cell.startsWith(':') && cell.endsWith(':') && cell.includes('-')) {
+      return true;
+    }
+    index = pipe + 1;
+  }
+  return false;
+}
+
+function preprocessEmbeddedHtmlBlocks(input: string, warnings: MarkdownConvertWarning[]): string {
+  const lower = input.toLowerCase();
+  let search = 0;
+  while (search < lower.length) {
+    const idx = lower.indexOf('<div', search);
+    if (idx === -1) {
+      break;
+    }
+    const after = lower.charAt(idx + 4);
+    if (after === ' ' || after === '>' || after === '\t' || after === '\n' || after === '\r') {
+      warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'embedded-html-block' } });
+      break;
+    }
+    search = idx + 4;
+  }
+  return input;
+}
+
+function preprocessRemoteImages(input: string, warnings: MarkdownConvertWarning[]): string {
+  let result = '';
+  let index = 0;
+  while (index < input.length) {
+    const start = input.indexOf('![', index);
+    if (start === -1) {
+      result += input.slice(index);
+      break;
+    }
+    result += input.slice(index, start);
+    const closeBracket = input.indexOf('](', start + 2);
+    if (closeBracket === -1) {
+      result += input.slice(start);
+      break;
+    }
+    const urlStart = closeBracket + 2;
+    const urlEnd = input.indexOf(')', urlStart);
+    if (urlEnd === -1) {
+      result += input.slice(start);
+      break;
+    }
+    const url = input.slice(urlStart, urlEnd);
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'remote-image' } });
+    }
+    result += input.slice(start, urlEnd + 1);
+    index = urlEnd + 1;
+  }
+  return result;
 }
 
 function wrapForType(type: NoteType, inner: string): string {
@@ -296,6 +385,25 @@ function wrapForType(type: NoteType, inner: string): string {
     return trimmed;
   }
   return `<article>\n${trimmed}\n</article>`;
+}
+
+function stampImportLossesOnContent(
+  body: string,
+  warnings: readonly MarkdownConvertWarning[],
+): string {
+  const tokens = warnings
+    .filter((warning) => warning.code === 'W_IMPORT_UNSUPPORTED')
+    .map((warning) => warning.params?.detail)
+    .filter((detail): detail is string => typeof detail === 'string' && detail.length > 0);
+  if (tokens.length === 0) {
+    return body;
+  }
+  const unique = [...new Set(tokens)];
+  const marker = ` data-g-import-losses="${escapeAttr(unique.join(','))}"`;
+  if (body.includes('<article')) {
+    return body.replace(/<article(\s|>)/, `<article${marker}$1`);
+  }
+  return body;
 }
 
 function defaultShell(type: NoteType): string {
@@ -389,9 +497,9 @@ function preprocessCallouts(input: string, warnings: MarkdownConvertWarning[]): 
       warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'callout-fold' } });
     }
     const kind = mapCalloutKind(start.rawKind, warnings);
-    const bodyLines: string[] = [];
+    const fragmentLines: string[] = [];
     if (start.titleRest.trim().length > 0) {
-      bodyLines.push(start.titleRest.trim());
+      fragmentLines.push(start.titleRest.trim());
     }
     index += 1;
     while (index < lines.length) {
@@ -399,11 +507,14 @@ function preprocessCallouts(input: string, warnings: MarkdownConvertWarning[]): 
       if (!next.startsWith('>')) {
         break;
       }
-      bodyLines.push(next.replace(/^>\s?/, ''));
+      fragmentLines.push(next.replace(/^>\s?/, ''));
       index += 1;
     }
-    const inner = markdownToHtmlFragment(bodyLines.join('\n'));
-    out.push(`<aside class="callout" data-kind="${escapeAttr(kind)}">\n${inner}\n</aside>`);
+    const inner = markdownToHtmlFragment(fragmentLines.join('\n\n'));
+    const foldAttr = start.fold !== null ? ' data-g-callout-fold=""' : '';
+    out.push(
+      `<aside class="callout" data-kind="${escapeAttr(kind)}"${foldAttr}>\n${inner}\n</aside>`,
+    );
   }
   return out.join('\n');
 }
@@ -414,6 +525,9 @@ function mapCalloutKind(raw: string, warnings: MarkdownConvertWarning[]): string
   if (mapped === undefined) {
     warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: `callout-${key}` } });
     return 'info';
+  }
+  if (mapped !== key) {
+    warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: `callout-kind-${key}` } });
   }
   return mapped;
 }
@@ -445,6 +559,7 @@ function preprocessWikiEmbeds(
       const vaultPath = target.includes('/') ? target : `attachments/${target}`;
       const href = hrefFromVaultRoot(sourcePath, vaultPath);
       const alt = posix.basename(target);
+      warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'wiki-embed' } });
       result += `![${alt}](${href})`;
     }
     index = close + 2;

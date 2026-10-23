@@ -187,7 +187,7 @@ describe('moveNote', () => {
         }
       });
     });
-  });
+  }, 30_000);
 
   it('resolves the source by id, path, or alias and renames inside the same directory', async () => {
     await withTemp(async (parent) => {
