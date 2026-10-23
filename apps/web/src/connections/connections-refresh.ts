@@ -1,12 +1,32 @@
+import { subscribeVaultEvents, subscribeVaultReconnect } from '../live/vault-socket-hub.ts';
+import type { VaultNoteEventType } from '../live/vault-events.ts';
+
 export type ConnectionsRefreshReason = 'websocket' | 'manual';
+
+const LIVE_NOTE_EVENTS = new Set<VaultNoteEventType>([
+  'note:changed',
+  'note:added',
+  'note:removed',
+  'note:moved',
+]);
 
 /**
  * Subscribe to vault change events that should reload the connections panel.
- * T2.2 will wire this to the serve WebSocket (`note:changed|added|removed|moved`).
  */
 export function subscribeConnectionsRefresh(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- wired in T2.2
-  _onRefresh: (reason: ConnectionsRefreshReason) => void,
+  onRefresh: (reason: ConnectionsRefreshReason) => void,
 ): () => void {
-  return () => undefined;
+  const notify = (): void => {
+    onRefresh('websocket');
+  };
+  const unsubscribeEvents = subscribeVaultEvents((event) => {
+    if (LIVE_NOTE_EVENTS.has(event.type)) {
+      notify();
+    }
+  });
+  const unsubscribeReconnect = subscribeVaultReconnect(notify);
+  return () => {
+    unsubscribeEvents();
+    unsubscribeReconnect();
+  };
 }
