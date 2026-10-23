@@ -103,6 +103,20 @@ const expected = {
     message: 'La nota artifact debe tener un único iframe con srcdoc y sin src.',
     hint: 'Los scripts van solo dentro del srcdoc; no añadas más iframes ni atributos distintos.',
   },
+  E_AUTH_REQUIRED: {
+    severity: 'error',
+    exitCode: 1,
+    escalatesToError: false,
+    message: 'Falta el token de sesión del servidor local.',
+    hint: 'Usa la URL que imprime gaveta serve o la cabecera Authorization: Bearer <token>.',
+  },
+  E_ORIGIN_INVALID: {
+    severity: 'error',
+    exitCode: 1,
+    escalatesToError: false,
+    message: 'La cabecera Origin o Host no coincide con este servidor.',
+    hint: 'Solo se aceptan peticiones dirigidas a 127.0.0.1 en el puerto de esta sesión.',
+  },
   E_TASK_INVALID: {
     severity: 'error',
     exitCode: 2,

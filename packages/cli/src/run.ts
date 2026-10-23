@@ -198,6 +198,20 @@ async function execute(
     cwd: io.cwd,
     required: inputMode === 'required',
   });
+  const emit = {
+    success: (data: unknown, commandWarnings: readonly CommandWarning[] = []) => {
+      const applied = applyWarnings(commandWarnings, strictRel);
+      if (!applied.ok) {
+        return;
+      }
+      if (io.json) {
+        io.writers.stdout(renderSuccess(spec.name, data, applied.warnings));
+      }
+    },
+    stdout: (text: string) => {
+      io.writers.stdout(finishLine(text));
+    },
+  };
   const context: CommandContext = {
     cwd: io.cwd,
     env: io.env,
@@ -208,6 +222,7 @@ async function execute(
     input,
     positionals,
     options: parsed.options,
+    emit,
     ...(subcommand === undefined ? {} : { subcommand: subcommand.name }),
   };
   let result: CommandResult;
@@ -228,14 +243,16 @@ async function execute(
       exitCode: warnings.exitCode,
     });
   }
-  if (io.json) {
-    io.writers.stdout(
-      renderSuccess(spec.name, result.data === undefined ? null : result.data, warnings.warnings),
-    );
-  } else {
-    io.writers.stdout(finishLine(result.human));
-    if (warnings.warnings.length > 0) {
-      io.writers.stderr(renderHumanWarnings(warnings.warnings));
+  if (result.deferSuccessOutput !== true) {
+    if (io.json) {
+      io.writers.stdout(
+        renderSuccess(spec.name, result.data === undefined ? null : result.data, warnings.warnings),
+      );
+    } else {
+      io.writers.stdout(finishLine(result.human));
+      if (warnings.warnings.length > 0) {
+        io.writers.stderr(renderHumanWarnings(warnings.warnings));
+      }
     }
   }
   return result.exitCode ?? EXIT_CODES.ok;

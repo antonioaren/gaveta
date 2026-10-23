@@ -276,6 +276,8 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_ARTIFACT_SANDBOX` | El iframe de una nota `artifact` no usa el sandbox permitido |
 | `E_ARTIFACT_CSP` | La CSP del `srcdoc` no coincide con `gaveta:artifact-cdn` |
 | `E_ARTIFACT_IFRAME` | La nota `artifact` no tiene un único iframe con `srcdoc` válido |
+| `E_AUTH_REQUIRED` | Falta el token de sesión del servidor local |
+| `E_ORIGIN_INVALID` | La cabecera Origin o Host no coincide con el servidor local |
 | `E_TASK_INVALID` | Tarea con atributos incorrectos |
 | `E_UNSAFE_SCRIPT`, `E_UNSAFE_HANDLER`, `E_UNSAFE_URL`, `E_UNSAFE_ELEMENT` | Contenido inseguro |
 | `E_PATH_OUTSIDE_VAULT` | La ruta sale del vault |

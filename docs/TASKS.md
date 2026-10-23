@@ -114,7 +114,7 @@ flowchart TB
 
 ### 2A. Visor
 
-- [ ] **T2.1 Servidor local.** `gaveta serve`: Fastify en `127.0.0.1`, API de lectura sobre el núcleo (`notes`, `read`, `links`, `backlinks`, `graph`, `search`, `doctor`), token de sesión y validación de `Origin`. Cubre: REQ-CLI-12, REQ-SEC-06. Depende de: fase 1.
+- [x] **T2.1 Servidor local.** `gaveta serve`: Fastify en `127.0.0.1`, API de lectura sobre el núcleo (`notes`, `read`, `links`, `backlinks`, `graph`, `search`, `doctor`), token de sesión y validación de `Origin`. Cubre: REQ-CLI-12, REQ-SEC-06. Depende de: fase 1.
 - [ ] **T2.2 Watcher y eventos.** `chokidar`, reindexado incremental y WebSocket con `note:changed|added|removed|moved`. Incluye una medida automática de la latencia de la CLI a la vista. Cubre: REQ-APP-05, REQ-NFR-01. Depende de: T2.1.
 - [ ] **T2.3 Ruta de render aislado.** Endpoint `/render/:id` con CSP estricta y tema inyectado, más el script de puente de la app para la navegación por `postMessage`. Cubre: REQ-APP-02, REQ-SEC-01. Depende de: T2.1.
 - [ ] **T2.4 Estructura de la app.** React + Vite con diseño de tres columnas, explorador (carpetas, tags y tipos), pestañas e historial atrás y adelante. Cubre: REQ-APP-01 y 03. Depende de: T2.1.
