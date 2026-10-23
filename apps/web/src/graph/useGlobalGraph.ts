@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiJson } from '../api/client.ts';
 import type { GraphResponse } from '../api/types.ts';
-import { subscribeConnectionsRefresh } from '../connections/connections-refresh.ts';
+import { subscribeVaultNoteLiveRefresh } from '../connections/connections-refresh.ts';
 import { type GraphFilterState, buildGraphApiPath } from './filter-graph.ts';
+
+const LIVE_REFRESH_DEBOUNCE_MS = 250;
 
 function serverFilters(filters: GraphFilterState): GraphFilterState {
   return {
@@ -13,6 +15,10 @@ function serverFilters(filters: GraphFilterState): GraphFilterState {
     hideOrphans: false,
     showTagNodes: false,
   };
+}
+
+function isAbortError(cause: unknown): boolean {
+  return cause instanceof DOMException && cause.name === 'AbortError';
 }
 
 export function useGlobalGraph(filters: GraphFilterState): {
@@ -30,34 +36,49 @@ export function useGlobalGraph(filters: GraphFilterState): {
     setReloadToken((value) => value + 1);
   }, []);
 
-  useEffect(
-    () =>
-      subscribeConnectionsRefresh(() => {
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleReload = (): void => {
+      if (timer !== undefined) {
+        clearTimeout(timer);
+      }
+      timer = setTimeout(() => {
+        timer = undefined;
         reload();
-      }),
-    [reload],
-  );
+      }, LIVE_REFRESH_DEBOUNCE_MS);
+    };
+    const unsubscribe = subscribeVaultNoteLiveRefresh(scheduleReload);
+    return () => {
+      if (timer !== undefined) {
+        clearTimeout(timer);
+      }
+      unsubscribe();
+    };
+  }, [reload]);
 
   useEffect(() => {
     const controller = new AbortController();
+    const { signal } = controller;
     void (async () => {
       setLoading(true);
       setError(null);
       try {
-        const envelope = await apiJson<GraphResponse>(apiPath, {
-          signal: controller.signal,
-        });
-        setGraph(envelope.data);
+        const envelope = await apiJson<GraphResponse>(apiPath, { signal });
+        if (!signal.aborted) {
+          setGraph(envelope.data);
+        }
       } catch (cause: unknown) {
-        if (cause instanceof DOMException && cause.name === 'AbortError') {
+        if (isAbortError(cause)) {
           return;
         }
         const message =
           cause instanceof Error ? cause.message : 'No se pudo cargar el grafo global';
-        setError(message);
-        setGraph(null);
+        if (!signal.aborted) {
+          setError(message);
+          setGraph(null);
+        }
       } finally {
-        if (!controller.signal.aborted) {
+        if (!signal.aborted) {
           setLoading(false);
         }
       }

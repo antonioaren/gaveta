@@ -66,7 +66,7 @@ afterEach(() => {
   clearSessionToken();
 });
 
-it('reloads the global graph when a live vault event arrives', async () => {
+it('reloads the global graph when a live vault event arrives (debounced)', async () => {
   const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
     ok: true,
     status: 200,
@@ -107,8 +107,79 @@ it('reloads the global graph when a live vault event arrives', async () => {
     path: 'demo.html',
     id: '01M5HGV8800000000000000001',
   });
+  emitMessage(socket, {
+    type: 'note:added',
+    path: 'otro.html',
+    id: '01M5HGV8800000000000000002',
+  });
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  vi.useFakeTimers();
+  await vi.advanceTimersByTimeAsync(250);
+  vi.useRealTimers();
 
   await waitFor(() => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+it('drops stale graph responses when filters change before fetch completes', async () => {
+  const pendingResolvers: ((value: Response) => void)[] = [];
+  const fetchMock = vi.fn<typeof fetch>().mockImplementation(() => {
+    return new Promise<Response>((resolve) => {
+      pendingResolvers.push(resolve);
+    });
+  });
+  vi.stubGlobal('fetch', fetchMock);
+
+  const graphEnvelope = (nodeId: string): Response =>
+    ({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          ok: true,
+          schemaVersion: 1,
+          data: {
+            ref: null,
+            depth: null,
+            type: null,
+            tag: null,
+            rel: null,
+            folder: null,
+            nodes: [
+              {
+                id: nodeId,
+                path: `${nodeId}.html`,
+                title: nodeId,
+                type: 'doc',
+                ghost: false,
+              },
+            ],
+            edges: [],
+          },
+        }),
+      headers: new Headers({ 'content-type': 'application/json' }),
+    }) as Response;
+
+  const { result, rerender } = renderHook(
+    ({ folder }: { folder: string | null }) => useGlobalGraph({ ...emptyFilters, folder }),
+    { initialProps: { folder: 'a' } },
+  );
+
+  await waitFor(() => {
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  rerender({ folder: 'b' });
+  await waitFor(() => {
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  pendingResolvers[0]?.(graphEnvelope('stale'));
+  pendingResolvers[1]?.(graphEnvelope('fresh'));
+
+  await waitFor(() => {
+    expect(result.current.graph?.nodes[0]?.id).toBe('fresh');
   });
 });
