@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { apiJson } from '../api/client.ts';
 import type { BacklinksResponse, GraphResponse, LinksResponse } from '../api/types.ts';
 import { subscribeConnectionsRefresh } from '../connections/connections-refresh.ts';
+import { fetchConnectionsBundle } from './fetch-connections.ts';
 
 export interface ConnectionsData {
   readonly links: LinksResponse | null;
@@ -43,20 +43,23 @@ export function useConnectionsData(ref: string | null): ConnectionsData {
     if (ref === null) {
       return;
     }
+    const controller = new AbortController();
+    const cancelledRef = { current: false };
     void (async () => {
       setLoading(true);
       setError(null);
-      const encoded = encodeURIComponent(ref);
       try {
-        const [linksEnvelope, backlinksEnvelope, graphEnvelope] = await Promise.all([
-          apiJson<LinksResponse>(`/api/links?ref=${encoded}`),
-          apiJson<BacklinksResponse>(`/api/backlinks?ref=${encoded}`),
-          apiJson<GraphResponse>(`/api/graph?ref=${encoded}&depth=1`),
-        ]);
-        setLinks(linksEnvelope.data);
-        setBacklinks(backlinksEnvelope.data);
-        setGraph(graphEnvelope.data);
+        const bundle = await fetchConnectionsBundle(ref, controller.signal);
+        if (cancelledRef.current) {
+          return;
+        }
+        setLinks(bundle.links);
+        setBacklinks(bundle.backlinks);
+        setGraph(bundle.graph);
       } catch (cause: unknown) {
+        if (cancelledRef.current || isAbortError(cause)) {
+          return;
+        }
         const message =
           cause instanceof Error ? cause.message : 'No se pudieron cargar las conexiones';
         setError(message);
@@ -64,9 +67,15 @@ export function useConnectionsData(ref: string | null): ConnectionsData {
         setBacklinks(null);
         setGraph(null);
       } finally {
-        setLoading(false);
+        if (!cancelledRef.current) {
+          setLoading(false);
+        }
       }
     })();
+    return () => {
+      cancelledRef.current = true;
+      controller.abort();
+    };
   }, [ref, reloadToken]);
 
   if (ref === null) {
@@ -74,4 +83,8 @@ export function useConnectionsData(ref: string | null): ConnectionsData {
   }
 
   return { links, backlinks, graph, loading, error, reload };
+}
+
+function isAbortError(cause: unknown): boolean {
+  return cause instanceof DOMException && cause.name === 'AbortError';
 }
