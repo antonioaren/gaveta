@@ -120,7 +120,7 @@ flowchart TB
 - [x] **T2.4 Estructura de la app.** React + Vite con diseño de tres columnas, explorador (carpetas, tags y tipos), pestañas e historial atrás y adelante. Cubre: REQ-APP-01 y 03. Depende de: T2.1.
 - [ ] **T2.5 Panel de conexiones.** Salientes, backlinks con contexto y grafo local. Cubre: REQ-APP-01. Depende de: T2.4.
 - [ ] **T2.6 Vista de grafo global.** Filtros por tipo, tag y `rel`, nodos fantasma con "Crear nota" (que deja el comando listo para copiar en esta fase) y tags como nodos opcionales. Cubre: REQ-GRAPH-04. Depende de: T2.4.
-- [ ] **T2.7 Vistas por tipo.** `doc` con índice lateral, `slides` con miniaturas y modo presentación, y `todo` con filtros (solo lectura). Cubre: REQ-APP-06. Depende de: T2.3.
+- [x] **T2.7 Vistas por tipo.** `doc` con índice lateral, `slides` con miniaturas y modo presentación, y `todo` con filtros (solo lectura). Cubre: REQ-APP-06. Depende de: T2.3.
 - [ ] **T2.8 Búsqueda y paleta.** Cmd/Ctrl+K sobre `search` y comandos de navegación. Cubre: REQ-APP-04. Depende de: T2.4.
 - [ ] **T2.9 Panel de salud y avisos.** Salida de `doctor` y aviso cuando un cambio externo rompe enlaces o el contrato. Cubre: REQ-APP-07. Depende de: T2.2.
 - [ ] **T2.10 Tests E2E de seguridad y latencia.** Notas maliciosas de `fixtures/` y medida del p95. Cubre: REQ-SEC-01, REQ-NFR-01. Depende de: T2.3, T2.2.

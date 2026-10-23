@@ -10,6 +10,8 @@ import {
 import { GavetaError } from '@gaveta/core';
 
 const RENDER_BRIDGE_BASENAME = 'render-bridge.js';
+const RENDER_SLIDES_BASENAME = 'render-slides.js';
+const RENDER_TODO_BASENAME = 'render-todo.js';
 
 const STATIC_FILES: Readonly<
   Record<string, { readonly body: string; readonly contentType: string }>
@@ -25,6 +27,14 @@ const STATIC_FILES: Readonly<
   },
   [RENDER_BRIDGE_BASENAME]: {
     body: readFileSync(join(import.meta.dirname, '../assets/render-bridge.js'), 'utf8'),
+    contentType: 'application/javascript; charset=utf-8',
+  },
+  [RENDER_SLIDES_BASENAME]: {
+    body: readFileSync(join(import.meta.dirname, '../assets/render-slides.js'), 'utf8'),
+    contentType: 'application/javascript; charset=utf-8',
+  },
+  [RENDER_TODO_BASENAME]: {
+    body: readFileSync(join(import.meta.dirname, '../assets/render-todo.js'), 'utf8'),
     contentType: 'application/javascript; charset=utf-8',
   },
 };

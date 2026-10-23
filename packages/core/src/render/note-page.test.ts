@@ -69,6 +69,23 @@ it('strips script tags and event handlers from malicious fixture notes', async (
   rmSync(parent, { recursive: true, force: true });
 });
 
+it('loads type-view scripts for slides notes', () => {
+  const vaultRoot = join(import.meta.dirname, '../../../../fixtures/showcase');
+  const source = readFileSync(join(vaultRoot, 'vitrina-slides.html'), 'utf8');
+  const page = buildNoteRenderPage({
+    noteId: '01M5HGV8800000000000000102',
+    notePath: 'vitrina-slides.html',
+    title: 'Slides',
+    sourceHtml: source,
+    port: TEST_SERVE_PORT,
+    renderTicket: TICKET,
+    remoteAllowlist: [],
+  });
+  expect(page).toContain('render-slides.js');
+  expect(page).toContain('gaveta-render--slides');
+  expect(page).toContain('meta name="gaveta:type" content="slides"');
+});
+
 it('includes the navigation bridge script from same origin only', () => {
   const vaultRoot = vaultPath('backlinks');
   const source = readFileSync(join(vaultRoot, 'nota-x.html'), 'utf8');
