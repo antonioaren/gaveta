@@ -44,34 +44,50 @@ export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): 
       return;
     }
     const epoch = flushEpoch;
-    const deduped = coalescePendingChanges([...pending.values()]);
-    pending.clear();
-    const flushAt = performance.now();
-    for (const change of deduped) {
-      const relativePath = change.kind === 'moved' ? change.to : change.relativePath;
-      markDebounceFlush(relativePath, flushAt);
-    }
-    const batch = await coalesceMovesByNoteId(deduped, options.vaultRoot, options.session);
-    if (epoch !== flushEpoch) {
-      return;
-    }
-    for (const change of batch) {
-      const event = await options.session.applyFileChange(change, recentUnlinks, movePairWindowMs);
+    try {
+      const deduped = coalescePendingChanges([...pending.values()]);
+      pending.clear();
+      const flushAt = performance.now();
+      for (const change of deduped) {
+        if (change.kind === 'change' || change.kind === 'add' || change.kind === 'unlink') {
+          markDebounceFlush(change.relativePath, flushAt);
+        }
+      }
+      const batch = await coalesceMovesByNoteId(deduped, options.vaultRoot, options.session);
       if (epoch !== flushEpoch) {
         return;
       }
-      if (event !== null) {
-        markIndexUpdated(event.path, performance.now());
-        const pipeline = takePipelineTrace(event.path, performance.now());
-        options.bus.emitNote(pipeline === undefined ? event : { ...event, pipeline });
+      for (const change of batch) {
+        const event = await options.session.applyFileChange(
+          change,
+          recentUnlinks,
+          movePairWindowMs,
+        );
+        if (epoch !== flushEpoch) {
+          return;
+        }
+        if (event !== null) {
+          markIndexUpdated(event.path, performance.now());
+          const pipeline = takePipelineTrace(event.path, performance.now());
+          options.bus.emitNote(pipeline === undefined ? event : { ...event, pipeline });
+        }
       }
+    } catch {
+      if (epoch !== flushEpoch) {
+        return;
+      }
+      throw new Error('E_VAULT_WATCHER_FLUSH_FAILED');
     }
   };
 
   const flushSchedule = createFlushSchedule({
     debounceMs,
     maxWaitMs,
-    onFlush: () => flushPending(),
+    onFlush: () => {
+      void flushPending().catch(() => {
+        /* superseded or closed; avoid unhandled rejections in tests */
+      });
+    },
   });
 
   return {

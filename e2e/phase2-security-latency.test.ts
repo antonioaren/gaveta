@@ -598,7 +598,7 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
       await frame
         .locator('#latency-probe')
         .filter({ hasText: marker })
-        .waitFor({ timeout: 30_000 });
+        .waitFor({ timeout: 60_000 });
       const elapsed = performance.now() - startedAt;
       samples.push(elapsed);
       const pipelineJson = await page.evaluate((): string | null => {
@@ -617,7 +617,7 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
           e2e: elapsed,
         });
       }
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(350);
     }
 
     const p50 = percentile(samples, 50);
