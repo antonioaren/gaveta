@@ -27,6 +27,45 @@ const RENDER_ASSET_ID = '01M5HGV8800000000000000022';
 const children: ReturnType<typeof spawn>[] = [];
 let browser: Browser;
 
+interface E2ePipelineSample {
+  readonly serverStages: {
+    readonly chokidar?: number;
+    readonly debounceFlush?: number;
+    readonly indexUpdated?: number;
+    readonly wsSent?: number;
+  };
+  readonly wsReceivedMs: number;
+}
+
+function readE2ePipelineSample(value: unknown): E2ePipelineSample | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const serverStages = record.serverStages;
+  if (typeof serverStages !== 'object' || serverStages === null) {
+    return null;
+  }
+  const stages = serverStages as Record<string, unknown>;
+  const readStage = (key: string): number | undefined => {
+    const stage = stages[key];
+    return typeof stage === 'number' ? stage : undefined;
+  };
+  const wsReceivedMs = record.wsReceivedMs;
+  if (typeof wsReceivedMs !== 'number') {
+    return null;
+  }
+  return {
+    serverStages: {
+      chokidar: readStage('chokidar'),
+      debounceFlush: readStage('debounceFlush'),
+      indexUpdated: readStage('indexUpdated'),
+      wsSent: readStage('wsSent'),
+    },
+    wsReceivedMs,
+  };
+}
+
 function percentile(samples: readonly number[], p: number): number {
   const sorted = [...samples].sort((left, right) => left - right);
   const index = Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1);
@@ -562,10 +601,9 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
         .waitFor({ timeout: 30_000 });
       const elapsed = performance.now() - startedAt;
       samples.push(elapsed);
-      const pipeline = await page.evaluate(() => {
-        const sample = globalThis.__gavetaLastPipeline;
-        return sample ?? null;
-      });
+      const pipeline = readE2ePipelineSample(
+        await page.evaluate(() => Reflect.get(globalThis, '__gavetaLastPipeline') ?? null),
+      );
       if (pipeline !== null) {
         stageRows.push({
           chokidar: pipeline.serverStages.chokidar,
