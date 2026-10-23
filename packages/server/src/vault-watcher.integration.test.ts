@@ -35,11 +35,15 @@ it('emits note:moved when a note is renamed across folders with the same ULID', 
     await mkdir(path.join(vaultRoot, 'folder-a'), { recursive: true });
     await mkdir(path.join(vaultRoot, 'folder-b'), { recursive: true });
 
-    const waitFor = (type: string, notePath?: string): Promise<void> =>
+    const waitFor = (types: readonly string[], notePath?: string): Promise<void> =>
       new Promise((resolve) => {
         const onMessage = (data: WebSocket.RawData): void => {
           const body = JSON.parse(wsMessageText(data)) as { type?: string; path?: string };
-          if (body.type === type && (notePath === undefined || body.path === notePath)) {
+          if (
+            body.type !== undefined &&
+            types.includes(body.type) &&
+            (notePath === undefined || body.path === notePath)
+          ) {
             socket.off('message', onMessage);
             resolve();
           }
@@ -47,8 +51,9 @@ it('emits note:moved when a note is renamed across folders with the same ULID', 
         socket.on('message', onMessage);
       });
 
+    const added = waitFor(['note:added', 'note:changed'], 'folder-a/destino.html');
     await copyFile(path.join(vaultRoot, 'destino-enlace.html'), from);
-    await waitFor('note:added', 'folder-a/destino.html');
+    await added;
 
     const moved = new Promise<{ readonly type: string; readonly from: string }>((resolve) => {
       const onMessage = (data: WebSocket.RawData): void => {
@@ -61,8 +66,9 @@ it('emits note:moved when a note is renamed across folders with the same ULID', 
       socket.on('message', onMessage);
     });
 
+    const movedPromise = moved;
     await rename(from, to);
-    const event = await moved;
+    const event = await movedPromise;
     expect(event.type).toBe('note:moved');
     socket.close();
     await server.close();

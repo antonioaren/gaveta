@@ -1,6 +1,10 @@
 import { performance } from 'node:perf_hooks';
 import type { VaultEventBus, VaultNoteEvent } from './vault-events.ts';
-import { coalesceMovesByNoteId, coalescePendingChanges } from './vault-batch.ts';
+import {
+  coalesceMovesByNoteId,
+  coalescePendingChanges,
+  mergePendingFileEvent,
+} from './vault-batch.ts';
 import type { RecentUnlink } from './vault-move.ts';
 import { shouldIndexVaultRelativePath } from './vault-paths.ts';
 import type { VaultIndexSession } from './vault-index.ts';
@@ -21,10 +25,7 @@ export interface CreateVaultWatcherCoreOptions {
   readonly movePairWindowMs?: number;
 }
 
-interface PendingChange {
-  readonly kind: 'change' | 'add' | 'unlink';
-  readonly relativePath: string;
-}
+type PendingChange = import('./vault-batch.ts').PendingFileEvent;
 
 export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): VaultWatcherCore {
   const debounceMs = options.debounceMs ?? 50;
@@ -98,7 +99,10 @@ export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): 
       if (!shouldIndexVaultRelativePath(change.relativePath)) {
         return;
       }
-      pending.set(change.relativePath, change);
+      pending.set(
+        change.relativePath,
+        mergePendingFileEvent(pending.get(change.relativePath), change),
+      );
       flushSchedule.schedule();
     },
     close(): Promise<void> {

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { attachLiveReloadFollowUp } from './live-iframe-reload.ts';
+import { pushLiveE2eLog } from '../live/live-e2e-log.ts';
 import { appendRenderReloadQuery } from './render-frame.ts';
 import { useRenderFrameUrl } from './useRenderFrameUrl.ts';
 
@@ -19,23 +19,7 @@ export function NoteRenderFrame({
   onIframeLoad,
 }: NoteRenderFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const latestReloadGenerationRef = useRef(reloadGeneration);
   const renderSrc = useRenderFrameUrl(noteId);
-
-  useEffect(() => {
-    latestReloadGenerationRef.current = reloadGeneration;
-  }, [reloadGeneration]);
-
-  useEffect(() => {
-    if (renderSrc === null) {
-      return;
-    }
-    const iframe = iframeRef.current;
-    if (iframe === null) {
-      return;
-    }
-    return attachLiveReloadFollowUp(iframe, renderSrc, () => latestReloadGenerationRef.current);
-  }, [renderSrc]);
 
   const frameSrc =
     renderSrc === null
@@ -44,14 +28,29 @@ export function NoteRenderFrame({
         ? appendRenderReloadQuery(renderSrc, reloadGeneration)
         : renderSrc;
 
+  const frameKey = frameSrc === null ? noteId : `${noteId}:${String(reloadGeneration)}:${frameSrc}`;
+
   const syncWindow = (): void => {
     onIframeWindow(iframeRef.current?.contentWindow ?? null);
   };
+
+  useEffect(() => {
+    if (frameSrc === null) {
+      return;
+    }
+    pushLiveE2eLog({
+      kind: 'iframeNav',
+      noteId,
+      reloadGeneration,
+      frameSrc,
+    });
+  }, [frameSrc, noteId, reloadGeneration]);
 
   return renderSrc === null ? (
     <p className="note-pane__placeholder">Preparando vista…</p>
   ) : (
     <iframe
+      key={frameKey}
       ref={iframeRef}
       className="note-pane__frame"
       title={`Vista de ${title}`}

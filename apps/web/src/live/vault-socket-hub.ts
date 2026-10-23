@@ -1,4 +1,5 @@
 import { getSessionToken } from '../auth/session-token.ts';
+import { pushLiveE2eLog } from './live-e2e-log.ts';
 import { recordLivePipelineFromServer } from './live-pipeline-client.ts';
 import type { LivePipelineTracePayload } from './live-pipeline-types.ts';
 import type { VaultNoteEvent } from './vault-events.ts';
@@ -164,6 +165,12 @@ function handleMessage(message: MessageEvent): void {
         wsReceivedMs ?? pipeline.stages.wsSent ?? 0,
       );
     }
+    pushLiveE2eLog({
+      kind: 'ws',
+      eventType: event.type,
+      path: event.path,
+      id: event.id,
+    });
     if (typeof record.from === 'string') {
       dispatch({ ...event, from: record.from });
     } else {
@@ -181,12 +188,16 @@ function connect(): void {
     return;
   }
   intentionalClose = false;
-  socket = new WebSocket(vaultWebSocketUrl());
-  socket.addEventListener('open', () => {
-    socket?.send(JSON.stringify({ type: 'auth', token }));
+  const opened = new WebSocket(vaultWebSocketUrl());
+  socket = opened;
+  opened.addEventListener('open', () => {
+    opened.send(JSON.stringify({ type: 'auth', token }));
   });
-  socket.addEventListener('message', handleMessage);
-  socket.addEventListener('close', (event) => {
+  opened.addEventListener('message', handleMessage);
+  opened.addEventListener('close', (event) => {
+    if (socket !== opened) {
+      return;
+    }
     socket = null;
     authed = false;
     if (event.code === 4401) {

@@ -1,56 +1,67 @@
 // @vitest-environment jsdom
-import { act, render } from '@testing-library/react';
+import { act, cleanup, render } from '@testing-library/react';
+import { afterEach } from 'vitest';
 import { describe, expect, it, vi, type Mock } from 'vitest';
+import { parseReloadGenerationFromIframeSrc } from './render-frame.ts';
+import { NoteRenderFrame } from './NoteRenderFrame.tsx';
 
 const noop: Mock = vi.fn();
-import { parseReloadGenerationFromIframeSrc } from './live-iframe-reload.ts';
-import { NoteRenderFrame } from './NoteRenderFrame.tsx';
 
 vi.mock('./useRenderFrameUrl.ts', () => ({
   useRenderFrameUrl: () => '/render/01NOTE?t=abc',
 }));
 
+function iframeElement(): HTMLIFrameElement {
+  const iframe = document.querySelector('iframe');
+  if (!(iframe instanceof HTMLIFrameElement)) {
+    throw new Error('expected iframe');
+  }
+  return iframe;
+}
+
+afterEach(() => {
+  cleanup();
+});
+
 describe('NoteRenderFrame', () => {
-  it('ends on the latest reload generation after rapid note:changed updates', () => {
+  it('remounts the iframe for each reload generation', () => {
     const { rerender } = render(
       <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={1} onIframeWindow={noop} />,
     );
-    const iframe = document.querySelector('iframe');
-    if (!(iframe instanceof HTMLIFrameElement)) {
-      throw new Error('expected iframe');
-    }
-    expect(parseReloadGenerationFromIframeSrc(iframe.src)).toBe(1);
+    const first = iframeElement();
+    expect(parseReloadGenerationFromIframeSrc(first.src)).toBe(1);
+
+    act(() => {
+      rerender(
+        <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={3} onIframeWindow={noop} />,
+      );
+    });
+    const second = iframeElement();
+    expect(second).not.toBe(first);
+    expect(parseReloadGenerationFromIframeSrc(second.src)).toBe(3);
+  });
+
+  it('ignores a late load on a detached iframe after a newer generation mounted', () => {
+    const { rerender } = render(
+      <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={1} onIframeWindow={noop} />,
+    );
+    const stale = iframeElement();
 
     act(() => {
       rerender(
         <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={2} onIframeWindow={noop} />,
       );
-      rerender(
-        <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={3} onIframeWindow={noop} />,
-      );
     });
-    expect(parseReloadGenerationFromIframeSrc(iframe.src)).toBe(3);
+    const current = iframeElement();
+    expect(stale.isConnected).toBe(false);
 
     act(() => {
-      iframe.src = 'http://127.0.0.1/render/01NOTE?t=abc&_g=1';
-      iframe.dispatchEvent(new Event('load'));
+      stale.src = 'http://127.0.0.1/render/01NOTE?t=abc&_g=1';
+      stale.dispatchEvent(new Event('load'));
     });
-    expect(parseReloadGenerationFromIframeSrc(iframe.src)).toBe(3);
-  });
 
-  it('keeps the latest _g on iframe src across benign re-renders', () => {
-    const { rerender } = render(
-      <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={3} onIframeWindow={noop} />,
-    );
-    const iframe = document.querySelector('iframe');
-    if (!(iframe instanceof HTMLIFrameElement)) {
-      throw new Error('expected iframe');
-    }
-    expect(parseReloadGenerationFromIframeSrc(iframe.src)).toBe(3);
-
-    rerender(
-      <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={3} onIframeWindow={noop} />,
-    );
-    expect(parseReloadGenerationFromIframeSrc(iframe.src)).toBe(3);
+    expect(parseReloadGenerationFromIframeSrc(current.src)).toBe(2);
+    expect(current.isConnected).toBe(true);
+    expect(document.querySelectorAll('iframe').length).toBe(1);
   });
 });

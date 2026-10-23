@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { pushLiveE2eLog } from './live-e2e-log.ts';
 import { useVaultWebSocket } from './useVaultWebSocket.ts';
 import { subscribeVaultReconnect } from './vault-socket-hub.ts';
 
@@ -24,9 +25,11 @@ export function useNoteLiveState(noteId: string | null): {
         event.type === 'note:added'
       ) {
         setDeleted(false);
-        if (event.type === 'note:changed' || event.type === 'note:moved') {
-          setReloadKey((value) => value + 1);
-        }
+        setReloadKey((value) => {
+          const next = value + 1;
+          pushLiveE2eLog({ kind: 'reloadKey', noteId, reloadKey: next, eventType: event.type });
+          return next;
+        });
       }
     },
     [noteId],

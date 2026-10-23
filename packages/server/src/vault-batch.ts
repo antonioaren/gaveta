@@ -5,17 +5,60 @@ export type PendingFileChange =
   | { readonly kind: 'change' | 'add' | 'unlink'; readonly relativePath: string }
   | { readonly kind: 'moved'; readonly from: string; readonly to: string };
 
-export function coalescePendingChanges(
-  batch: readonly { readonly kind: 'change' | 'add' | 'unlink'; readonly relativePath: string }[],
-): PendingFileChange[] {
-  const byPath = new Map<
-    string,
-    { readonly kind: 'change' | 'add' | 'unlink'; readonly relativePath: string }
-  >();
-  for (const item of batch) {
-    byPath.set(item.relativePath, item);
+export interface PendingFileEvent {
+  readonly kind: 'change' | 'add' | 'unlink';
+  readonly relativePath: string;
+}
+
+/** Merge a new watcher event into the pending map (atomic replace is unlink+add on Linux). */
+export function mergePendingFileEvent(
+  existing: PendingFileEvent | undefined,
+  incoming: PendingFileEvent,
+): PendingFileEvent {
+  if (existing === undefined) {
+    return incoming;
   }
-  return [...byPath.values()];
+  const path = incoming.relativePath;
+  if (
+    (incoming.kind === 'add' && existing.kind === 'unlink') ||
+    (incoming.kind === 'unlink' && existing.kind === 'add')
+  ) {
+    return { kind: 'change', relativePath: path };
+  }
+  return incoming;
+}
+
+export function coalescePendingChanges(batch: readonly PendingFileEvent[]): PendingFileChange[] {
+  const unlinks = new Set<string>();
+  const adds = new Set<string>();
+  const lastByPath = new Map<string, PendingFileEvent>();
+  for (const item of batch) {
+    if (item.kind === 'unlink') {
+      unlinks.add(item.relativePath);
+    }
+    if (item.kind === 'add') {
+      adds.add(item.relativePath);
+    }
+    lastByPath.set(item.relativePath, item);
+  }
+
+  const atomicReplace = new Set<string>();
+  for (const path of unlinks) {
+    if (adds.has(path)) {
+      atomicReplace.add(path);
+    }
+  }
+
+  const out: PendingFileChange[] = [];
+  for (const path of atomicReplace) {
+    out.push({ kind: 'change', relativePath: path });
+  }
+  for (const [path, item] of lastByPath) {
+    if (!atomicReplace.has(path)) {
+      out.push(item);
+    }
+  }
+  return out;
 }
 
 export function sortPendingChanges(batch: readonly PendingFileChange[]): PendingFileChange[] {
