@@ -54,6 +54,19 @@ it('wraps todo notes with filter toolbar and script', () => {
   expect(layout.scripts).toEqual(['render-todo.js']);
 });
 
+it('does not duplicate a nested nav.toc in doc main content', () => {
+  const body = `<article>
+<section><nav class="toc"><a href="#inner">Inner</a></nav><h2 id="inner">Inner</h2></section>
+</article>`;
+  const layout = buildRenderTypeLayout('doc', body);
+  const tocCount = layout.html.split('nav class="toc"').length - 1;
+  expect(tocCount).toBe(1);
+  expect(layout.html).toContain('gaveta-render__main');
+  const mainPattern = /<main class="gaveta-render__main">[\s\S]*<\/main>/u;
+  const mainBlock = mainPattern.exec(layout.html)?.[0] ?? '';
+  expect(mainBlock).not.toContain('nav class="toc"');
+});
+
 it('uses the doc layout for dashboard and design artifact types', () => {
   const body = '<article class="g-dashboard"><gaveta-kpi data-label="K">1</gaveta-kpi></article>';
   expect(buildRenderTypeLayout('dashboard', body).html).toContain('gaveta-render--dashboard');
