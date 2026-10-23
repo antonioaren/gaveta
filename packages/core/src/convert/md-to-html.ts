@@ -286,27 +286,88 @@ function renderMarkdownChunk(
 }
 
 function preprocessTableColumnAlignment(input: string, warnings: MarkdownConvertWarning[]): string {
-  if (/\|[^|\n]*:[-][-]+:[^|\n]*\|/.test(input)) {
-    warnings.push({
-      code: 'W_IMPORT_UNSUPPORTED',
-      params: { detail: 'table-column-alignment' },
-    });
+  for (const line of input.split('\n')) {
+    if (!line.includes('|') || !line.includes(':')) {
+      continue;
+    }
+    if (lineHasGfmColumnAlignment(line)) {
+      warnings.push({
+        code: 'W_IMPORT_UNSUPPORTED',
+        params: { detail: 'table-column-alignment' },
+      });
+      break;
+    }
   }
   return input;
 }
 
+function lineHasGfmColumnAlignment(line: string): boolean {
+  let index = 0;
+  while (index < line.length) {
+    const pipe = line.indexOf('|', index);
+    if (pipe === -1) {
+      return false;
+    }
+    const nextPipe = line.indexOf('|', pipe + 1);
+    if (nextPipe === -1) {
+      return false;
+    }
+    const cell = line.slice(pipe + 1, nextPipe).trim();
+    if (cell.length >= 3 && cell.startsWith(':') && cell.endsWith(':') && cell.includes('-')) {
+      return true;
+    }
+    index = pipe + 1;
+  }
+  return false;
+}
+
 function preprocessEmbeddedHtmlBlocks(input: string, warnings: MarkdownConvertWarning[]): string {
-  if (/<\s*div[\s>]/i.test(input)) {
-    warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'embedded-html-block' } });
+  const lower = input.toLowerCase();
+  let search = 0;
+  while (search < lower.length) {
+    const idx = lower.indexOf('<div', search);
+    if (idx === -1) {
+      break;
+    }
+    const after = lower.charAt(idx + 4);
+    if (after === ' ' || after === '>' || after === '\t' || after === '\n' || after === '\r') {
+      warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'embedded-html-block' } });
+      break;
+    }
+    search = idx + 4;
   }
   return input;
 }
 
 function preprocessRemoteImages(input: string, warnings: MarkdownConvertWarning[]): string {
-  return input.replace(/!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g, (match) => {
-    warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'remote-image' } });
-    return match;
-  });
+  let result = '';
+  let index = 0;
+  while (index < input.length) {
+    const start = input.indexOf('![', index);
+    if (start === -1) {
+      result += input.slice(index);
+      break;
+    }
+    result += input.slice(index, start);
+    const closeBracket = input.indexOf('](', start + 2);
+    if (closeBracket === -1) {
+      result += input.slice(start);
+      break;
+    }
+    const urlStart = closeBracket + 2;
+    const urlEnd = input.indexOf(')', urlStart);
+    if (urlEnd === -1) {
+      result += input.slice(start);
+      break;
+    }
+    const url = input.slice(urlStart, urlEnd);
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'remote-image' } });
+    }
+    result += input.slice(start, urlEnd + 1);
+    index = urlEnd + 1;
+  }
+  return result;
 }
 
 function wrapForType(type: NoteType, inner: string): string {
