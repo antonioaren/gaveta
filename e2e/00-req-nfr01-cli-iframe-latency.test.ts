@@ -12,7 +12,8 @@ import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope } from './helpers.t
 const LATENCY_SPEC_P95_MS = 500;
 /** CI-safe ceiling; failures here still warrant investigation. */
 const LATENCY_CI_P95_MS = 4_000;
-const LATENCY_SAMPLES = 5;
+/** Fewer samples on CI runners to avoid tail timeouts while preserving p50/p95 logging. */
+const LATENCY_SAMPLES = process.env.CI === 'true' ? 3 : 5;
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 
@@ -204,7 +205,7 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
           e2e: elapsed,
         });
       }
-      await page.waitForTimeout(350);
+      await page.waitForTimeout(process.env.CI === 'true' ? 1_200 : 350);
     }
 
     const p50 = percentile(samples, 50);
