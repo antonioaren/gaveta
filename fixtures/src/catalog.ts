@@ -389,7 +389,7 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     payloads: ['attachments/pixel.svg'],
   },
   {
-    path: 'graph-label-xss.html',
+    path: 'lt-script-gt-alert-1-lt-script-gt.html',
     id: '01M5HGV8800000000000000024',
     type: 'doc',
     title: '&lt;script&gt;alert(1)&lt;/script&gt;',

@@ -11,5 +11,11 @@
     "types": ["node"],
     "allowImportingTsExtensions": true
   },
-  "include": ["vitest.config.ts", "vitest.e2e.config.ts", "tests/**/*.ts", "e2e/**/*.ts"]
+  "include": [
+    "vitest.config.ts",
+    "vitest.e2e.config.ts",
+    "vitest.nfr.config.ts",
+    "tests/**/*.ts",
+    "e2e/**/*.ts"
+  ]
 }
