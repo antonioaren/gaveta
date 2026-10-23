@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
-import {
-  attachLiveReloadFollowUp,
-  navigateIframeToRenderGeneration,
-} from './live-iframe-reload.ts';
+import { attachLiveReloadFollowUp } from './live-iframe-reload.ts';
+import { appendRenderReloadQuery } from './render-frame.ts';
 import { useRenderFrameUrl } from './useRenderFrameUrl.ts';
 
 interface NoteRenderFrameProps {
@@ -29,16 +27,22 @@ export function NoteRenderFrame({
   }, [reloadGeneration]);
 
   useEffect(() => {
-    if (reloadGeneration === 0 || renderSrc === null) {
+    if (renderSrc === null) {
       return;
     }
     const iframe = iframeRef.current;
     if (iframe === null) {
       return;
     }
-    navigateIframeToRenderGeneration(iframe, renderSrc, reloadGeneration);
     return attachLiveReloadFollowUp(iframe, renderSrc, () => latestReloadGenerationRef.current);
-  }, [reloadGeneration, renderSrc]);
+  }, [renderSrc]);
+
+  const frameSrc =
+    renderSrc === null
+      ? null
+      : reloadGeneration > 0
+        ? appendRenderReloadQuery(renderSrc, reloadGeneration)
+        : renderSrc;
 
   const syncWindow = (): void => {
     onIframeWindow(iframeRef.current?.contentWindow ?? null);
@@ -51,7 +55,7 @@ export function NoteRenderFrame({
       ref={iframeRef}
       className="note-pane__frame"
       title={`Vista de ${title}`}
-      src={renderSrc}
+      src={frameSrc ?? renderSrc}
       sandbox="allow-scripts"
       data-testid="note-render-frame"
       onLoad={() => {

@@ -37,4 +37,20 @@ describe('NoteRenderFrame', () => {
     });
     expect(parseReloadGenerationFromIframeSrc(iframe.src)).toBe(3);
   });
+
+  it('keeps the latest _g on iframe src across benign re-renders', () => {
+    const { rerender } = render(
+      <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={3} onIframeWindow={noop} />,
+    );
+    const iframe = document.querySelector('iframe');
+    if (!(iframe instanceof HTMLIFrameElement)) {
+      throw new Error('expected iframe');
+    }
+    expect(parseReloadGenerationFromIframeSrc(iframe.src)).toBe(3);
+
+    rerender(
+      <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={3} onIframeWindow={noop} />,
+    );
+    expect(parseReloadGenerationFromIframeSrc(iframe.src)).toBe(3);
+  });
 });
