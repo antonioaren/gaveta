@@ -1,6 +1,6 @@
 import { isUlid } from '../contract.ts';
 import { GavetaError } from '../errors.ts';
-import { escapeAttr, escapeText } from '../links/path.ts';
+import { escapeAttr, escapeText, isProducedHref, resolveVaultHref } from '../links/path.ts';
 import { GavetaRefError, notesForId, refCandidates } from '../links/ref.ts';
 import { suggestNotes } from '../links/suggest.ts';
 import {
@@ -175,11 +175,15 @@ function rewriteAssetUrls(
     return bodyHtml;
   }
   walkElements(body, (element) => {
-    if (element.tagName.toLowerCase() === 'img') {
+    const tag = element.tagName.toLowerCase();
+    if (tag === 'img' || tag === 'source' || tag === 'video' || tag === 'audio') {
       rewriteMediaSrc(element, 'src', noteId, notePath, ticket);
+      if (tag === 'video') {
+        rewriteMediaSrc(element, 'poster', noteId, notePath, ticket);
+      }
     }
-    if (element.tagName.toLowerCase() === 'source') {
-      rewriteMediaSrc(element, 'src', noteId, notePath, ticket);
+    if (tag === 'a') {
+      rewriteAnchorHref(element, noteId, notePath, ticket);
     }
   });
   return body.childNodes.map((child) => serializeChild(child)).join('');
@@ -203,27 +207,48 @@ function rewriteMediaSrc(
   if (/^[a-z]+:/iu.test(value)) {
     return;
   }
-  const vaultRelative = joinNoteRelative(notePath, value);
+  const vaultRelative = resolveVaultAttachmentPath(notePath, value);
+  if (vaultRelative === null) {
+    return;
+  }
   const path = `${RENDER_NOTE_FILE_PREFIX}/${noteId}/file/${encodePathSegments(vaultRelative)}`;
   attr.value = appendRenderTicketQuery(path, ticket);
 }
 
-function joinNoteRelative(notePath: string, href: string): string {
-  const slash = notePath.lastIndexOf('/');
-  const dir = slash === -1 ? '' : notePath.slice(0, slash);
-  const segments = href.split('/').filter((part) => part.length > 0);
-  const stack = dir.length === 0 ? [] : dir.split('/');
-  for (const segment of segments) {
-    if (segment === '.') {
-      continue;
-    }
-    if (segment === '..') {
-      stack.pop();
-      continue;
-    }
-    stack.push(segment);
+function rewriteAnchorHref(
+  element: ParseElement,
+  noteId: string,
+  notePath: string,
+  ticket: string,
+): void {
+  const attr = element.attrs.find((entry) => entry.name === 'href');
+  if (attr === undefined) {
+    return;
   }
-  return stack.join('/');
+  const value = attr.value.trim();
+  if (value.length === 0 || value.startsWith('/render/')) {
+    return;
+  }
+  const vaultRelative = resolveVaultAttachmentPath(notePath, value);
+  if (vaultRelative === null) {
+    return;
+  }
+  const path = `${RENDER_NOTE_FILE_PREFIX}/${noteId}/file/${encodePathSegments(vaultRelative)}`;
+  attr.value = appendRenderTicketQuery(path, ticket);
+}
+
+function resolveVaultAttachmentPath(notePath: string, href: string): string | null {
+  if (!isProducedHref(href)) {
+    return null;
+  }
+  const resolved = resolveVaultHref(notePath, href);
+  if (resolved === null) {
+    return null;
+  }
+  if (resolved.endsWith('.html') || resolved.endsWith('.md')) {
+    return null;
+  }
+  return resolved;
 }
 
 function encodePathSegments(vaultRelative: string): string {

@@ -160,6 +160,18 @@ export {
 export { isTrustedMermaidScript, sanitizeMermaidSource } from './mermaid/normalize.ts';
 
 export {
+  assertNoteAttachmentPathAllowed,
+  collectNoteAttachmentPaths,
+  isBlockedRenderVaultPath,
+} from './render/attachments.ts';
+
+export {
+  GAVETA_NAVIGATE_MESSAGE_TYPE,
+  parseGavetaNavigateMessage,
+  type GavetaNavigateMessage,
+} from './render/navigate-message.ts';
+
+export {
   appendRenderTicketQuery,
   buildNoteRenderCsp,
   buildNoteRenderPage,

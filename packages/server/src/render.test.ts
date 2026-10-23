@@ -1,5 +1,6 @@
+import { initVault, normalizeNote, openVaultIndex } from '@gaveta/core';
 import { vaultPath } from '@gaveta/fixtures';
-import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
@@ -10,6 +11,8 @@ import { createRenderTicket, RENDER_TICKET_TTL_SECONDS } from './render-ticket.t
 
 const NOTE_ID = '01M5HGV8800000000000000011';
 const OTHER_ID = '01M5HGV8800000000000000012';
+const RENDER_SECRET = 'render-hmac-secret-for-unit-tests!!';
+const SESSION_TOKEN = 'session-token-for-unit-tests!!!!!!';
 
 function authHeaders(token: string): Record<string, string> {
   return {
@@ -49,10 +52,14 @@ function renderPath(noteId: string, ticket: string): string {
 
 it('serves render HTML with a strict CSP header when the render ticket is valid', async () => {
   await withMaliciousVault(async (vaultRoot) => {
-    const token = 'render-csp-token';
-    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const server = createGavetaServer({
+      vaultRoot,
+      port: 0,
+      token: SESSION_TOKEN,
+      renderTicketSecret: RENDER_SECRET,
+    });
     const address = await server.listen();
-    const ticket = await fetchRenderTicket(address.port, token, NOTE_ID);
+    const ticket = await fetchRenderTicket(address.port, SESSION_TOKEN, NOTE_ID);
     const response = await requestLocal(address.port, renderPath(NOTE_ID, ticket));
     expect(response.status).toBe(200);
     const csp = String(response.headers['content-security-policy'] ?? '');
@@ -67,19 +74,27 @@ it('serves render HTML with a strict CSP header when the render ticket is valid'
 
 it('rejects render without a ticket, with session token only, or with token in the query', async () => {
   await withMaliciousVault(async (vaultRoot) => {
-    const token = 'render-auth-token';
-    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const server = createGavetaServer({
+      vaultRoot,
+      port: 0,
+      token: SESSION_TOKEN,
+      renderTicketSecret: RENDER_SECRET,
+    });
     const address = await server.listen();
 
     const missingTicket = await requestLocal(address.port, `/render/${NOTE_ID}`);
     expect(missingTicket.status).toBe(401);
 
-    const sessionOnly = await requestLocal(address.port, `/render/${NOTE_ID}`, authHeaders(token));
+    const sessionOnly = await requestLocal(
+      address.port,
+      `/render/${NOTE_ID}`,
+      authHeaders(SESSION_TOKEN),
+    );
     expect(sessionOnly.status).toBe(401);
 
     const tokenInQuery = await requestLocal(
       address.port,
-      `/render/${NOTE_ID}?token=${encodeURIComponent(token)}`,
+      `/render/${NOTE_ID}?token=${encodeURIComponent(SESSION_TOKEN)}`,
     );
     expect(tokenInQuery.status).toBe(401);
 
@@ -89,19 +104,23 @@ it('rejects render without a ticket, with session token only, or with token in t
 
 it('rejects expired or mismatched render tickets', async () => {
   await withMaliciousVault(async (vaultRoot) => {
-    const token = 'render-ticket-token';
-    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const server = createGavetaServer({
+      vaultRoot,
+      port: 0,
+      token: SESSION_TOKEN,
+      renderTicketSecret: RENDER_SECRET,
+    });
     const address = await server.listen();
     const issued = Date.now();
     const expired = createRenderTicket(
-      token,
+      RENDER_SECRET,
       NOTE_ID,
       issued - (RENDER_TICKET_TTL_SECONDS + 5) * 1000,
     );
     const expiredResponse = await requestLocal(address.port, renderPath(NOTE_ID, expired));
     expect(expiredResponse.status).toBe(401);
 
-    const valid = createRenderTicket(token, NOTE_ID, issued);
+    const valid = createRenderTicket(RENDER_SECRET, NOTE_ID, issued);
     const wrongNote = await requestLocal(address.port, renderPath(OTHER_ID, valid));
     expect(wrongNote.status).toBe(401);
 
@@ -111,10 +130,14 @@ it('rejects expired or mismatched render tickets', async () => {
 
 it('rejects traversal-like render ids and unknown notes', async () => {
   await withMaliciousVault(async (vaultRoot) => {
-    const token = 'render-traversal-token';
-    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const server = createGavetaServer({
+      vaultRoot,
+      port: 0,
+      token: SESSION_TOKEN,
+      renderTicketSecret: RENDER_SECRET,
+    });
     const address = await server.listen();
-    const ticket = await fetchRenderTicket(address.port, token, NOTE_ID);
+    const ticket = await fetchRenderTicket(address.port, SESSION_TOKEN, NOTE_ID);
     const traversal = await requestLocal(
       address.port,
       `/render/${encodeURIComponent('../../../etc/passwd')}?t=${encodeURIComponent(ticket)}`,
@@ -122,7 +145,7 @@ it('rejects traversal-like render ids and unknown notes', async () => {
     expect(traversal.status).toBe(400);
 
     const missingId = '01JB7Z3K9QX4T5M2N8V6R0WYHD';
-    const missingTicket = createRenderTicket(token, missingId);
+    const missingTicket = createRenderTicket(RENDER_SECRET, missingId);
     const missing = await requestLocal(address.port, renderPath(missingId, missingTicket));
     expect(missing.status).toBe(404);
     await server.close();
@@ -131,8 +154,12 @@ it('rejects traversal-like render ids and unknown notes', async () => {
 
 it('issues render tickets only to authenticated API clients', async () => {
   await withMaliciousVault(async (vaultRoot) => {
-    const token = 'render-ticket-api-token';
-    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const server = createGavetaServer({
+      vaultRoot,
+      port: 0,
+      token: SESSION_TOKEN,
+      renderTicketSecret: RENDER_SECRET,
+    });
     const address = await server.listen();
     const unauth = await requestLocal(
       address.port,
@@ -141,4 +168,117 @@ it('issues render tickets only to authenticated API clients', async () => {
     expect(unauth.status).toBe(401);
     await server.close();
   });
+});
+
+it('rejects render tickets signed with the session token instead of the render secret', async () => {
+  await withMaliciousVault(async (vaultRoot) => {
+    const server = createGavetaServer({
+      vaultRoot,
+      port: 0,
+      token: SESSION_TOKEN,
+      renderTicketSecret: RENDER_SECRET,
+    });
+    const address = await server.listen();
+    const forged = createRenderTicket(SESSION_TOKEN, NOTE_ID);
+    const response = await requestLocal(address.port, renderPath(NOTE_ID, forged));
+    expect(response.status).toBe(401);
+    await server.close();
+  });
+});
+
+it('serves only note-referenced attachment files with sandboxed file headers', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-render-files-'));
+  const vaultRoot = join(parent, 'vault');
+  mkdirSync(vaultRoot, { recursive: true });
+  await initVault({ cwd: vaultRoot });
+  mkdirSync(join(vaultRoot, 'attachments'), { recursive: true });
+  writeFileSync(join(vaultRoot, 'attachments', 'pixel.png'), 'PNG', 'utf8');
+  writeFileSync(join(vaultRoot, 'attachments', 'secret.png'), 'SECRET', 'utf8');
+  const shell = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Img</title><meta name="gaveta:id" content="01JB7Z3K9QX4T5M2N8V6R0WYHC"><meta name="gaveta:type" content="doc"><meta name="gaveta:created" content="2026-10-22T12:00:00Z"></head><body><p><img src="attachments/pixel.png" alt=""></p></body></html>`;
+  const normalized = normalizeNote(shell, { notePath: 'img.html' });
+  if (!normalized.ok || normalized.html === null) {
+    throw new Error('normalize failed');
+  }
+  writeFileSync(join(vaultRoot, 'img.html'), normalized.html, 'utf8');
+  const index = await openVaultIndex(vaultRoot);
+  await index.rebuild();
+  index.close();
+  const server = createGavetaServer({
+    vaultRoot,
+    port: 0,
+    token: SESSION_TOKEN,
+    renderTicketSecret: RENDER_SECRET,
+  });
+  try {
+    const address = await server.listen();
+    const ticket = await fetchRenderTicket(
+      address.port,
+      SESSION_TOKEN,
+      '01JB7Z3K9QX4T5M2N8V6R0WYHC',
+    );
+    const allowed = await requestLocal(
+      address.port,
+      `/render/01JB7Z3K9QX4T5M2N8V6R0WYHC/file/attachments/pixel.png?t=${encodeURIComponent(ticket)}`,
+    );
+    expect(allowed.status).toBe(200);
+    expect(allowed.headers['content-security-policy']).toBe("default-src 'none'; sandbox");
+    expect(allowed.headers['content-disposition']).toContain('inline');
+
+    const secretFile = await requestLocal(
+      address.port,
+      `/render/01JB7Z3K9QX4T5M2N8V6R0WYHC/file/attachments/secret.png?t=${encodeURIComponent(ticket)}`,
+    );
+    expect(secretFile.status).toBe(400);
+
+    const gaveta = await requestLocal(
+      address.port,
+      `/render/01JB7Z3K9QX4T5M2N8V6R0WYHC/file/.gaveta/config.json?t=${encodeURIComponent(ticket)}`,
+    );
+    expect(gaveta.status).toBe(400);
+  } finally {
+    await server.close();
+    rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+it('does not serve attachment symlinks that escape the vault', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-render-symlink-'));
+  const vaultRoot = join(parent, 'vault');
+  const outside = join(parent, 'outside.png');
+  writeFileSync(outside, 'OUT', 'utf8');
+  mkdirSync(vaultRoot, { recursive: true });
+  await initVault({ cwd: vaultRoot });
+  mkdirSync(join(vaultRoot, 'attachments'), { recursive: true });
+  symlinkSync(outside, join(vaultRoot, 'attachments', 'leak.png'));
+  const shell = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Img</title><meta name="gaveta:id" content="01JB7Z3K9QX4T5M2N8V6R0WYHC"><meta name="gaveta:type" content="doc"><meta name="gaveta:created" content="2026-10-22T12:00:00Z"></head><body><p><img src="attachments/leak.png" alt=""></p></body></html>`;
+  const normalized = normalizeNote(shell, { notePath: 'img.html' });
+  if (!normalized.ok || normalized.html === null) {
+    throw new Error('normalize failed');
+  }
+  writeFileSync(join(vaultRoot, 'img.html'), normalized.html, 'utf8');
+  const leakIndex = await openVaultIndex(vaultRoot);
+  await leakIndex.rebuild();
+  leakIndex.close();
+  const server = createGavetaServer({
+    vaultRoot,
+    port: 0,
+    token: SESSION_TOKEN,
+    renderTicketSecret: RENDER_SECRET,
+  });
+  try {
+    const address = await server.listen();
+    const ticket = await fetchRenderTicket(
+      address.port,
+      SESSION_TOKEN,
+      '01JB7Z3K9QX4T5M2N8V6R0WYHC',
+    );
+    const response = await requestLocal(
+      address.port,
+      `/render/01JB7Z3K9QX4T5M2N8V6R0WYHC/file/attachments/leak.png?t=${encodeURIComponent(ticket)}`,
+    );
+    expect(response.status).toBe(400);
+  } finally {
+    await server.close();
+    rmSync(parent, { recursive: true, force: true });
+  }
 });

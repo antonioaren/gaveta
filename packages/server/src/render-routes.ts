@@ -1,7 +1,10 @@
 import {
   GavetaError,
+  assertNoteAttachmentPathAllowed,
   buildNoteRenderCsp,
   buildNoteRenderPage,
+  collectNoteAttachmentPaths,
+  normalizeNote,
   readRenderNoteId,
   readVaultConfig,
   readVaultText,
@@ -16,6 +19,7 @@ import {
   assertRenderTicketForStatic,
   readRenderTicketFromRequest,
 } from './render-access.ts';
+import { RENDER_FILE_CSP, contentDispositionForVaultFile } from './render-file.ts';
 import { isAllowedRenderStaticName, readRenderStaticFile } from './render-static.ts';
 import type { VaultIndexSession } from './vault-index.ts';
 
@@ -52,12 +56,27 @@ export function registerRenderRoutes(
       if (note.id === null) {
         throw new GavetaError('E_META_MISSING');
       }
+      const config = await readVaultConfig(options.vaultRoot);
+      const sourceHtml = await readVaultText(options.vaultRoot, note.path);
+      const normalized = normalizeNote(sourceHtml, {
+        notePath: note.path,
+        remoteAllowlist: config.remoteAllowlist,
+      });
+      if (!normalized.ok || normalized.html === null) {
+        throw new GavetaError('E_HTML_INVALID');
+      }
+      const allowed = new Set(collectNoteAttachmentPaths(normalized.html, note.path));
+      assertNoteAttachmentPathAllowed(relative, allowed);
       const absolute = await resolveInsideVault(options.vaultRoot, relative);
       const body = await readFile(absolute);
       return { body, path: relative };
     });
     const contentType = contentTypeForPath(result.path);
-    return reply.type(contentType).send(result.body);
+    return reply
+      .type(contentType)
+      .header('Content-Security-Policy', RENDER_FILE_CSP)
+      .header('Content-Disposition', contentDispositionForVaultFile(result.path))
+      .send(result.body);
   });
 
   app.get('/render/:id', async (request, reply) => {
@@ -133,6 +152,15 @@ function contentTypeForPath(relativePath: string): string {
   }
   if (lower.endsWith('.svg')) {
     return 'image/svg+xml';
+  }
+  if (lower.endsWith('.pdf')) {
+    return 'application/pdf';
+  }
+  if (lower.endsWith('.mp3')) {
+    return 'audio/mpeg';
+  }
+  if (lower.endsWith('.mp4')) {
+    return 'video/mp4';
   }
   return 'application/octet-stream';
 }

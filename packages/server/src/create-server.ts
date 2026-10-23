@@ -209,7 +209,7 @@ function registerReadRoutes(
   options: CreateGavetaServerOptions,
   vaultSession: VaultIndexSession,
   port: () => number,
-  ticketSecret: string,
+  renderTicketSecret: string,
 ): void {
   app.get(BOOTSTRAP_PATH, (_request, reply) => {
     const data = {
@@ -225,7 +225,7 @@ function registerReadRoutes(
       resolveRenderNote(index, id);
       return Promise.resolve();
     });
-    const ticket = createRenderTicket(ticketSecret, id);
+    const ticket = createRenderTicket(renderTicketSecret, id);
     const expiresAt = renderTicketExpiresAt(ticket);
     return reply.send(
       apiSuccess({

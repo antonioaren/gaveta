@@ -1,3 +1,8 @@
+/**
+ * Navigation bridge for sandboxed render iframes (opaque origin; postMessage targetOrigin '*').
+ * Parent shell MUST verify event.source === iframe.contentWindow and validate payloads with
+ * parseGavetaNavigateMessage from @gaveta/core before navigating.
+ */
 (function () {
   'use strict';
 

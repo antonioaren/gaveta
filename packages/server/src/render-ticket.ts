@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { readRenderNoteId } from '@gaveta/core';
 
-export const RENDER_TICKET_TTL_SECONDS = 60;
+export const RENDER_TICKET_TTL_SECONDS = 600;
 
 const TICKET_SEPARATOR = '.';
 
