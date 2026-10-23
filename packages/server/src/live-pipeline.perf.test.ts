@@ -4,17 +4,22 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { performance } from 'node:perf_hooks';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import WebSocket from 'ws';
 import { expectedOrigin } from './auth.ts';
 import { GAVETA_WS_PATH } from './constants.ts';
-import { createGavetaServer } from './index.ts';
+import { GAVETA_TOKEN_HEADER, createGavetaServer } from './index.ts';
 import { formatStageBreakdown, percentile, sumStages } from './live-pipeline-report.ts';
 import { markWriteFinished, resetLivePipelineTracesForTests } from './live-pipeline-trace.ts';
 import { wsMessageText } from './ws-message.ts';
 
 const SAMPLES = 8;
 const CI_P95_CEILING_MS = 1_200;
+const SAMPLE_EVENT_TIMEOUT_MS = 120_000;
+
+beforeEach(() => {
+  vi.useRealTimers();
+});
 
 afterEach(() => {
   resetLivePipelineTracesForTests();
@@ -47,6 +52,16 @@ it('REQ-NFR-01: 1000-note vault pipeline stages (write → WebSocket)', async ()
       });
     });
 
+    const warm = await server.app.inject({
+      method: 'GET',
+      url: '/api/notes',
+      headers: {
+        host: `127.0.0.1:${String(address.port)}`,
+        [GAVETA_TOKEN_HEADER]: token,
+      },
+    });
+    expect(warm.statusCode).toBe(200);
+
     const endToEnd: number[] = [];
     const stageSamples: { stages: import('./live-pipeline-trace.ts').LivePipelineStages }[] = [];
 
@@ -69,7 +84,14 @@ it('REQ-NFR-01: 1000-note vault pipeline stages (write → WebSocket)', async ()
         files.find((file) => file.path === notePath)?.contents ??
         '<!DOCTYPE html><html><head><meta charset="utf-8"><title>n</title></head><body></body></html>';
       await writeAtomic(`${vaultRoot}/${notePath}`, `${base}<!-- ${String(index)} -->`);
-      const event = await eventPromise;
+      const event = await Promise.race([
+        eventPromise,
+        new Promise<never>((_resolve, reject) => {
+          setTimeout(() => {
+            reject(new Error(`timed out waiting for note:changed on ${notePath}`));
+          }, SAMPLE_EVENT_TIMEOUT_MS);
+        }),
+      ]);
       const elapsed = performance.now() - writeStart;
       endToEnd.push(elapsed);
       if (event.pipeline !== undefined) {
