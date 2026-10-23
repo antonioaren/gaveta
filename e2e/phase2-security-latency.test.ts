@@ -577,6 +577,25 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
     for (let index = 0; index < LATENCY_SAMPLES; index += 1) {
       const marker = `latency-${String(index)}-${String(Date.now())}`;
       const startedAt = performance.now();
+      const expectedReloadGeneration = index + 1;
+      const renderResponse = page.waitForResponse(
+        (response) => {
+          if (response.request().method() !== 'GET' || !response.ok()) {
+            return false;
+          }
+          const url = new URL(response.url());
+          const path = url.pathname;
+          if (
+            !path.startsWith('/render/') ||
+            path.startsWith('/render/static/') ||
+            path.includes('/file/')
+          ) {
+            return false;
+          }
+          return url.searchParams.get('_g') === String(expectedReloadGeneration);
+        },
+        { timeout: 60_000 },
+      );
       const edit = runGaveta(
         [
           'edit',
@@ -595,6 +614,7 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
       await page.evaluate((stamp: number) => {
         Reflect.set(globalThis, '__gavetaWriteFinishedAt', stamp);
       }, writeFinishedAt);
+      await renderResponse;
       await frame
         .locator('#latency-probe')
         .filter({ hasText: marker })

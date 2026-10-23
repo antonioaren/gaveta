@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { appendRenderReloadQuery } from './render-frame.ts';
 import { useRenderFrameUrl } from './useRenderFrameUrl.ts';
 
 interface NoteRenderFrameProps {
@@ -20,18 +21,14 @@ export function NoteRenderFrame({
   const renderSrc = useRenderFrameUrl(noteId);
 
   useEffect(() => {
-    if (reloadGeneration === 0) {
+    if (reloadGeneration === 0 || renderSrc === null) {
       return;
     }
     const iframe = iframeRef.current;
     if (iframe === null) {
       return;
     }
-    try {
-      iframe.contentWindow?.location.reload();
-    } catch {
-      iframe.src = renderSrc ?? iframe.src;
-    }
+    iframe.src = appendRenderReloadQuery(renderSrc, reloadGeneration);
   }, [reloadGeneration, renderSrc]);
 
   const syncWindow = (): void => {
