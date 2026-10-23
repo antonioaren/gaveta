@@ -95,6 +95,25 @@ describe('T2.10 global graph XSS labels', () => {
       const labelNode = page.locator('.graph-view__label').filter({ hasText: labelText });
       expect(await labelNode.count()).toBeGreaterThan(0);
 
+      const ghostTitle = '<script>alert(9)</script>';
+      await page.getByRole('button', { name: ghostTitle }).click();
+      const ghostHeading = page.locator('.graph-view__ghost-title');
+      await ghostHeading.waitFor({ state: 'visible' });
+      expect(await ghostHeading.innerText()).toBe(ghostTitle);
+      expect(await page.locator('.graph-view__ghost-title script').count()).toBe(0);
+      await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+      await page.getByRole('button', { name: 'Crear nota (copiar comando)' }).click();
+      const commandStatus = page.locator('.graph-view__ghost-command');
+      await commandStatus.waitFor({ state: 'visible' });
+      const statusText = await commandStatus.innerText();
+      const command =
+        statusText.startsWith('gaveta new')
+          ? statusText
+          : await page.evaluate(() => navigator.clipboard.readText());
+      expect(command).toMatch(/^gaveta new --type doc -- '/);
+      expect(command).toContain(ghostTitle);
+      expect(command).not.toMatch(/^gaveta new --type doc -- "/);
+
       await page.close();
     } finally {
       rmSync(parent, { recursive: true, force: true });

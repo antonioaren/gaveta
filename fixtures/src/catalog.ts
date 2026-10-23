@@ -398,4 +398,14 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     codes: [],
     payloads: [],
   },
+  {
+    path: 'ghost-xss-enlace.html',
+    id: '01M5HGV8800000000000000025',
+    type: 'doc',
+    title: 'Ghost XSS enlace',
+    tags: 'malicioso',
+    caseId: 'graph-ghost-xss',
+    codes: [],
+    payloads: ['data-g-pending="&lt;script&gt;alert(9)&lt;/script&gt;"'],
+  },
 ];

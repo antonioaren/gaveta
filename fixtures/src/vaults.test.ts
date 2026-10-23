@@ -601,6 +601,7 @@ describe('malicious vault (REQ-SEC-01, REQ-SEC-02)', () => {
         'combined',
         'embed',
         'form',
+        'graph-ghost-xss',
         'graph-label-xss',
         'handler',
         'iframe',
