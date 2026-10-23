@@ -44,6 +44,7 @@ import {
   moveNote,
   removeNote,
   exportVaultToMarkdown,
+  importMarkdownFolder,
 } from './index.ts';
 
 it('exports vault I/O and the shared slug helper from the package entry', () => {
@@ -92,5 +93,6 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(typeof moveNote).toBe('function');
   expect(typeof removeNote).toBe('function');
   expect(typeof exportVaultToMarkdown).toBe('function');
+  expect(typeof importMarkdownFolder).toBe('function');
   expect(GavetaOperationError.prototype).toBeInstanceOf(GavetaError);
 });

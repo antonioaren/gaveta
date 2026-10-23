@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `gaveta export` and `exportVaultToMarkdown`: export one note, a folder, or `--all` to Markdown with folder hierarchy, attachment copy, `--links wiki|relative`, `--dry-run`, `--force`, and per-file `W_EXPORT_LOSSY` reporting (REQ-MIG-08).
+- Core `importMarkdownFolder` API: recursive Markdown import with two-pass link resolution, attachment deduplication, `dryRun`, `onConflict`, and atomic batch writes (`continueOnError`).
 
 ## [0.1.0] - 2026-10-22
 

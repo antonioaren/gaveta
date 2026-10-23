@@ -134,7 +134,7 @@ export {
 
 export { readVaultText, resolveInsideVault, writeVaultText } from './vault/paths.ts';
 
-export { writeAtomic } from './vault/atomic.ts';
+export { writeAtomic, writeAtomicBuffer } from './vault/atomic.ts';
 
 export {
   createDefaultVaultConfig,
@@ -166,6 +166,19 @@ export { adoptNote } from './adopt.ts';
 export { convertClaudeHtml } from './convert/claude.ts';
 
 export { convertMarkdownToHtml, finalizeMarkdownHtml } from './convert/md-to-html.ts';
+
+export { importMarkdownFolder } from './import/folder.ts';
+
+export type {
+  ImportAttachmentReport,
+  ImportFailureReport,
+  ImportMarkdownFolderOptions,
+  ImportMarkdownFolderResult,
+  ImportNoteLink,
+  ImportNoteReport,
+  ImportOnConflict,
+  ImportWarning,
+} from './import/folder.ts';
 
 export { convertHtmlToMarkdown } from './convert/html-to-md.ts';
 
