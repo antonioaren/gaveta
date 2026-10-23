@@ -312,9 +312,15 @@ describe('exportVaultToMarkdown', () => {
     }
   });
 
-  it('rejects case-insensitive markdown path collisions in preflight', async (ctx) => {
+  it('detects case-insensitive markdown path collisions', () => {
+    const conflicts = exportMdPathCaseCollisions(['Foo.md', 'foo.md']);
+    expect(conflicts).toHaveLength(2);
+    expect(conflicts.every((entry) => entry.detail === 'case-collision')).toBe(true);
+  });
+
+  it('rejects case-insensitive markdown path collisions in preflight on Linux', async () => {
     if (process.platform === 'darwin') {
-      ctx.skip();
+      return;
     }
     const parent = await mkdtemp(join(tmpdir(), 'gaveta-export-case-'));
     const vault = join(parent, 'vault');
