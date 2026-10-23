@@ -53,7 +53,9 @@ it('REQ-NFR-01: 1000-note vault pipeline stages (write → WebSocket)', async ()
     for (let index = 0; index < SAMPLES; index += 1) {
       const eventPromise = new Promise<import('./vault-events.ts').VaultNoteEvent>((resolve) => {
         const onMessage = (data: WebSocket.RawData): void => {
-          const body = JSON.parse(wsMessageText(data)) as import('./vault-events.ts').VaultNoteEvent;
+          const body = JSON.parse(
+            wsMessageText(data),
+          ) as import('./vault-events.ts').VaultNoteEvent;
           if (body.type === 'note:changed' && body.path === notePath) {
             socket.off('message', onMessage);
             resolve(body);

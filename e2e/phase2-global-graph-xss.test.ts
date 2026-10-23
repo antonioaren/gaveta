@@ -87,7 +87,9 @@ describe('T2.10 global graph XSS labels', () => {
       await page.getByRole('img', { name: 'Grafo global del vault' }).waitFor({ state: 'visible' });
 
       const labelText = '<script>alert(1)</script>';
-      await page.getByRole('button', { name: labelText }).waitFor({ state: 'visible', timeout: 30_000 });
+      await page
+        .getByRole('button', { name: labelText })
+        .waitFor({ state: 'visible', timeout: 30_000 });
       const svgHtml = await page.locator('.graph-view__svg').innerHTML();
       expect(svgHtml).not.toMatch(/<script[\s>]/iu);
       const labelNode = page.locator('.graph-view__label').filter({ hasText: labelText });

@@ -127,11 +127,10 @@ function handleMessage(message: MessageEvent): void {
       ...(pipeline === undefined ? {} : { pipeline }),
     };
     if (pipeline !== undefined) {
-      const writeAnchor = (globalThis as { __gavetaWriteFinishedAt?: number }).__gavetaWriteFinishedAt;
+      const writeAnchor = (globalThis as { __gavetaWriteFinishedAt?: number })
+        .__gavetaWriteFinishedAt;
       const wsReceivedMs =
-        writeAnchor === undefined
-          ? undefined
-          : Math.max(0, performance.now() - writeAnchor);
+        writeAnchor === undefined ? undefined : Math.max(0, performance.now() - writeAnchor);
       recordLivePipelineFromServer(
         event.path,
         pipeline.stages,

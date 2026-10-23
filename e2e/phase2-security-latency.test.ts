@@ -563,15 +563,19 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
       const elapsed = performance.now() - startedAt;
       samples.push(elapsed);
       const pipeline = await page.evaluate(() => {
-        const sample = (globalThis as { __gavetaLastPipeline?: {
-          serverStages: {
-            chokidar?: number;
-            debounceFlush?: number;
-            indexUpdated?: number;
-            wsSent?: number;
-          };
-          wsReceivedMs: number;
-        } }).__gavetaLastPipeline;
+        const sample = (
+          globalThis as {
+            __gavetaLastPipeline?: {
+              serverStages: {
+                chokidar?: number;
+                debounceFlush?: number;
+                indexUpdated?: number;
+                wsSent?: number;
+              };
+              wsReceivedMs: number;
+            };
+          }
+        ).__gavetaLastPipeline;
         return sample ?? null;
       });
       if (pipeline !== null) {
