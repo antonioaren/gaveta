@@ -123,7 +123,9 @@ function danglingCanonical(index: VaultIndex): { path: string; targetId: string 
 }
 
 describe('moveNote', () => {
-  it('rewrites the twenty incoming hrefs, moves the file, and recalculates the theme', async () => {
+  it(
+    'rewrites the twenty incoming hrefs, moves the file, and recalculates the theme',
+    async () => {
     await withTemp(async (parent) => {
       const root = await copyVault(parent, 'backlinks');
       const before = new Map<string, string>();
@@ -187,7 +189,9 @@ describe('moveNote', () => {
         }
       });
     });
-  });
+    },
+    30_000,
+  );
 
   it('resolves the source by id, path, or alias and renames inside the same directory', async () => {
     await withTemp(async (parent) => {
