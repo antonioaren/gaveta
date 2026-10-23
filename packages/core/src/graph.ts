@@ -29,6 +29,11 @@ export const BACKLINK_CONTEXT_LIMIT = 200;
 /** Prefix for a ghost node key. The rest of the key is the pending title. */
 export const GRAPH_GHOST_PREFIX = 'ghost:';
 
+/** True when `notePath` lies under folder segment `folder` (not a sibling prefix like `enlaces-otros`). */
+export function notePathInFolder(notePath: string, folder: string): boolean {
+  return notePath.startsWith(`${folder}/`);
+}
+
 const FILTER_KEYS = ['type', 'tag', 'rel', 'folder'] as const;
 const LOCAL_KEYS = ['depth', 'type', 'tag', 'rel', 'folder'] as const;
 
@@ -499,7 +504,7 @@ function noteMatches(note: IndexedNote, filters: NormalizedFilters): boolean {
   if (filters.tag !== null && !note.tags.includes(filters.tag)) {
     return false;
   }
-  if (filters.folder !== null && !note.path.startsWith(`${filters.folder}/`)) {
+  if (filters.folder !== null && !notePathInFolder(note.path, filters.folder)) {
     return false;
   }
   return true;

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Command palette and global search (Ctrl/Cmd+K): debounced FTS search, navigation commands, accessible combobox/listbox, and safe snippet highlights (REQ-APP-04).
+- Global graph view (`/grafo`): whole-vault graph from `/api/graph` with type, folder, tag, and `rel` filters, optional tag nodes and hide-orphans, pan/zoom, neighbor highlight on hover, per-type legend, ghost nodes with copy-ready `gaveta new` command, and worker-backed capped force layout for large vaults (REQ-GRAPH-04).
 - Viewer connections panel: outgoing links, backlinks with plain-text context snippets, and a local force-layout graph with per-type node colors; navigation uses ULID refs via the shell router (REQ-APP-01).
 - Type-specific render views for `doc` (lateral outline), `slides` (thumbnails and sandboxed presentation mode with keyboard navigation), and `todo` (read-only filters), plus wide layouts for Claude artifact types `dashboard`, `design`, and `artifact` (REQ-APP-06).
 - Round-trip migration tests on `fixtures/markdown` with documented equivalence in `docs/migration-round-trip.md` (REQ-MIG-11): comparable mdast for Markdown → HTML → Markdown, semantic HTML snapshots for HTML → Markdown → HTML, and explicit lossy notes with required `W_IMPORT_UNSUPPORTED` / `W_EXPORT_LOSSY` warnings.
