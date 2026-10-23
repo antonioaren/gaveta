@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@gaveta/core": "workspace:*",
+    "@gaveta/server": "workspace:*",
     "commander": "14.0.3"
   },
   "devDependencies": {

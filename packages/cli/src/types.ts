@@ -15,12 +15,19 @@ export interface CommandWarning {
   readonly params?: Readonly<Record<string, string | number>>;
 }
 
+export interface CommandEmit {
+  success(data: unknown, warnings?: readonly CommandWarning[]): void;
+  stdout(text: string): void;
+}
+
 export interface CommandResult {
   readonly data: unknown;
   readonly human: string;
   readonly warnings?: readonly CommandWarning[];
   /** When set, overrides the default success exit code (0). */
   readonly exitCode?: number;
+  /** Long-running commands print success via `emit` and skip the final envelope. */
+  readonly deferSuccessOutput?: boolean;
 }
 
 export type CommandInputMode = 'none' | 'optional' | 'required';
@@ -90,4 +97,6 @@ export interface CommandContext {
   readonly positionals: readonly string[];
   readonly options: Readonly<Record<string, string>>;
   readonly subcommand?: string;
+  /** Writers for long-running commands that print before shutdown. */
+  readonly emit?: CommandEmit;
 }

@@ -92,6 +92,24 @@ export function withTempVault(
   }
 }
 
+export async function withTempVaultAsync(
+  run: (vault: string) => Promise<void>,
+  options: { readonly prefix?: string; readonly fixture?: VaultName } = {},
+): Promise<void> {
+  const parent = mkdtempSync(join(tmpdir(), options.prefix ?? 'gaveta-e2e-'));
+  const vault = join(parent, 'vault');
+  try {
+    if (options.fixture !== undefined) {
+      cpSync(vaultPath(options.fixture), vault, { recursive: true });
+    } else {
+      mkdirSync(vault, { recursive: true });
+    }
+    await run(vault);
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}
+
 export function initVault(directory: string, extraArgs: readonly string[] = []): RunResult {
   return runGaveta(['init', '--json', ...extraArgs], { cwd: directory });
 }

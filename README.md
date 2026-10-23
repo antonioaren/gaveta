@@ -103,11 +103,11 @@ cat fixtures/claude/doc.html \
 
 Los scripts y estilos inline se eliminan en tipos declarativos (`doc`, `slides`, `dashboard`, `design`); el HTML interactivo se guarda como nota `artifact` dentro de un `iframe` aislado.
 
-| Paquete          | Ruta              | Estado                            |
-| ---------------- | ----------------- | --------------------------------- |
-| `@gaveta/core`   | `packages/core`   | vacío hasta la fase 1             |
-| `@gaveta/cli`    | `packages/cli`    | esqueleto (`version`, sobre JSON) |
-| `@gaveta/server` | `packages/server` | vacío hasta la fase 2             |
-| `@gaveta/web`    | `apps/web`        | esqueleto React + Vite            |
+| Paquete          | Ruta              | Estado                                     |
+| ---------------- | ----------------- | ------------------------------------------ |
+| `@gaveta/core`   | `packages/core`   | vacío hasta la fase 1                      |
+| `@gaveta/cli`    | `packages/cli`    | esqueleto (`version`, sobre JSON)          |
+| `@gaveta/server` | `packages/server` | API local de solo lectura (`gaveta serve`) |
+| `@gaveta/web`    | `apps/web`        | esqueleto React + Vite                     |
 
 Los paquetes de Node usan TypeScript estricto con `NodeNext` y sin emit. Los imports relativos llevan extensión `.ts`. La app usa la resolución de Vite.

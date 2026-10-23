@@ -2,7 +2,7 @@
   "name": "@gaveta/server",
   "version": "0.1.0",
   "private": true,
-  "description": "Local API. Empty until phase 2.",
+  "description": "Local read-only API for gaveta serve (Fastify on 127.0.0.1).",
   "type": "module",
   "engines": {
     "node": ">=22.18.0"
@@ -14,9 +14,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@gaveta/core": "workspace:*"
+    "@gaveta/core": "workspace:*",
+    "fastify": "5.12.2"
   },
   "devDependencies": {
+    "@gaveta/fixtures": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
