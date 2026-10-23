@@ -167,26 +167,10 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
       await page.evaluate((stamp: number) => {
         Reflect.set(globalThis, '__gavetaWriteFinishedAt', stamp);
       }, writeFinishedAt);
-      const probe = frame.locator('#latency-probe').filter({ hasText: marker });
-      try {
-        await probe.waitFor({ timeout: 60_000 });
-      } catch {
-        const retry = runGaveta(
-          [
-            'edit',
-            'destino-enlace.html',
-            '--section',
-            'resumen',
-            '--replace',
-            '--from',
-            '-',
-            '--json',
-          ],
-          { vault, input: `<p id="latency-probe">${marker}</p>` },
-        );
-        expect(retry.status).toBe(0);
-        await probe.waitFor({ timeout: 60_000 });
-      }
+      await frame
+        .locator('#latency-probe')
+        .filter({ hasText: marker })
+        .waitFor({ timeout: 90_000 });
       const elapsed = performance.now() - startedAt;
       samples.push(elapsed);
       const pipelineJson = await page.evaluate((): string | null => {
