@@ -16,6 +16,13 @@ function aggregateWarnings(report: ExportVaultReport): CommandWarning[] {
 
 function renderHuman(report: ExportVaultReport): string {
   if (report.dryRun) {
+    if (report.blocked) {
+      const lines = ['La exportación se bloquearía por conflictos:'];
+      for (const conflict of report.conflicts) {
+        lines.push(`- ${conflict.path} (${conflict.detail})`);
+      }
+      return `${lines.join('\n')}\n`;
+    }
     if (report.notes.length === 0) {
       return 'No se escribiría ningún archivo.\n';
     }

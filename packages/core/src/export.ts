@@ -2,6 +2,7 @@ import { copyFile, lstat, mkdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
+import { isUlid } from './contract.ts';
 import {
   convertHtmlToMarkdown,
   type HtmlExportLinksMode,
@@ -11,6 +12,7 @@ import {
 import { GavetaError } from './errors.ts';
 import { inspectVaultPath, isProducedHref, resolveVaultHref } from './links/path.ts';
 import { resolveRef } from './links/ref.ts';
+import { parseNote } from './parser.ts';
 import { scanNoteFiles } from './sqlite/scan.ts';
 import { openVaultIndex, type VaultIndex } from './sqlite/store.ts';
 import { pathOutsideVault } from './vault/errors.ts';
@@ -22,6 +24,14 @@ type ParseChild = DefaultTreeAdapterMap['childNode'];
 type ParseElement = DefaultTreeAdapterMap['element'];
 
 export type ExportFormat = 'md';
+
+export type ExportConflictDetail = 'exists' | 'case-collision';
+
+export interface ExportConflict {
+  readonly path: string;
+  readonly code: 'E_PATH_EXISTS';
+  readonly detail: ExportConflictDetail;
+}
 
 export interface ExportVaultOptions {
   readonly vaultRoot: string;
@@ -44,9 +54,19 @@ export interface ExportedNoteReport {
 
 export interface ExportVaultReport {
   readonly dryRun: boolean;
+  readonly blocked: boolean;
   readonly outDir: string;
   readonly notes: readonly ExportedNoteReport[];
   readonly attachments: readonly string[];
+  readonly conflicts: readonly ExportConflict[];
+}
+
+interface PlannedNote {
+  readonly source: string;
+  readonly mdPath: string;
+  readonly markdown: string;
+  readonly warnings: readonly HtmlToMarkdownWarning[];
+  readonly losses: readonly { readonly detail: string }[];
 }
 
 export async function exportVaultToMarkdown(
@@ -69,20 +89,15 @@ export async function exportVaultToMarkdown(
   const links = options.links ?? 'wiki';
   const dryRun = options.dryRun === true;
   const force = options.force === true;
-  if (!dryRun) {
-    await mkdir(exportRoot, { recursive: true });
-    const exportReal = await realpath(exportRoot);
-    if (isInsideVault(vaultRoot, exportReal) || exportReal === vaultRoot) {
-      throw new GavetaError('E_ARG_INVALID');
-    }
-  }
 
   const index = await openVaultIndex(vaultRoot);
   try {
-    const notePaths = await selectNotePaths(vaultRoot, index, ref, all);
-    const targets = buildTargetMap(index);
+    const scanned = await scanNoteFiles(vaultRoot);
+    const scannedPaths = scanned.files.map((file) => file.relativePath);
+    const targets = await buildTargetMapFromVault(vaultRoot, scannedPaths);
+    const notePaths = selectNotePaths(index, ref, all, scannedPaths);
     const attachments = new Set<string>();
-    const notes: ExportedNoteReport[] = [];
+    const plannedNotes: PlannedNote[] = [];
 
     for (const notePath of notePaths) {
       const html = await readVaultText(vaultRoot, notePath);
@@ -94,46 +109,89 @@ export async function exportVaultToMarkdown(
         notePath,
         resolveTarget: (id) => targets.get(id) ?? null,
       });
-      const mdPath = htmlPathToMd(notePath);
-      notes.push({
-        path: mdPath,
+      plannedNotes.push({
         source: notePath,
+        mdPath: htmlPathToMd(notePath),
+        markdown: converted.markdown,
         warnings: converted.warnings,
         losses: converted.losses,
       });
-      if (!dryRun) {
-        await writeExportFile(exportRoot, mdPath, converted.markdown, force);
-      }
     }
 
     const attachmentList = [...attachments].sort();
-    if (!dryRun) {
-      for (const attachment of attachmentList) {
-        await copyVaultAttachment(vaultRoot, exportRoot, attachment, force);
+    const conflicts = await preflightExportDestinations({
+      exportRoot,
+      notes: plannedNotes,
+      attachments: attachmentList,
+      force,
+    });
+
+    const notes: ExportedNoteReport[] = plannedNotes.map((entry) => ({
+      path: entry.mdPath,
+      source: entry.source,
+      warnings: entry.warnings,
+      losses: entry.losses,
+    }));
+
+    if (conflicts.length > 0) {
+      if (dryRun) {
+        return {
+          dryRun: true,
+          blocked: true,
+          outDir: exportRoot,
+          notes,
+          attachments: attachmentList,
+          conflicts,
+        };
       }
+      throw new GavetaError('E_PATH_EXISTS');
+    }
+
+    if (dryRun) {
+      return {
+        dryRun: true,
+        blocked: false,
+        outDir: exportRoot,
+        notes,
+        attachments: attachmentList,
+        conflicts: [],
+      };
+    }
+
+    await mkdir(exportRoot, { recursive: true });
+    const exportReal = await realpath(exportRoot);
+    if (isInsideVault(vaultRoot, exportReal) || exportReal === vaultRoot) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+
+    for (const entry of plannedNotes) {
+      await writeExportFile(exportRoot, entry.mdPath, entry.markdown);
+    }
+    for (const attachment of attachmentList) {
+      await copyVaultAttachment(vaultRoot, exportRoot, attachment);
     }
 
     return {
-      dryRun,
+      dryRun: false,
+      blocked: false,
       outDir: exportRoot,
       notes,
       attachments: attachmentList,
+      conflicts: [],
     };
   } finally {
     index.close();
   }
 }
 
-async function selectNotePaths(
-  vaultRoot: string,
+function selectNotePaths(
   index: VaultIndex,
   ref: string | undefined,
   all: boolean,
-): Promise<string[]> {
-  const scanned = await scanNoteFiles(vaultRoot);
-  const scannedPaths = scanned.files.map((file) => file.relativePath);
+  scannedPaths: readonly string[],
+): string[] {
   if (all) {
-    return scannedPaths;
+    return [...scannedPaths];
   }
   if (ref === undefined) {
     throw new GavetaError('E_ARG_INVALID');
@@ -159,15 +217,78 @@ async function selectNotePaths(
   return [resolved.path];
 }
 
-function buildTargetMap(index: VaultIndex): Map<string, HtmlExportTarget> {
+async function buildTargetMapFromVault(
+  vaultRoot: string,
+  notePaths: readonly string[],
+): Promise<Map<string, HtmlExportTarget>> {
   const map = new Map<string, HtmlExportTarget>();
-  for (const note of index.notes()) {
-    if (note.id === null) {
+  for (const notePath of notePaths) {
+    const html = await readVaultText(vaultRoot, notePath);
+    const parsed = parseNote(html);
+    const note = parsed.note;
+    if (note === null) {
       continue;
     }
-    map.set(note.id, { id: note.id, title: note.title, path: note.path });
+    const id = note.metadata.id ?? note.id ?? null;
+    const title = note.title ?? note.metadata.title ?? notePath;
+    if (id !== null && isUlid(id)) {
+      map.set(id, { id, title, path: notePath });
+    }
   }
   return map;
+}
+
+async function preflightExportDestinations(input: {
+  readonly exportRoot: string;
+  readonly notes: readonly PlannedNote[];
+  readonly attachments: readonly string[];
+  readonly force: boolean;
+}): Promise<ExportConflict[]> {
+  const conflicts: ExportConflict[] = [];
+  const byFolded = new Map<string, string>();
+  for (const note of input.notes) {
+    const folded = note.mdPath.toLowerCase();
+    const previous = byFolded.get(folded);
+    if (previous !== undefined && previous !== note.mdPath) {
+      conflicts.push({
+        path: note.mdPath,
+        code: 'E_PATH_EXISTS',
+        detail: 'case-collision',
+      });
+      conflicts.push({
+        path: previous,
+        code: 'E_PATH_EXISTS',
+        detail: 'case-collision',
+      });
+      continue;
+    }
+    byFolded.set(folded, note.mdPath);
+  }
+
+  const destinations = new Set<string>();
+  for (const note of input.notes) {
+    destinations.add(note.mdPath);
+  }
+  for (const attachment of input.attachments) {
+    destinations.add(attachment);
+  }
+
+  for (const relative of destinations) {
+    const absolute = plannedExportPath(input.exportRoot, relative);
+    if (input.force) {
+      continue;
+    }
+    const listed = await lstatOrNull(absolute);
+    if (listed !== null) {
+      conflicts.push({
+        path: relative,
+        code: 'E_PATH_EXISTS',
+        detail: 'exists',
+      });
+    }
+  }
+
+  return conflicts.sort((left, right) => left.path.localeCompare(right.path));
 }
 
 function htmlPathToMd(notePath: string): string {
@@ -179,26 +300,42 @@ function collectAttachmentPaths(html: string, notePath: string): string[] {
   const found = new Set<string>();
   for (const child of document.childNodes) {
     walkTree(child, (element) => {
-      if (element.tagName !== 'img' && element.tagName !== 'source') {
+      const tag = element.tagName;
+      if (tag === 'a') {
+        addVaultResource(readAttr(element, 'href'), notePath, found, false);
         return;
       }
-      const src = readAttr(element, 'src');
-      if (src === null || src.length === 0) {
-        return;
-      }
-      if (!isProducedHref(src)) {
-        return;
-      }
-      const resolved = resolveVaultHref(notePath, src);
-      if (resolved === null) {
-        throw pathOutsideVault();
-      }
-      if (!resolved.endsWith('.html')) {
-        found.add(resolved);
+      if (tag === 'img' || tag === 'source' || tag === 'video' || tag === 'audio') {
+        addVaultResource(readAttr(element, 'src'), notePath, found, false);
+        if (tag === 'video') {
+          addVaultResource(readAttr(element, 'poster'), notePath, found, false);
+        }
       }
     });
   }
   return [...found].sort();
+}
+
+function addVaultResource(
+  src: string | null,
+  notePath: string,
+  found: Set<string>,
+  allowHtml: boolean,
+): void {
+  if (src === null || src.length === 0) {
+    return;
+  }
+  if (!isProducedHref(src)) {
+    return;
+  }
+  const resolved = resolveVaultHref(notePath, src);
+  if (resolved === null) {
+    throw pathOutsideVault();
+  }
+  if (!allowHtml && resolved.endsWith('.html')) {
+    return;
+  }
+  found.add(resolved);
 }
 
 function walkTree(node: ParseChild, visit: (element: ParseElement) => void): void {
@@ -240,53 +377,26 @@ async function copyVaultAttachment(
   vaultRoot: string,
   exportRoot: string,
   vaultRelative: string,
-  force: boolean,
 ): Promise<void> {
   const source = await resolveInsideVault(vaultRoot, vaultRelative);
   const destination = await resolveInsideExport(exportRoot, vaultRelative);
   await assertReadableVaultFile(vaultRoot, source);
-  await writeExportBinary(exportRoot, source, destination, force);
+  await writeExportBinary(source, destination);
 }
 
 async function writeExportFile(
   exportRoot: string,
   relativePath: string,
   contents: string,
-  force: boolean,
 ): Promise<void> {
   const destination = await resolveInsideExport(exportRoot, relativePath);
-  await assertWritableExport(exportRoot, destination, force);
   await mkdir(path.dirname(destination), { recursive: true });
   await writeAtomic(destination, contents);
 }
 
-async function writeExportBinary(
-  exportRoot: string,
-  source: string,
-  destination: string,
-  force: boolean,
-): Promise<void> {
-  await assertWritableExport(exportRoot, destination, force);
+async function writeExportBinary(source: string, destination: string): Promise<void> {
   await mkdir(path.dirname(destination), { recursive: true });
   await copyFile(source, destination);
-}
-
-async function assertWritableExport(
-  exportRoot: string,
-  destination: string,
-  force: boolean,
-): Promise<void> {
-  const root = await realDirectory(exportRoot);
-  if (!isInsideVault(root, destination)) {
-    throw pathOutsideVault();
-  }
-  const listed = await lstatOrNull(destination);
-  if (listed === null) {
-    return;
-  }
-  if (!force) {
-    throw new GavetaError('E_PATH_EXISTS');
-  }
 }
 
 async function assertReadableVaultFile(vaultRoot: string, entry: string): Promise<void> {
@@ -298,6 +408,30 @@ async function assertReadableVaultFile(vaultRoot: string, entry: string): Promis
       throw pathOutsideVault();
     }
   }
+}
+
+function plannedExportPath(exportRoot: string, relativePath: string): string {
+  if (!isSafePathInput(relativePath)) {
+    throw pathOutsideVault();
+  }
+  const root = path.normalize(exportRoot);
+  const segments = splitSegments(relativePath);
+  let current = root;
+  for (const segment of segments) {
+    if (segment === '..') {
+      throw pathOutsideVault();
+    }
+    current = path.join(current, segment);
+  }
+  if (!isInsideExportRoot(root, current)) {
+    throw pathOutsideVault();
+  }
+  return current;
+}
+
+function isInsideExportRoot(root: string, candidate: string): boolean {
+  const relative = path.relative(root, candidate);
+  return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
 async function realVaultRoot(vaultRoot: string): Promise<string> {

@@ -189,6 +189,8 @@ export type {
 } from './convert/html-to-md.ts';
 
 export type {
+  ExportConflict,
+  ExportConflictDetail,
   ExportFormat,
   ExportVaultOptions,
   ExportVaultReport,
