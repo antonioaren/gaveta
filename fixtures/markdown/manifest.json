@@ -255,6 +255,49 @@
       "mustContain": ["https://evil.example/fixtures/remote.png"]
     }
   },
+  "roundTrip": {
+    "lossyMarkdown": [
+      {
+        "path": "contenido/callouts-completos.md",
+        "reason": "Obsidian callout labels collapse to contract kinds on import (abstract, question, failure, …).",
+        "requireImportWarnings": ["W_IMPORT_UNSUPPORTED"]
+      },
+      {
+        "path": "contenido/callouts-plegables.md",
+        "reason": "Foldable callouts (`+`/`-`) are not represented in HTML.",
+        "requireImportWarnings": ["W_IMPORT_UNSUPPORTED"]
+      },
+      {
+        "path": "contenido/imagenes.md",
+        "reason": "Wikilink embeds `![[file]]` become classic Markdown images on import.",
+        "requireImportWarnings": ["W_IMPORT_UNSUPPORTED"]
+      },
+      {
+        "path": "contenido/tablas.md",
+        "reason": "GFM table column alignment is not preserved in HTML."
+      },
+      {
+        "path": "tareas/tareas-fechas.md",
+        "reason": "Obsidian task date emoji and inline date syntax differ after export."
+      },
+      {
+        "path": "presentacion/diapositivas-marp.md",
+        "reason": "Slides add marp front matter and `---` separators on export."
+      },
+      {
+        "path": "no-soportado/bloques-html.md",
+        "reason": "Raw HTML blocks are preserved as embedded HTML."
+      },
+      {
+        "path": "no-soportado/enlace-remoto.md",
+        "reason": "Remote images follow DEC-05 and may be dropped or flagged."
+      },
+      {
+        "path": "no-soportado/notas-al-pie.md",
+        "reason": "GFM footnotes are not part of the contract."
+      }
+    ]
+  },
   "intentionalBrokenLinks": [
     {
       "from": "enlaces/wikilinks.md",

@@ -213,6 +213,21 @@ export type {
 export { convertHtmlToMarkdown } from './convert/html-to-md.ts';
 
 export {
+  listLossyMarkdownFixtureNotes,
+  listMdastEquivalentFixturePaths,
+  mdastBodiesEquivalent,
+  noteSemanticSnapshot,
+  roundTripHtmlNoteInVault,
+  roundTripMarkdownFixture,
+  roundTripMarkdownSource,
+  stripMarkdownFrontMatter,
+  warningCodes,
+  withMarkdownImportVault,
+} from './convert/round-trip.ts';
+
+export type { MarkdownRoundTripResult, NoteSemanticSnapshot } from './convert/round-trip.ts';
+
+export {
   exportMdPathCaseCollisions,
   exportVaultToMarkdown,
   resolveInsideExport,

@@ -7,6 +7,7 @@ import {
   renderMigrationSummary,
   type ImportCliData,
 } from './migration-report.ts';
+import { renderImportFailureLines } from './migration-human.ts';
 
 function readExclude(value: string | undefined): readonly string[] {
   if (value === undefined || value.length === 0) {
@@ -48,13 +49,19 @@ function renderHuman(data: ImportCliData): string {
     attachments: 'adjuntos',
   };
   const summary = renderMigrationSummary(data.summary, labels);
+  const lines: string[] = [];
   if (data.dryRun) {
-    return `Vista previa de importación: ${summary}.\n`;
+    lines.push(`Vista previa de importación: ${summary}.`);
+  } else if (!data.ok) {
+    lines.push(`Importación incompleta: ${summary}.`);
+  } else {
+    lines.push(`Importación completada: ${summary}.`);
   }
-  if (!data.ok) {
-    return `Importación incompleta: ${summary}.\n`;
+  if (data.failures.length > 0) {
+    lines.push('Fallos:');
+    lines.push(...renderImportFailureLines(data.failures));
   }
-  return `Importación completada: ${summary}.\n`;
+  return `${lines.join('\n')}\n`;
 }
 
 export const importCommand: CommandSpec = {

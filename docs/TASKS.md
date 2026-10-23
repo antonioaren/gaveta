@@ -134,8 +134,8 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [x] **T2.15 Conversor HTML → Markdown** en `core/convert/html-to-md.ts`, con `--links wiki|relative`, front matter, tareas, callouts, slides y `W_EXPORT_LOSSY` para lo que no se puede representar. Cubre: REQ-MIG-09 y 10. Depende de: T2.12.
 - [x] **T2.16 `gaveta export`.** Una nota, una carpeta o `--all`, conservando la jerarquía y los adjuntos. Cubre: REQ-MIG-08. Depende de: T2.15.
 - [x] **T2.17 Comandos `import` y `export` en la CLI**, con su sobre `--json`, sus códigos de error y sus ejemplos en `gaveta guide`. Cubre: REQ-MIG-01 a 10, REQ-CLI-09. Depende de: T2.14, T2.16.
-- [ ] **T2.18 Tests de ida y vuelta** (Markdown → HTML → Markdown y HTML → Markdown → HTML) sobre los fixtures. Cubre: REQ-MIG-11. Depende de: T2.17.
-- [ ] **T2.19 Skill: importar y exportar.** Añadir a la skill y a las instrucciones cómo importar documentación Markdown existente y cómo exportarla. Depende de: T2.17, T1.23.
+- [x] **T2.18 Tests de ida y vuelta** (Markdown → HTML → Markdown y HTML → Markdown → HTML) sobre los fixtures. Cubre: REQ-MIG-11. Depende de: T2.17.
+- [x] **T2.19 Skill: importar y exportar.** Añadir a la skill y a las instrucciones cómo importar documentación Markdown existente y cómo exportarla. Depende de: T2.17, T1.23.
 
 ### 2C. Puerta 2
 

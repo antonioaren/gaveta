@@ -17,6 +17,19 @@ export interface MarkdownBrokenLink {
   reason: string;
 }
 
+export interface MarkdownRoundTripLossyNote {
+  path: string;
+  reason: string;
+  requireImportWarnings?: WarningCodeName[];
+  requireExportWarnings?: WarningCodeName[];
+}
+
+type WarningCodeName = 'W_IMPORT_UNSUPPORTED' | 'W_EXPORT_LOSSY';
+
+export interface MarkdownRoundTripManifest {
+  lossyMarkdown: MarkdownRoundTripLossyNote[];
+}
+
 export interface MarkdownFixtureManifest {
   version: number;
   description: string;
@@ -25,6 +38,7 @@ export interface MarkdownFixtureManifest {
   attachments: string[];
   ignoredOnImport: string[];
   features: Record<string, MarkdownFixtureFeature>;
+  roundTrip: MarkdownRoundTripManifest;
   intentionalBrokenLinks: MarkdownBrokenLink[];
 }
 
@@ -65,6 +79,7 @@ function assertManifest(value: unknown): MarkdownFixtureManifest {
   const ignoredOnImport = readStringArray(record.ignoredOnImport, 'ignoredOnImport');
   const features = readFeatures(record.features);
   const intentionalBrokenLinks = readBrokenLinks(record.intentionalBrokenLinks);
+  const roundTrip = readRoundTrip(record.roundTrip);
   return {
     version: 1,
     description,
@@ -73,8 +88,72 @@ function assertManifest(value: unknown): MarkdownFixtureManifest {
     attachments,
     ignoredOnImport,
     features,
+    roundTrip,
     intentionalBrokenLinks,
   };
+}
+
+function readRoundTrip(value: unknown): MarkdownRoundTripManifest {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('roundTrip must be an object');
+  }
+  const record = value as Record<string, unknown>;
+  const lossyMarkdown = readLossyMarkdown(record.lossyMarkdown);
+  return { lossyMarkdown };
+}
+
+function readLossyMarkdown(value: unknown): MarkdownRoundTripLossyNote[] {
+  if (!Array.isArray(value)) {
+    throw new Error('roundTrip.lossyMarkdown must be an array');
+  }
+  return value.map((item, index) => {
+    if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+      throw new Error(`roundTrip.lossyMarkdown[${String(index)}] must be an object`);
+    }
+    const record = item as Record<string, unknown>;
+    const path = record.path;
+    const reason = record.reason;
+    if (typeof path !== 'string' || typeof reason !== 'string') {
+      throw new Error(`roundTrip.lossyMarkdown[${String(index)}] has invalid fields`);
+    }
+    const requireImportWarnings = readOptionalWarningCodes(
+      record.requireImportWarnings,
+      index,
+      'requireImportWarnings',
+    );
+    const requireExportWarnings = readOptionalWarningCodes(
+      record.requireExportWarnings,
+      index,
+      'requireExportWarnings',
+    );
+    const lossyNote: MarkdownRoundTripLossyNote = { path, reason };
+    if (requireImportWarnings !== undefined) {
+      lossyNote.requireImportWarnings = requireImportWarnings;
+    }
+    if (requireExportWarnings !== undefined) {
+      lossyNote.requireExportWarnings = requireExportWarnings;
+    }
+    return lossyNote;
+  });
+}
+
+function readOptionalWarningCodes(
+  value: unknown,
+  index: number,
+  label: string,
+): WarningCodeName[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(value) || !value.every((item) => typeof item === 'string')) {
+    throw new Error(`roundTrip.lossyMarkdown[${String(index)}].${label} must be a string array`);
+  }
+  for (const item of value) {
+    if (item !== 'W_IMPORT_UNSUPPORTED' && item !== 'W_EXPORT_LOSSY') {
+      throw new Error(`roundTrip.lossyMarkdown[${String(index)}].${label} has invalid code`);
+    }
+  }
+  return value as WarningCodeName[];
 }
 
 function readStringArray(value: unknown, label: string): string[] {

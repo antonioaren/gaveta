@@ -17,7 +17,20 @@ exports[`gaveta import and export > imports the markdown fixture, exports it bac
       "path": "contenido/callouts-completos.html",
       "sourceMd": "contenido/callouts-completos.md",
       "title": "Callouts completos",
-      "warningCodes": [],
+      "warningCodes": [
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+      ],
     },
     {
       "action": "create",
@@ -63,7 +76,10 @@ exports[`gaveta import and export > imports the markdown fixture, exports it bac
       "path": "contenido/imagenes.html",
       "sourceMd": "contenido/imagenes.md",
       "title": "Imágenes y adjuntos",
-      "warningCodes": [],
+      "warningCodes": [
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+      ],
     },
     {
       "action": "create",

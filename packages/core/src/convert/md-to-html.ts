@@ -389,9 +389,9 @@ function preprocessCallouts(input: string, warnings: MarkdownConvertWarning[]): 
       warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'callout-fold' } });
     }
     const kind = mapCalloutKind(start.rawKind, warnings);
-    const bodyLines: string[] = [];
+    const fragmentLines: string[] = [];
     if (start.titleRest.trim().length > 0) {
-      bodyLines.push(start.titleRest.trim());
+      fragmentLines.push(start.titleRest.trim());
     }
     index += 1;
     while (index < lines.length) {
@@ -399,10 +399,10 @@ function preprocessCallouts(input: string, warnings: MarkdownConvertWarning[]): 
       if (!next.startsWith('>')) {
         break;
       }
-      bodyLines.push(next.replace(/^>\s?/, ''));
+      fragmentLines.push(next.replace(/^>\s?/, ''));
       index += 1;
     }
-    const inner = markdownToHtmlFragment(bodyLines.join('\n'));
+    const inner = markdownToHtmlFragment(fragmentLines.join('\n\n'));
     out.push(`<aside class="callout" data-kind="${escapeAttr(kind)}">\n${inner}\n</aside>`);
   }
   return out.join('\n');
@@ -414,6 +414,9 @@ function mapCalloutKind(raw: string, warnings: MarkdownConvertWarning[]): string
   if (mapped === undefined) {
     warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: `callout-${key}` } });
     return 'info';
+  }
+  if (mapped !== key) {
+    warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: `callout-kind-${key}` } });
   }
   return mapped;
 }
@@ -445,6 +448,7 @@ function preprocessWikiEmbeds(
       const vaultPath = target.includes('/') ? target : `attachments/${target}`;
       const href = hrefFromVaultRoot(sourcePath, vaultPath);
       const alt = posix.basename(target);
+      warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'wiki-embed' } });
       result += `![${alt}](${href})`;
     }
     index = close + 2;

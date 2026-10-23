@@ -35,6 +35,7 @@ export type {
   MarkdownBrokenLink,
   MarkdownFixtureFeature,
   MarkdownFixtureManifest,
+  MarkdownRoundTripLossyNote,
 } from './markdown.ts';
 export { VAULT_NAMES, resolveInsideVault, themeHrefFor, vaultPath } from './paths.ts';
 export type { VaultName } from './paths.ts';

@@ -319,10 +319,9 @@ function stripUnsafeNodes(node: ParseChild): void {
 function calloutToMarkdown(element: ParseElement): string {
   const kind = readAttr(element, 'data-kind') ?? 'info';
   const obsidianKind = EXPORT_CALLOUT_KIND[kind] ?? 'info';
-  const bodyText = elementPlainText(element).trim();
-  const lines = bodyText.split('\n');
-  const title = lines[0]?.trim() ?? '';
-  const bodyLines = lines
+  const paragraphs = calloutParagraphs(element);
+  const title = paragraphs[0]?.trim() ?? '';
+  const bodyLines = paragraphs
     .slice(1)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
@@ -336,6 +335,33 @@ function calloutToMarkdown(element: ParseElement): string {
     out.push(`> ${line}`);
   }
   return out.join('\n');
+}
+
+function calloutParagraphs(element: ParseElement): string[] {
+  const paragraphs: string[] = [];
+  for (const child of element.childNodes) {
+    if (!isElementNode(child)) {
+      continue;
+    }
+    if (child.tagName === 'p') {
+      const text = elementPlainText(child).trim();
+      if (text.length > 0) {
+        paragraphs.push(text);
+      }
+    }
+  }
+  if (paragraphs.length > 0) {
+    return paragraphs;
+  }
+  const fallback = elementPlainText(element).trim();
+  if (fallback.length === 0) {
+    return [];
+  }
+  const lines = fallback
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  return lines;
 }
 
 function tasksToMarkdown(element: ParseElement, ctx: ConvertContext): string {
@@ -416,7 +442,6 @@ function mermaidToMarkdown(element: ParseElement): string {
 }
 
 function genericHtmlToMarkdown(fragment: string, ctx: ConvertContext): string {
-  /* eslint-disable @typescript-eslint/no-unsafe-argument -- unified plugin typings */
   const processor = unified()
     .use(rehypeParse, { fragment: true })
     .use(rehypeExportLinks, ctx)
@@ -430,7 +455,6 @@ function genericHtmlToMarkdown(fragment: string, ctx: ConvertContext): string {
       rule: '-',
       setext: false,
     });
-  /* eslint-enable @typescript-eslint/no-unsafe-argument */
   const file = processor.processSync(fragment);
   return String(file).trim();
 }
