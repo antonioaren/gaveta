@@ -172,6 +172,152 @@ describe('importMarkdownFolder', { timeout: 60_000 }, () => {
     });
   });
 
+  it('assigns distinct slug paths for case and accent collisions in one batch', async () => {
+    await withVault(async (root) => {
+      const source = await mkdtemp(join(tmpdir(), 'gaveta-import-slug-'));
+      try {
+        await writeFile(join(source, 'Foo.md'), '# Foo\n');
+        await writeFile(join(source, 'foo.md'), '# foo\n');
+        await writeFile(join(source, 'Café.md'), '# Cafe\n');
+        await writeFile(join(source, 'cafe.md'), '# cafe accent\n');
+        const result = await importMarkdownFolder({
+          vaultRoot: root,
+          sourcePath: source,
+          dryRun: true,
+          now: () => NOW,
+          createId: nextId,
+        });
+        const paths = result.notes
+          .filter((note) => note.action !== 'skip')
+          .map((note) => note.path);
+        expect(new Set(paths).size).toBe(4);
+        expect(paths).toContain('foo.html');
+        expect(paths).toContain('foo-2.html');
+        expect(paths).toContain('cafe.html');
+        expect(paths).toContain('cafe-2.html');
+      } finally {
+        await rm(source, { recursive: true, force: true });
+      }
+    });
+  });
+
+  it('slugifies imported note file names', async () => {
+    await withVault(async (root) => {
+      const source = await mkdtemp(join(tmpdir(), 'gaveta-import-slug-name-'));
+      try {
+        await writeFile(join(source, 'Mi Nota Ñandú.md'), '# Titulo\n');
+        const result = await importMarkdownFolder({
+          vaultRoot: root,
+          sourcePath: source,
+          now: () => NOW,
+          createId: nextId,
+        });
+        expect(result.ok).toBe(true);
+        expect(result.notes[0]?.path).toBe('mi-nota-nandu.html');
+        await stat(join(root, 'mi-nota-nandu.html'));
+      } finally {
+        await rm(source, { recursive: true, force: true });
+      }
+    });
+  });
+
+  it('drops pass-2 failures from the overlay and re-resolves dependents with continue-on-error', async () => {
+    await withVault(async (root) => {
+      const source = await mkdtemp(join(tmpdir(), 'gaveta-import-pass2-'));
+      try {
+        await writeFile(
+          join(source, 'bad.md'),
+          '---\ntype: artifact\n---\n# Bad\n<iframe src="https://example.com"></iframe>\n',
+        );
+        await writeFile(join(source, 'links.md'), '# Links\n[peer](bad.md)\n');
+        const result = await importMarkdownFolder({
+          vaultRoot: root,
+          sourcePath: source,
+          continueOnError: true,
+          now: () => NOW,
+          createId: nextId,
+        });
+        const badFailure = result.failures.find((failure) => failure.sourceMd === 'bad.md');
+        expect(badFailure).toBeDefined();
+        expect(badFailure?.code).not.toBe('E_IMPORT_PARSE');
+        expect(result.notes.some((note) => note.sourceMd === 'links.md')).toBe(true);
+        const doctor = await doctorVault(root);
+        expect(doctor.findings.some((finding) => finding.code === 'E_LINK_BROKEN')).toBe(false);
+        const linksHtml = await readFile(join(root, 'links.html'), 'utf8');
+        expect(linksHtml).toContain('data-g-pending');
+      } finally {
+        await rm(source, { recursive: true, force: true });
+      }
+    });
+  });
+
+  it('resolves relative links to skipped notes against the existing vault note', async () => {
+    await withVault(async (root) => {
+      await importMarkdownFolder({
+        vaultRoot: root,
+        sourcePath: MARKDOWN,
+        now: () => NOW,
+        createId: nextId,
+      });
+      const existing = parseNote(await readFile(join(root, 'indice.html'), 'utf8')).note;
+      expect(existing?.id).toBeDefined();
+      const source = await mkdtemp(join(tmpdir(), 'gaveta-import-skip-link-'));
+      try {
+        await mkdir(join(source, 'enlaces'));
+        await writeFile(join(source, 'indice.md'), '# Indice reimport\n');
+        await writeFile(
+          join(source, 'enlaces/to-indice.md'),
+          '# To indice\n[home](../indice.md)\n',
+        );
+        const result = await importMarkdownFolder({
+          vaultRoot: root,
+          sourcePath: source,
+          onConflict: 'skip',
+          now: () => NOW,
+          createId: nextId,
+        });
+        const linker = result.notes.find((note) => note.sourceMd === 'enlaces/to-indice.md');
+        expect(linker?.links.some((link) => link.targetId === existing?.id)).toBe(true);
+      } finally {
+        await rm(source, { recursive: true, force: true });
+      }
+    });
+  });
+
+  it('reports every note not written when commit fails with continue-on-error', async () => {
+    await withVault(async (root) => {
+      const source = await mkdtemp(join(tmpdir(), 'gaveta-import-commit-fail-'));
+      try {
+        await mkdir(join(source, 'a'));
+        await mkdir(join(source, 'b'));
+        await writeFile(join(source, 'a/one.md'), '# One\n');
+        await writeFile(join(source, 'b/two.md'), '# Two\n');
+        await mkdir(join(root, 'dest'), { recursive: true });
+        await chmod(join(root, 'dest'), 0o555);
+        try {
+          const result = await importMarkdownFolder({
+            vaultRoot: root,
+            sourcePath: source,
+            in: 'dest',
+            continueOnError: true,
+            now: () => NOW,
+            createId: nextId,
+          });
+          expect(result.ok).toBe(false);
+          const failedPaths = result.failures.map((failure) => failure.sourceMd).sort();
+          expect(failedPaths).toEqual(['a/one.md', 'b/two.md']);
+          expect(result.failures.every((failure) => failure.code === 'E_IMPORT_ABORTED')).toBe(
+            true,
+          );
+        } finally {
+          await chmod(join(root, 'dest'), 0o755);
+        }
+      } finally {
+        await rm(source, { recursive: true, force: true });
+      }
+    });
+  });
+
   it('imports under --in while preserving relative structure', async () => {
     await withVault(async (root) => {
       const result = await importMarkdownFolder({

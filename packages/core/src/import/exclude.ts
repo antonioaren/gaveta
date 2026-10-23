@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { slugify } from '../contract.ts';
 
 export const DEFAULT_IMPORT_EXCLUDES = [
   '.obsidian/**',
@@ -79,11 +80,25 @@ export function mergeExcludePatterns(user: readonly string[] | undefined): reado
 
 export function vaultPathFromMarkdown(sourceRelativeMd: string, inFolder: string): string {
   const withoutExt = sourceRelativeMd.replace(/\.md$/i, '');
-  const html = `${withoutExt}.html`;
+  const parts = withoutExt.split('/').filter((part) => part.length > 0);
+  const fileStem = slugify(parts.pop() ?? 'nota') || 'nota';
+  const folderSegments = parts.map((part) => slugify(part)).filter((part) => part.length > 0);
+  const relativeHtml =
+    folderSegments.length === 0
+      ? `${fileStem}.html`
+      : `${folderSegments.join('/')}/${fileStem}.html`;
   if (inFolder.length === 0) {
-    return html;
+    return relativeHtml;
   }
-  return `${inFolder.replace(/\/$/, '')}/${html}`;
+  const inSegments = inFolder
+    .replace(/\/$/, '')
+    .split('/')
+    .map((part) => slugify(part))
+    .filter((part) => part.length > 0);
+  if (inSegments.length === 0) {
+    return relativeHtml;
+  }
+  return `${inSegments.join('/')}/${relativeHtml}`;
 }
 
 export function sourceMdFromVaultHtml(vaultHtmlPath: string, inFolder: string): string {

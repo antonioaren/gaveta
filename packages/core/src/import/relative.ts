@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
 import { escapeAttr, escapeText, relativeNoteHref } from '../links/path.ts';
@@ -23,6 +24,7 @@ export function rewriteImportedMarkdownLinks(options: {
   readonly html: string;
   readonly fromVaultPath: string;
   readonly fromSourceMd: string;
+  readonly knownSourceMds: ReadonlySet<string>;
   readonly lookupSourceMd: (sourceMd: string) => ImportedMdTarget | null;
   readonly sectionFor: (targetPath: string, rawSection: string | null) => string | null;
 }): string {
@@ -56,6 +58,7 @@ function walk(
   options: {
     readonly fromVaultPath: string;
     readonly fromSourceMd: string;
+    readonly knownSourceMds: ReadonlySet<string>;
     readonly lookupSourceMd: (sourceMd: string) => ImportedMdTarget | null;
     readonly sectionFor: (targetPath: string, rawSection: string | null) => string | null;
   },
@@ -82,6 +85,7 @@ function rewriteAnchor(
   options: {
     readonly fromVaultPath: string;
     readonly fromSourceMd: string;
+    readonly knownSourceMds: ReadonlySet<string>;
     readonly lookupSourceMd: (sourceMd: string) => ImportedMdTarget | null;
     readonly sectionFor: (targetPath: string, rawSection: string | null) => string | null;
   },
@@ -107,6 +111,21 @@ function rewriteAnchor(
   }
   const target = options.lookupSourceMd(sourceMd);
   if (target === null) {
+    if (!options.knownSourceMds.has(sourceMd)) {
+      return;
+    }
+    const location = element.sourceCodeLocation;
+    if (location === undefined || location === null) {
+      return;
+    }
+    const text = elementText(element);
+    const stem = posix.basename(pathPart).replace(/\.md$/i, '');
+    const pendingTitle = text.length > 0 ? text : stem;
+    edits.push({
+      start: location.startOffset,
+      end: location.endOffset,
+      text: `<a data-g-pending="${escapeAttr(pendingTitle)}">${escapeText(text)}</a>`,
+    });
     return;
   }
   const section = options.sectionFor(target.path, rawFragment);

@@ -173,13 +173,14 @@ export async function importMarkdownFolder(
         throw new GavetaError('E_IMPORT_ABORTED');
       }
       const code = error instanceof GavetaError ? error.code : 'E_IMPORT_ABORTED';
+      const commitCode = isErrorCode(code) ? code : 'E_IMPORT_ABORTED';
       const failed: ImportFailureReport[] = [
         ...failures,
-        {
-          sourceMd: ready[0]?.sourceMd ?? '',
-          path: ready[0]?.path ?? null,
-          code: isErrorCode(code) ? code : 'E_IMPORT_ABORTED',
-        },
+        ...ready.map((note) => ({
+          sourceMd: note.sourceMd,
+          path: note.path,
+          code: commitCode,
+        })),
       ];
       return {
         ok: false,
@@ -248,6 +249,9 @@ async function planImport(options: {
     if (conflict.kind === 'rename') {
       targetPath = await allocateImportPath(options.vaultRoot, vaultPath, takenPaths);
       action = 'rename';
+    } else if (takenPaths.has(targetPath)) {
+      targetPath = await allocateImportPath(options.vaultRoot, targetPath, takenPaths);
+      action = 'rename';
     }
     takenPaths.add(targetPath);
     let converted: MarkdownConvertResult;
@@ -294,21 +298,112 @@ async function planImport(options: {
     });
   }
 
-  const overlayInputs = passOne.filter((note) => note.action !== 'skip' && note.html.length > 0);
-  const overlay = withImportOverlay(
-    options.index,
-    overlayInputs.map((note) => ({ path: note.path, html: note.html })),
-  );
-  const sourceMdIndex = new Map<string, { id: string; path: string; title: string }>();
-  for (const note of overlayInputs) {
-    sourceMdIndex.set(note.sourceMd, { id: note.id, path: note.path, title: note.title });
-  }
-
-  const attachmentByHash = new Map<string, string>();
+  const knownSourceMds = new Set(options.walked.map((file) => file.relativePath));
+  const failedSources = new Set<string>();
+  const passTwoFailures = new Map<string, ImportFailureReport>();
+  const resolvedBySource = new Map<string, PlannedNote>();
+  const attachmentHashToVault = new Map<string, string>();
+  const attachmentTakenPaths = new Map<string, string>();
   const attachmentPlans: AttachmentPlan[] = [];
   const attachmentReports: ImportAttachmentReport[] = [];
-  const resolvedNotes: PlannedNote[] = [];
 
+  let passTwoStable = false;
+  while (!passTwoStable) {
+    passTwoStable = true;
+    const active = passOne.filter(
+      (note) => note.action !== 'skip' && note.html.length > 0 && !failedSources.has(note.sourceMd),
+    );
+    const overlay = withImportOverlay(
+      options.index,
+      active.map((note) => ({ path: note.path, html: note.html })),
+    );
+    const sourceMdIndex = await buildSourceMdIndex(options.vaultRoot, passOne, failedSources);
+    const roundFailures: string[] = [];
+    const roundResolved = new Map<string, PlannedNote>();
+
+    for (const note of passOne) {
+      if (note.action === 'skip') {
+        continue;
+      }
+      if (note.html.length === 0 || failedSources.has(note.sourceMd)) {
+        continue;
+      }
+      const withMdLinks = rewriteImportedMarkdownLinks({
+        html: note.html,
+        fromVaultPath: note.path,
+        fromSourceMd: note.sourceMd,
+        knownSourceMds,
+        lookupSourceMd: (sourceMd) => sourceMdIndex.get(sourceMd) ?? null,
+        sectionFor: (targetPath, rawSection) => sectionFragment(overlay, targetPath, rawSection),
+      });
+      const resolved = resolveNoteLinks({
+        html: withMdLinks,
+        fromPath: note.path,
+        index: overlay,
+        rel: options.config.rel,
+      });
+      if (!resolved.ok) {
+        const resolveError = resolved.errors.find((item) => isErrorCode(item.code));
+        passTwoFailures.set(note.sourceMd, {
+          sourceMd: note.sourceMd,
+          path: note.path,
+          code:
+            resolveError !== undefined && isErrorCode(resolveError.code)
+              ? resolveError.code
+              : 'E_HTML_INVALID',
+        });
+        roundFailures.push(note.sourceMd);
+        continue;
+      }
+      const validated = validateNote(resolved.html, {
+        notePath: note.path,
+        remoteAllowlist: options.config.remoteAllowlist,
+        relVocabulary: options.config.rel.vocabulary,
+      });
+      if (!validated.ok) {
+        const validateError = validated.diagnostics.find(
+          (item) => item.severity === 'error' && isErrorCode(item.code),
+        );
+        passTwoFailures.set(note.sourceMd, {
+          sourceMd: note.sourceMd,
+          path: note.path,
+          code:
+            validateError !== undefined && isErrorCode(validateError.code)
+              ? validateError.code
+              : 'E_HTML_INVALID',
+        });
+        roundFailures.push(note.sourceMd);
+        continue;
+      }
+      const linkWarnings = warningsFromLinks(resolved.warnings);
+      roundResolved.set(note.sourceMd, {
+        sourceMd: note.sourceMd,
+        path: note.path,
+        id: note.id,
+        title: note.title,
+        html: resolved.html,
+        warnings: mergeWarnings(note.warnings, linkWarnings),
+        links: mapLinks(resolved.links),
+        action: note.action,
+      });
+    }
+
+    if (roundFailures.length === 0) {
+      for (const [sourceMd, planned] of roundResolved) {
+        passTwoFailures.delete(sourceMd);
+        resolvedBySource.set(sourceMd, planned);
+      }
+      continue;
+    }
+    passTwoStable = false;
+    for (const sourceMd of roundFailures) {
+      failedSources.add(sourceMd);
+    }
+  }
+
+  failures.push(...passTwoFailures.values());
+
+  const resolvedNotes: PlannedNote[] = [];
   for (const note of passOne) {
     if (note.action === 'skip') {
       resolvedNotes.push({
@@ -317,83 +412,75 @@ async function planImport(options: {
       });
       continue;
     }
-    const withMdLinks = rewriteImportedMarkdownLinks({
-      html: note.html,
-      fromVaultPath: note.path,
-      fromSourceMd: note.sourceMd,
-      lookupSourceMd: (sourceMd) => sourceMdIndex.get(sourceMd) ?? null,
-      sectionFor: (targetPath, rawSection) => sectionFragment(overlay, targetPath, rawSection),
-    });
-    const resolved = resolveNoteLinks({
-      html: withMdLinks,
-      fromPath: note.path,
-      index: overlay,
-      rel: options.config.rel,
-    });
-    if (!resolved.ok) {
-      const resolveError = resolved.errors.find((item) => isErrorCode(item.code));
-      failures.push({
-        sourceMd: note.sourceMd,
-        path: note.path,
-        code:
-          resolveError !== undefined && isErrorCode(resolveError.code)
-            ? resolveError.code
-            : 'E_HTML_INVALID',
-      });
-      continue;
-    }
-    const validated = validateNote(resolved.html, {
-      notePath: note.path,
-      remoteAllowlist: options.config.remoteAllowlist,
-      relVocabulary: options.config.rel.vocabulary,
-    });
-    if (!validated.ok) {
-      const validateError = validated.diagnostics.find(
-        (item) => item.severity === 'error' && isErrorCode(item.code),
-      );
-      failures.push({
-        sourceMd: note.sourceMd,
-        path: note.path,
-        code:
-          validateError !== undefined && isErrorCode(validateError.code)
-            ? validateError.code
-            : 'E_HTML_INVALID',
-      });
+    const planned = resolvedBySource.get(note.sourceMd);
+    if (planned === undefined) {
       continue;
     }
     const collected = await collectNoteAttachments({
       sourceRoot: options.sourceRoot,
-      noteVaultPath: note.path,
-      noteSourceMd: note.sourceMd,
-      html: resolved.html,
-      existingByHash: attachmentByHash,
+      vaultRoot: options.vaultRoot,
+      noteVaultPath: planned.path,
+      noteSourceMd: planned.sourceMd,
+      html: planned.html,
+      hashToVault: attachmentHashToVault,
+      takenPaths: attachmentTakenPaths,
     });
     for (const plan of collected.plans) {
-      const existing = attachmentByHash.has(plan.hash);
-      if (!existing) {
-        attachmentByHash.set(plan.hash, plan.vaultPath);
-        attachmentPlans.push(plan);
-      }
+      attachmentPlans.push(plan);
+    }
+    for (const report of collected.reports) {
       attachmentReports.push({
-        vaultPath: plan.vaultPath,
-        hash: plan.hash,
-        deduplicated: existing,
+        vaultPath: report.vaultPath,
+        hash: report.hash,
+        deduplicated: report.deduplicated,
       });
     }
-    const linkWarnings = warningsFromLinks(resolved.warnings);
     resolvedNotes.push({
-      sourceMd: note.sourceMd,
-      path: note.path,
-      id: note.id,
-      title: note.title,
+      ...planned,
       html: collected.html,
-      warnings: mergeWarnings(note.warnings, linkWarnings),
-      links: mapLinks(resolved.links),
-      action: note.action,
     });
   }
 
   return { notes: resolvedNotes, failures, attachmentPlans, attachmentReports };
+}
+
+async function buildSourceMdIndex(
+  vaultRoot: string,
+  passOne: readonly {
+    sourceMd: string;
+    path: string;
+    id: string;
+    title: string;
+    html: string;
+    action: ImportNoteReport['action'];
+  }[],
+  failedSources: ReadonlySet<string>,
+): Promise<Map<string, { id: string; path: string; title: string }>> {
+  const index = new Map<string, { id: string; path: string; title: string }>();
+  for (const note of passOne) {
+    if (note.action === 'skip') {
+      const existing = await readTextOrNull(vaultRoot, note.path);
+      if (existing === null) {
+        continue;
+      }
+      const parsed = parseNote(existing);
+      const id = parsed.ok ? (parsed.note?.id ?? null) : null;
+      if (id === null) {
+        continue;
+      }
+      index.set(note.sourceMd, {
+        id,
+        path: note.path,
+        title: parsed.ok && parsed.note !== null ? (parsed.note.title ?? '') : '',
+      });
+      continue;
+    }
+    if (note.html.length === 0 || failedSources.has(note.sourceMd)) {
+      continue;
+    }
+    index.set(note.sourceMd, { id: note.id, path: note.path, title: note.title });
+  }
+  return index;
 }
 
 async function commitImport(

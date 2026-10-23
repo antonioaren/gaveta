@@ -4,8 +4,8 @@ import path from 'node:path';
 import { posix } from 'node:path';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
+import { allocateSlug, isJavascriptUrl, slugify } from '../contract.ts';
 import { GavetaError } from '../errors.ts';
-import { isJavascriptUrl } from '../contract.ts';
 import { isDataUrl } from '../links/path.ts';
 import { writeAtomicBuffer } from '../vault/atomic.ts';
 import { hasNodeErrorCode } from '../vault/node-error.ts';
@@ -22,15 +22,24 @@ export interface AttachmentPlan {
 
 export interface CollectAttachmentsOptions {
   readonly sourceRoot: string;
+  readonly vaultRoot: string;
   readonly noteVaultPath: string;
   readonly noteSourceMd: string;
   readonly html: string;
-  readonly existingByHash: ReadonlyMap<string, string>;
+  readonly hashToVault: Map<string, string>;
+  readonly takenPaths: Map<string, string>;
+}
+
+export interface CollectedAttachmentReport {
+  readonly vaultPath: string;
+  readonly hash: string;
+  readonly deduplicated: boolean;
 }
 
 export interface CollectAttachmentsResult {
   readonly html: string;
   readonly plans: readonly AttachmentPlan[];
+  readonly reports: readonly CollectedAttachmentReport[];
 }
 
 export async function collectNoteAttachments(
@@ -38,7 +47,7 @@ export async function collectNoteAttachments(
 ): Promise<CollectAttachmentsResult> {
   const refs = extractLocalRefs(options.html);
   const plans: AttachmentPlan[] = [];
-  const hashToVault = new Map(options.existingByHash);
+  const reports: CollectedAttachmentReport[] = [];
   let html = options.html;
   for (const ref of refs) {
     const sourceAbsolute = await resolveAttachmentSource(
@@ -51,19 +60,156 @@ export async function collectNoteAttachments(
     }
     const bytes = await readFile(sourceAbsolute);
     const hash = hashBytes(bytes);
-    let vaultPath = hashToVault.get(hash);
+    const existingPath = options.hashToVault.get(hash);
+    let vaultPath = existingPath;
+    let deduplicated = existingPath !== undefined;
     if (vaultPath === undefined) {
-      const baseName = posix.basename(sourceAbsolute);
-      vaultPath = `attachments/${baseName}`;
-      hashToVault.set(hash, vaultPath);
-      plans.push({ vaultPath, bytes, hash });
+      const allocated = await allocateAttachmentVaultPath({
+        vaultRoot: options.vaultRoot,
+        sourceAbsolute,
+        hash,
+        bytes,
+        hashToVault: options.hashToVault,
+        takenPaths: options.takenPaths,
+      });
+      vaultPath = allocated.vaultPath;
+      deduplicated = allocated.reusedExisting;
+      if (!deduplicated) {
+        plans.push({ vaultPath, bytes, hash });
+      }
+      options.hashToVault.set(hash, vaultPath);
+      options.takenPaths.set(vaultPath, hash);
     }
+    reports.push({ vaultPath, hash, deduplicated });
     const relative = relativeAttachmentHref(options.noteVaultPath, vaultPath);
     if (relative !== null && relative !== ref) {
       html = replaceSrc(html, ref, relative);
     }
   }
-  return { html, plans };
+  return { html, plans, reports };
+}
+
+async function allocateAttachmentVaultPath(options: {
+  readonly vaultRoot: string;
+  readonly sourceAbsolute: string;
+  readonly hash: string;
+  readonly bytes: Buffer;
+  readonly hashToVault: ReadonlyMap<string, string>;
+  readonly takenPaths: ReadonlyMap<string, string>;
+}): Promise<{ readonly vaultPath: string; readonly reusedExisting: boolean }> {
+  const baseName = posix.basename(options.sourceAbsolute);
+  const extensionIndex = baseName.lastIndexOf('.');
+  const extension = extensionIndex >= 0 ? baseName.slice(extensionIndex) : '';
+  const rawStem = extensionIndex >= 0 ? baseName.slice(0, extensionIndex) : baseName;
+  const baseStem = slugify(rawStem) || 'adjunto';
+  const takenStems = attachmentStemsInUse(options.hashToVault, options.takenPaths);
+  await addVaultAttachmentStems(options.vaultRoot, takenStems);
+
+  const exact = `attachments/${baseName}`;
+  const exactReuse = await reusePathIfMatchingHash(options, exact);
+  if (exactReuse !== null) {
+    return exactReuse;
+  }
+
+  let allocatedStem = allocateSlug(baseStem, takenStems);
+  for (;;) {
+    const candidate =
+      allocatedStem === baseStem && baseName === `${rawStem}${extension}`
+        ? exact
+        : `attachments/${allocatedStem}${extension}`;
+    const reuse = await reusePathIfMatchingHash(options, candidate);
+    if (reuse !== null) {
+      return reuse;
+    }
+    const mappedHash = options.takenPaths.get(candidate);
+    const onDisk = await readVaultBytesOrNull(options.vaultRoot, candidate);
+    if (mappedHash === undefined && onDisk === null) {
+      return { vaultPath: candidate, reusedExisting: false };
+    }
+    takenStems.add(allocatedStem);
+    allocatedStem = allocateSlug(baseStem, takenStems);
+  }
+}
+
+async function reusePathIfMatchingHash(
+  options: {
+    readonly vaultRoot: string;
+    readonly hash: string;
+    readonly takenPaths: ReadonlyMap<string, string>;
+  },
+  candidate: string,
+): Promise<{ readonly vaultPath: string; readonly reusedExisting: boolean } | null> {
+  const mappedHash = options.takenPaths.get(candidate);
+  if (mappedHash !== undefined) {
+    if (mappedHash === options.hash) {
+      return { vaultPath: candidate, reusedExisting: true };
+    }
+    return null;
+  }
+  const onDisk = await readVaultBytesOrNull(options.vaultRoot, candidate);
+  if (onDisk === null) {
+    return null;
+  }
+  if (hashBytes(onDisk) === options.hash) {
+    return { vaultPath: candidate, reusedExisting: true };
+  }
+  return null;
+}
+
+function attachmentStemsInUse(
+  hashToVault: ReadonlyMap<string, string>,
+  takenPaths: ReadonlyMap<string, string>,
+): Set<string> {
+  const stems = new Set<string>();
+  for (const vaultPath of hashToVault.values()) {
+    stems.add(attachmentStem(vaultPath));
+  }
+  for (const vaultPath of takenPaths.keys()) {
+    stems.add(attachmentStem(vaultPath));
+  }
+  return stems;
+}
+
+async function addVaultAttachmentStems(vaultRoot: string, stems: Set<string>): Promise<void> {
+  try {
+    const attachmentsDir = await resolveInsideVault(vaultRoot, 'attachments');
+    const listed = await lstat(attachmentsDir);
+    if (!listed.isDirectory()) {
+      return;
+    }
+    const { readdir } = await import('node:fs/promises');
+    const entries = await readdir(attachmentsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isFile()) {
+        continue;
+      }
+      stems.add(attachmentStem(`attachments/${entry.name}`));
+    }
+  } catch (error) {
+    if (hasNodeErrorCode(error, 'ENOENT')) {
+      return;
+    }
+    throw error;
+  }
+}
+
+function attachmentStem(vaultPath: string): string {
+  const base = posix.basename(vaultPath);
+  const extensionIndex = base.lastIndexOf('.');
+  const stem = extensionIndex >= 0 ? base.slice(0, extensionIndex) : base;
+  return stem.length > 0 ? stem : 'adjunto';
+}
+
+async function readVaultBytesOrNull(vaultRoot: string, userPath: string): Promise<Buffer | null> {
+  try {
+    const absolute = await resolveInsideVault(vaultRoot, userPath);
+    return await readFile(absolute);
+  } catch (error) {
+    if (hasNodeErrorCode(error, 'ENOENT')) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function writeVaultBytes(
@@ -75,6 +221,13 @@ export async function writeVaultBytes(
   const entry = await resolveInsideVault(root, userPath);
   if (!isInsideVault(root, entry) || entry === root) {
     throw new GavetaError('E_PATH_OUTSIDE_VAULT');
+  }
+  const existing = await readVaultBytesOrNull(root, userPath);
+  if (existing !== null && !existing.equals(contents)) {
+    throw new GavetaError('E_IMPORT_ABORTED');
+  }
+  if (existing !== null) {
+    return;
   }
   const parent = path.dirname(entry);
   const parentRelative = path.relative(root, parent).split(path.sep).join('/');
