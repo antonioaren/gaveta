@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiJson } from '../api/client.ts';
 import type { SearchHitView, SearchResponse } from '../api/types.ts';
+import { subscribeVaultNoteLiveRefresh } from '../connections/connections-refresh.ts';
 
 const DEBOUNCE_MS = 250;
 
@@ -15,6 +16,16 @@ const IDLE: PaletteSearchState = { hits: [], loading: false, error: null };
 export function usePaletteSearch(query: string, enabled: boolean): PaletteSearchState {
   const trimmed = query.trim();
   const [state, setState] = useState<PaletteSearchState>(IDLE);
+  const [refreshToken, setRefreshToken] = useState(0);
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+    return subscribeVaultNoteLiveRefresh(() => {
+      setRefreshToken((value) => value + 1);
+    });
+  }, [enabled]);
 
   useEffect(() => {
     if (!enabled || trimmed.length === 0) {
@@ -49,7 +60,7 @@ export function usePaletteSearch(query: string, enabled: boolean): PaletteSearch
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [trimmed, enabled]);
+  }, [trimmed, enabled, refreshToken]);
 
   if (!enabled || trimmed.length === 0) {
     return IDLE;

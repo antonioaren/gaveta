@@ -11,22 +11,28 @@ const LIVE_NOTE_EVENTS = new Set<VaultNoteEventType>([
 ]);
 
 /**
+ * Subscribe to live vault note events (WebSocket and reconnect).
+ */
+export function subscribeVaultNoteLiveRefresh(onRefresh: () => void): () => void {
+  const unsubscribeEvents = subscribeVaultEvents((event) => {
+    if (LIVE_NOTE_EVENTS.has(event.type)) {
+      onRefresh();
+    }
+  });
+  const unsubscribeReconnect = subscribeVaultReconnect(onRefresh);
+  return () => {
+    unsubscribeEvents();
+    unsubscribeReconnect();
+  };
+}
+
+/**
  * Subscribe to vault change events that should reload the connections panel.
  */
 export function subscribeConnectionsRefresh(
   onRefresh: (reason: ConnectionsRefreshReason) => void,
 ): () => void {
-  const notify = (): void => {
+  return subscribeVaultNoteLiveRefresh(() => {
     onRefresh('websocket');
-  };
-  const unsubscribeEvents = subscribeVaultEvents((event) => {
-    if (LIVE_NOTE_EVENTS.has(event.type)) {
-      notify();
-    }
   });
-  const unsubscribeReconnect = subscribeVaultReconnect(notify);
-  return () => {
-    unsubscribeEvents();
-    unsubscribeReconnect();
-  };
 }
