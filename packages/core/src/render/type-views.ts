@@ -2,6 +2,7 @@ import type { NoteType } from '../contract.ts';
 import { escapeAttr, escapeText } from '../links/path.ts';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
+import { serializeOuter } from 'parse5';
 
 type ParseDocument = DefaultTreeAdapterMap['document'];
 type ParseElement = DefaultTreeAdapterMap['element'];
@@ -128,17 +129,51 @@ export function collectSlideThumbTargets(bodyInner: string): SlideThumbTarget[] 
   return slides;
 }
 
-const DOC_TOC_PATTERN = /<nav\s+class="toc"[^>]*>[\s\S]*?<\/nav>/iu;
-
 function splitOrBuildDocToc(bodyInner: string): { readonly toc: string; readonly main: string } {
-  const tocMatch = DOC_TOC_PATTERN.exec(bodyInner);
-  if (tocMatch !== null) {
-    const toc = tocMatch[0];
-    const main = bodyInner.replace(toc, '').trim();
-    return { toc, main };
+  let document: ParseDocument;
+  try {
+    document = parse(`<body>${bodyInner}</body>`, { scriptingEnabled: false });
+  } catch {
+    const built = buildAutoToc(bodyInner);
+    return { toc: built, main: bodyInner };
   }
-  const built = buildAutoToc(bodyInner);
-  return { toc: built, main: bodyInner };
+  const body = findElement(document, 'body');
+  if (body === null) {
+    const built = buildAutoToc(bodyInner);
+    return { toc: built, main: bodyInner };
+  }
+  const tocElement = findDocTocNav(body);
+  if (tocElement === null) {
+    const built = buildAutoToc(bodyInner);
+    return { toc: built, main: bodyInner };
+  }
+  const toc = serializeOuter(tocElement);
+  const mainParts: string[] = [];
+  for (const child of body.childNodes) {
+    if ('tagName' in child && child === tocElement) {
+      continue;
+    }
+    mainParts.push(serializeOuter(child));
+  }
+  return { toc, main: mainParts.join('').trim() };
+}
+
+function findDocTocNav(body: ParseElement): ParseElement | null {
+  let found: ParseElement | null = null;
+  walkElements(body, (element) => {
+    if (found !== null) {
+      return;
+    }
+    if (element.tagName.toLowerCase() !== 'nav') {
+      return;
+    }
+    const classAttr = element.attrs.find((entry) => entry.name === 'class');
+    const classes = classAttr?.value.split(/\s+/u) ?? [];
+    if (classes.includes('toc')) {
+      found = element;
+    }
+  });
+  return found;
 }
 
 function buildAutoToc(bodyInner: string): string {
