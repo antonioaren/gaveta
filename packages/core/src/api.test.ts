@@ -43,6 +43,7 @@ import {
   GavetaOperationError,
   moveNote,
   removeNote,
+  exportVaultToMarkdown,
 } from './index.ts';
 
 it('exports vault I/O and the shared slug helper from the package entry', () => {
@@ -90,5 +91,6 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   expect(typeof doctorVault).toBe('function');
   expect(typeof moveNote).toBe('function');
   expect(typeof removeNote).toBe('function');
+  expect(typeof exportVaultToMarkdown).toBe('function');
   expect(GavetaOperationError.prototype).toBeInstanceOf(GavetaError);
 });

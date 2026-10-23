@@ -22,6 +22,7 @@ it('registers version, init, adopt, search, new, read, edit, mv, rm, connection,
     'validate',
     'doctor',
     'reindex',
+    'export',
     'skill',
     'guide',
   ]);
