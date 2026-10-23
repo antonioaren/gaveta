@@ -201,6 +201,7 @@ describe('importMarkdownFolder', { timeout: 60_000 }, () => {
     });
   });
 
+  // APFS default volume is case-insensitive; Foo.md and foo.md are one file on disk.
   it.skipIf(process.platform === 'darwin')(
     'assigns distinct slug paths for case-only collisions in one batch',
     async () => {
