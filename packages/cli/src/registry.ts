@@ -6,6 +6,7 @@ import {
   linksCommand,
 } from './commands/connections.ts';
 import { doctorCommand } from './commands/doctor.ts';
+import { exportCommand } from './commands/export.ts';
 import { createGuideCommand } from './commands/guide.ts';
 import { createSkillCommand } from './commands/skill.ts';
 import { initCommand } from './commands/init.ts';
@@ -38,6 +39,7 @@ const peerCommands: readonly CommandSpec[] = [
   validateCommand,
   doctorCommand,
   reindexCommand,
+  exportCommand,
 ];
 
 const skillCommand = createSkillCommand(peerCommands);

@@ -169,6 +169,8 @@ export { convertMarkdownToHtml, finalizeMarkdownHtml } from './convert/md-to-htm
 
 export { convertHtmlToMarkdown } from './convert/html-to-md.ts';
 
+export { exportVaultToMarkdown, resolveInsideExport } from './export.ts';
+
 export type {
   FinalizeMarkdownOptions,
   FinalizeMarkdownResult,
@@ -185,6 +187,13 @@ export type {
   HtmlToMarkdownResult,
   HtmlToMarkdownWarning,
 } from './convert/html-to-md.ts';
+
+export type {
+  ExportFormat,
+  ExportVaultOptions,
+  ExportVaultReport,
+  ExportedNoteReport,
+} from './export.ts';
 
 export type {
   ClaudeConvertOptions,
