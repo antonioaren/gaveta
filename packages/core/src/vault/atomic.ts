@@ -12,6 +12,11 @@ const directorySyncIgnored = new Set(['EINVAL', 'EPERM', 'ENOTSUP', 'EBADF', 'EI
  * the vault. A crash before the rename leaves the previous file intact.
  */
 export async function writeAtomic(destination: string, contents: string): Promise<void> {
+  await writeAtomicBuffer(destination, Buffer.from(contents, 'utf8'));
+}
+
+/** Same atomic replace as {@link writeAtomic}, for binary vault assets such as attachments. */
+export async function writeAtomicBuffer(destination: string, contents: Buffer): Promise<void> {
   const directory = path.dirname(destination);
   const temporary = path.join(
     directory,
@@ -23,7 +28,7 @@ export async function writeAtomic(destination: string, contents: string): Promis
     0o644,
   );
   try {
-    await handle.writeFile(contents, 'utf8');
+    await handle.writeFile(contents);
     await handle.sync();
   } catch (error) {
     await handle.close();
