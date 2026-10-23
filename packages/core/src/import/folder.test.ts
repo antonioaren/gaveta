@@ -172,12 +172,12 @@ describe('importMarkdownFolder', { timeout: 60_000 }, () => {
     });
   });
 
-  it('assigns distinct slug paths for case and accent collisions in one batch', async () => {
+  it('assigns distinct slug paths when different sources slug to the same vault path', async () => {
     await withVault(async (root) => {
       const source = await mkdtemp(join(tmpdir(), 'gaveta-import-slug-'));
       try {
-        await writeFile(join(source, 'Foo.md'), '# Foo\n');
-        await writeFile(join(source, 'foo.md'), '# foo\n');
+        await writeFile(join(source, 'foo bar.md'), '# spaced\n');
+        await writeFile(join(source, 'foo-bar.md'), '# hyphen\n');
         await writeFile(join(source, 'Café.md'), '# Cafe\n');
         await writeFile(join(source, 'cafe.md'), '# cafe accent\n');
         const result = await importMarkdownFolder({
@@ -191,8 +191,8 @@ describe('importMarkdownFolder', { timeout: 60_000 }, () => {
           .filter((note) => note.action !== 'skip')
           .map((note) => note.path);
         expect(new Set(paths).size).toBe(4);
-        expect(paths).toContain('foo.html');
-        expect(paths).toContain('foo-2.html');
+        expect(paths).toContain('foo-bar.html');
+        expect(paths).toContain('foo-bar-2.html');
         expect(paths).toContain('cafe.html');
         expect(paths).toContain('cafe-2.html');
       } finally {
@@ -200,6 +200,34 @@ describe('importMarkdownFolder', { timeout: 60_000 }, () => {
       }
     });
   });
+
+  it.skipIf(process.platform === 'darwin')(
+    'assigns distinct slug paths for case-only collisions in one batch',
+    async () => {
+      await withVault(async (root) => {
+        const source = await mkdtemp(join(tmpdir(), 'gaveta-import-slug-case-'));
+        try {
+          await writeFile(join(source, 'Foo.md'), '# Foo\n');
+          await writeFile(join(source, 'foo.md'), '# foo\n');
+          const result = await importMarkdownFolder({
+            vaultRoot: root,
+            sourcePath: source,
+            dryRun: true,
+            now: () => NOW,
+            createId: nextId,
+          });
+          const paths = result.notes
+            .filter((note) => note.action !== 'skip')
+            .map((note) => note.path);
+          expect(new Set(paths).size).toBe(2);
+          expect(paths).toContain('foo.html');
+          expect(paths).toContain('foo-2.html');
+        } finally {
+          await rm(source, { recursive: true, force: true });
+        }
+      });
+    },
+  );
 
   it('slugifies imported note file names', async () => {
     await withVault(async (root) => {
