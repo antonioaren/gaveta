@@ -65,6 +65,14 @@ function scheduleReconnect(): void {
   }, backoffMs);
 }
 
+function readStageOffset(
+  stages: Record<string, unknown>,
+  key: keyof LivePipelineTracePayload['stages'],
+): number | undefined {
+  const value = stages[key];
+  return typeof value === 'number' ? value : undefined;
+}
+
 function parsePipelineTrace(value: unknown): LivePipelineTracePayload | undefined {
   if (typeof value !== 'object' || value === null) {
     return undefined;
@@ -76,10 +84,18 @@ function parsePipelineTrace(value: unknown): LivePipelineTracePayload | undefine
   if (typeof record.stages !== 'object' || record.stages === null) {
     return undefined;
   }
+  const rawStages = record.stages as Record<string, unknown>;
+  const stages: LivePipelineTracePayload['stages'] = {
+    writeFinished: readStageOffset(rawStages, 'writeFinished'),
+    chokidar: readStageOffset(rawStages, 'chokidar'),
+    debounceFlush: readStageOffset(rawStages, 'debounceFlush'),
+    indexUpdated: readStageOffset(rawStages, 'indexUpdated'),
+    wsSent: readStageOffset(rawStages, 'wsSent'),
+  };
   return {
     anchor: 'writeFinished',
     path: record.path,
-    stages: record.stages as LivePipelineTracePayload['stages'],
+    stages,
   };
 }
 

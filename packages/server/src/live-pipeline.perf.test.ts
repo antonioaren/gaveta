@@ -24,7 +24,7 @@ it('REQ-NFR-01: 1000-note vault pipeline stages (write → WebSocket)', async ()
   const parent = mkdtempSync(join(tmpdir(), 'gaveta-live-pipeline-perf-'));
   const vaultRoot = join(parent, 'vault');
   const files = generateVault({ noteCount: 1000, seed: NFR_SEED });
-  await writeVault(vaultRoot, files);
+  writeVault(vaultRoot, files);
   const notePath = generatedNotePath(0);
   const token = 'pipeline-perf-token';
   const server = createGavetaServer({ vaultRoot, port: 0, token });
@@ -84,7 +84,6 @@ it('REQ-NFR-01: 1000-note vault pipeline stages (write → WebSocket)', async ()
       ...totals,
       endToEnd: p50,
     });
-    // eslint-disable-next-line no-console -- perf regression visibility in CI
     console.info(
       `REQ-NFR-01 live pipeline (n=${String(SAMPLES)}): p50=${p50.toFixed(1)}ms p95=${p95.toFixed(1)}ms (spec p95<500ms); ${breakdown}`,
     );
