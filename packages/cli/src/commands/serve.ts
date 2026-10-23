@@ -2,9 +2,12 @@ import { GavetaError } from '@gaveta/core';
 import { GAVETA_SERVE_DEFAULT_PORT, GAVETA_SERVE_HOST, createGavetaServer } from '@gaveta/server';
 import { CliFailure } from '../failure.ts';
 import type { CommandResult, CommandSpec } from '../types.ts';
+import { resolveWebDistRoot, webDistReady } from '../web-dist.ts';
 import { cliVersion } from './version.ts';
 
 const BAD_PORT = 'El puerto tiene que ser un entero entre 0 y 65535.';
+const MISSING_WEB_BUILD =
+  'Falta el visor web compilado. Ejecuta `pnpm build:web` en la raíz del repositorio.';
 
 export const serveCommand: CommandSpec = {
   name: 'serve',
@@ -24,11 +27,15 @@ export const serveCommand: CommandSpec = {
       throw new GavetaError('E_VAULT_NOT_FOUND');
     }
     const port = readPort(context.options.port);
+    if (!webDistReady()) {
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: MISSING_WEB_BUILD });
+    }
     const server = createGavetaServer({
       vaultRoot: context.vault.root,
       host: GAVETA_SERVE_HOST,
       port,
       cliVersion: cliVersion(),
+      webRoot: resolveWebDistRoot(),
     });
     const address = await server.listen();
     const data = {

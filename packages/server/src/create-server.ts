@@ -45,7 +45,8 @@ import {
   rejectDepthWithoutRef,
   toSearchOptions,
 } from './query.ts';
-import { applySecurityHeaders } from './security-headers.ts';
+import { applyAppShellHeaders, applySecurityHeaders, isApiPath } from './security-headers.ts';
+import { registerWebApp } from './static-web.ts';
 import { VaultIndexSession } from './vault-index.ts';
 
 export interface CreateGavetaServerOptions {
@@ -54,6 +55,8 @@ export interface CreateGavetaServerOptions {
   readonly port?: number;
   readonly token?: string;
   readonly cliVersion?: string;
+  /** Built output of @gaveta/web; when set, gaveta serve also serves the viewer shell. */
+  readonly webRoot?: string;
 }
 
 export interface GavetaServerAddress {
@@ -99,14 +102,20 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       throw new GavetaError('E_ARG_INVALID');
     }
-    if (!readRequestToken(request.headers, token)) {
+    if (isApiPath(request.url) && !readRequestToken(request.headers, token)) {
       throw new GavetaError('E_AUTH_REQUIRED');
     }
   });
 
-  app.addHook('onSend', async (_request, reply, payload) => {
+  app.addHook('onSend', async (request, reply, payload) => {
     await Promise.resolve();
-    applySecurityHeaders(reply);
+    if (isApiPath(request.url)) {
+      applySecurityHeaders(reply);
+    } else if (options.webRoot !== undefined) {
+      applyAppShellHeaders(reply);
+    } else {
+      applySecurityHeaders(reply);
+    }
     return payload;
   });
 
@@ -119,6 +128,9 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
   return {
     app,
     async listen(): Promise<GavetaServerAddress> {
+      if (options.webRoot !== undefined) {
+        await registerWebApp(app, options.webRoot);
+      }
       await app.listen({
         host,
         port: requestedPort,
