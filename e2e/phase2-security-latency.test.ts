@@ -452,7 +452,7 @@ describe('T2.10 XSS surfaces in the shell UI', () => {
   it('renders markup in titles, snippets, graph labels, doctor output, and todo view as text', async () => {
     const vault = copyMaliciousVault();
     const started = await startServe(vault);
-    const { url, token } = started.json.data;
+    const { url } = started.json.data;
     const page = await browser.newPage();
     page.on('dialog', (dialog) => {
       void dialog.dismiss();

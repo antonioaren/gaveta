@@ -73,6 +73,23 @@ function readStageOffset(
   return typeof value === 'number' ? value : undefined;
 }
 
+function buildStages(rawStages: Record<string, unknown>): LivePipelineTracePayload['stages'] {
+  const stages: Partial<Record<keyof LivePipelineTracePayload['stages'], number>> = {};
+  for (const key of [
+    'writeFinished',
+    'chokidar',
+    'debounceFlush',
+    'indexUpdated',
+    'wsSent',
+  ] as const) {
+    const offset = readStageOffset(rawStages, key);
+    if (offset !== undefined) {
+      stages[key] = offset;
+    }
+  }
+  return stages;
+}
+
 function parsePipelineTrace(value: unknown): LivePipelineTracePayload | undefined {
   if (typeof value !== 'object' || value === null) {
     return undefined;
@@ -85,13 +102,7 @@ function parsePipelineTrace(value: unknown): LivePipelineTracePayload | undefine
     return undefined;
   }
   const rawStages = record.stages as Record<string, unknown>;
-  const stages: LivePipelineTracePayload['stages'] = {
-    writeFinished: readStageOffset(rawStages, 'writeFinished'),
-    chokidar: readStageOffset(rawStages, 'chokidar'),
-    debounceFlush: readStageOffset(rawStages, 'debounceFlush'),
-    indexUpdated: readStageOffset(rawStages, 'indexUpdated'),
-    wsSent: readStageOffset(rawStages, 'wsSent'),
-  };
+  const stages = buildStages(rawStages);
   return {
     anchor: 'writeFinished',
     path: record.path,
