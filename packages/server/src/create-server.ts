@@ -12,6 +12,7 @@ import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest }
 import {
   assertAllowedHost,
   assertAllowedOrigin,
+  assertSingleHostHeader,
   assertServeHost,
   buildAppUrl,
   createSessionToken,
@@ -44,6 +45,7 @@ import {
   rejectDepthWithoutRef,
   toSearchOptions,
 } from './query.ts';
+import { applySecurityHeaders } from './security-headers.ts';
 import { VaultIndexSession } from './vault-index.ts';
 
 export interface CreateGavetaServerOptions {
@@ -79,6 +81,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
   let boundPort = requestedPort;
   let shutdownPromise: Promise<void> | null = null;
   let resolveShutdown: (() => void) | null = null;
+  let onSignal: (() => void) | null = null;
 
   const app = Fastify({
     logger: false,
@@ -87,6 +90,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
 
   app.addHook('onRequest', async (request) => {
     await Promise.resolve();
+    assertSingleHostHeader(request.raw.rawHeaders);
     assertAllowedHost(request.headers.host, boundPort);
     assertAllowedOrigin(
       typeof request.headers.origin === 'string' ? request.headers.origin : undefined,
@@ -95,12 +99,18 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       throw new GavetaError('E_ARG_INVALID');
     }
-    if (!isBootstrapPath(request.url) && !readRequestToken(request.headers, token)) {
+    if (!readRequestToken(request.headers, token)) {
       throw new GavetaError('E_AUTH_REQUIRED');
     }
   });
 
-  registerReadRoutes(app, options, vaultSession, () => boundPort, token);
+  app.addHook('onSend', async (_request, reply, payload) => {
+    await Promise.resolve();
+    applySecurityHeaders(reply);
+    return payload;
+  });
+
+  registerReadRoutes(app, options, vaultSession, () => boundPort);
 
   app.setErrorHandler((error, _request, reply) => {
     sendError(reply, error);
@@ -127,6 +137,11 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
       };
     },
     async close(): Promise<void> {
+      if (onSignal !== null) {
+        process.off('SIGINT', onSignal);
+        process.off('SIGTERM', onSignal);
+        onSignal = null;
+      }
       await app.close();
       vaultSession.close();
       if (resolveShutdown !== null) {
@@ -138,7 +153,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
         shutdownPromise = new Promise((resolve) => {
           resolveShutdown = resolve;
         });
-        const onSignal = (): void => {
+        onSignal = (): void => {
           void app.close().then(() => {
             vaultSession.close();
             if (resolveShutdown !== null) {
@@ -159,14 +174,11 @@ function registerReadRoutes(
   options: CreateGavetaServerOptions,
   vaultSession: VaultIndexSession,
   port: () => number,
-  token: string,
 ): void {
   app.get(BOOTSTRAP_PATH, (_request, reply) => {
     const data = {
       host: GAVETA_SERVE_HOST,
       port: port(),
-      token,
-      url: buildAppUrl(port(), token),
     };
     return reply.send(apiSuccess(data));
   });
@@ -269,14 +281,9 @@ function readQueryParam(request: FastifyRequest, name: string): string | undefin
     return undefined;
   }
   if (Array.isArray(value)) {
-    return value[0];
+    throw new GavetaError('E_ARG_INVALID');
   }
   return value;
-}
-
-function isBootstrapPath(url: string): boolean {
-  const path = url.split('?')[0] ?? url;
-  return path === BOOTSTRAP_PATH;
 }
 
 function sendError(reply: FastifyReply, error: unknown): FastifyReply {

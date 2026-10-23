@@ -202,7 +202,7 @@ Son P1 en el PRD, pero la parte de CLI se adelanta a la fase 2 porque facilita a
 | REQ-SEC-03 | P0 | 1 | La CLI sanea al guardar: elimina lo inseguro, lo informa como aviso y nunca escribe un archivo que no pasa REQ-SEC-02. | — |
 | REQ-SEC-04 | P0 | 1 | Recursos remotos bloqueados por defecto (DEC-05). | `validate` avisa con `W_REMOTE_RESOURCE`. |
 | REQ-SEC-05 | P0 | 1 | Ninguna operación lee ni escribe fuera de la raíz del vault (protección contra path traversal y enlaces simbólicos). | `gaveta new --in ../fuera` falla con `E_PATH_OUTSIDE_VAULT`. |
-| REQ-SEC-06 | P0 | 2 | El servidor escucha solo en `127.0.0.1`, exige un token por sesión en las rutas de escritura y valida la cabecera `Origin`. | Una petición de escritura sin token devuelve 401. |
+| REQ-SEC-06 | P0 | 2 | El servidor escucha solo en `127.0.0.1`, exige un token por sesión en **todas** las rutas de la API (incluida `/api/session`), compara el token en tiempo constante, valida `Origin` y `Host` (un solo valor, sin comas; se rechaza `localhost` y solo se acepta `127.0.0.1` con el puerto enlazado o sin puerto), rechaza parámetros de consulta duplicados y envía cabeceras `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'` y `Cross-Origin-Resource-Policy: same-origin` en todas las respuestas. La app web (T2.4) obtiene el token de la URL de arranque (`?token=`) y lo guarda en memoria o `sessionStorage`; ningún endpoint devuelve el token. | Una petición sin token devuelve 401; una con `Host: localhost:<puerto>` devuelve 403. |
 
 ### Formato y normalización
 

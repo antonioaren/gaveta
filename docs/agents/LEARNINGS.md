@@ -60,11 +60,9 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-22 · T2.13 · CodeQL `js/polynomial-redos` flags `CALLOUT_LINE.exec(line)` on Obsidian callout prefixes. · Parse `> [!kind]` with `startsWith` and a short kind scan instead of a regex on the whole line.
 - 2026-10-23 · T2.16 · `walkTree(document)` never visits `<img>` because a parse5 `Document` is not a `ChildNode`; fixture e2e vaults often have an empty index until `reindex`. · Walk from `document.childNodes`, and resolve export targets with `scanNoteFiles` while keeping `resolveRef` for titles.
 - 2026-10-23 · T2.16 · Export wrote notes sequentially, so `E_PATH_EXISTS` on a later file left earlier `.md` on disk; link `data-g-to` came only from SQLite. · Plan all outputs, preflight destinations (including case-folded `.md` collisions), then write once; build the target map from `parseNote` on scanned HTML; on `--dry-run` return `blocked` + `conflicts` instead of throwing.
-<<<<<<< HEAD
 - 2026-10-23 · T2.17 · Commander has no repeatable string options in `readCommandOptions`; a single `.md` import must not call `walkMarkdownFolder` on its parent or every sibling file is imported. · Use `kind: 'stringList'` with a dedicated separator for `--exclude`, and branch `resolveImportSource` on file vs directory (basename only under `--in`).
 - 2026-10-23 · T2.14 · A `Proxy` on `VaultIndex` that delegates `notes()` to `target.notes()` recurses forever. · Call the real index (`base.notes()`, etc.) inside the trap, not `target`.
 - 2026-10-23 · T2.14 · Import pass 2 must rebuild the overlay when a note fails; `knownSourceMds` comes from the walk, not pass 1 successes. · Re-resolve in a loop, map skipped vault notes for `.md` links, and emit `data-g-pending` only for sources in the walked batch.
-=======
 - 2026-10-23 · T2.1 · Node `fetch` drops a custom `Host` header, so e2e cannot assert Host/Origin rejection through `fetch`. · Use `node:http.request` with an explicit `host: 127.0.0.1:<port>` header against the real `gaveta serve` process.
 - 2026-10-23 · T2.1 · Fastify 5 leaves successful routes hanging when `onRequest` is a sync hook (`inject` and real HTTP both stall). · Mark the hook `async` even when it only throws synchronously.
->>>>>>> e2bbbf7 (feat(T2.1): add gaveta serve read-only local API)
+- 2026-10-23 · T2.1 · `inject` with `host: [a, b]` collapses to one `headers.host`, so duplicate `Host` must be counted on `request.raw.rawHeaders`. · Call `assertSingleHostHeader` before `assertAllowedHost`; still reject comma-separated values in the single header.

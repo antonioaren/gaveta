@@ -11,11 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `gaveta import` and polished `gaveta export`: CLI migration commands with shared `--json` summaries (`created`, `overwritten`, `renamed`, `skipped`, `failed`, `attachments`), Spanish human output, and `gaveta guide` examples (REQ-MIG-01–10, REQ-CLI-09).
 - `gaveta export` and `exportVaultToMarkdown`: export one note, a folder, or `--all` to Markdown with folder hierarchy, attachment copy, `--links wiki|relative`, `--dry-run`, `--force`, and per-file `W_EXPORT_LOSSY` reporting (REQ-MIG-08).
-<<<<<<< HEAD
 - Core `importMarkdownFolder` API: recursive Markdown import (folder or single `.md` file) with two-pass link resolution, attachment deduplication, `dryRun`, `onConflict`, and atomic batch writes (`continueOnError`).
-=======
-- `gaveta serve` / `gv serve`: read-only local API on `127.0.0.1` with per-session token, Origin/Host checks, and endpoints for `notes`, `read`, `links`, `backlinks`, `graph`, `search`, and `doctor` (`@gaveta/server`).
->>>>>>> e2bbbf7 (feat(T2.1): add gaveta serve read-only local API)
+- `gaveta serve` / `gv serve`: read-only local API on `127.0.0.1` with per-session token, constant-time token check, strict Host/Origin validation, security headers on every response, and endpoints for `notes`, `read`, `links`, `backlinks`, `graph`, `search`, `doctor`, and authenticated `/api/session` (no token in API bodies; app bootstraps from `?token=` on the serve URL).
 
 ## [0.1.0] - 2026-10-22
 

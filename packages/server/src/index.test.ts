@@ -71,15 +71,13 @@ it('rejects a hostile Origin header', async () => {
   });
 });
 
-it('exposes session bootstrap without a token', async () => {
+it('requires a token for /api/session', async () => {
   await withVaultCopy(async (vaultRoot) => {
     const token = 'bootstrap-token';
     const server = createGavetaServer({ vaultRoot, port: 0, token });
     const address = await server.listen();
     const response = await requestLocal(address.port, '/api/session');
-    expect(response.status).toBe(200);
-    const body = JSON.parse(response.body) as { data: { token: string } };
-    expect(body.data.token).toBe(token);
+    expect(response.status).toBe(401);
     await server.close();
   });
 });

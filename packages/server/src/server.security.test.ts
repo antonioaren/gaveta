@@ -64,6 +64,40 @@ it('rejects a wrong Host header', async () => {
   });
 });
 
+it('rejects a comma-separated Host header', async () => {
+  await withVaultCopy(async (vaultRoot) => {
+    const token = 'host-comma-token';
+    const server = createGavetaServer({ vaultRoot, port, token });
+    const response = await server.app.inject({
+      method: 'GET',
+      url: '/api/notes',
+      headers: {
+        host: `${hostHeader}, evil.example`,
+        [GAVETA_TOKEN_HEADER]: token,
+      },
+    });
+    expect(response.statusCode).toBe(403);
+    await server.close();
+  });
+});
+
+it('rejects duplicate Host header values', async () => {
+  await withVaultCopy(async (vaultRoot) => {
+    const token = 'host-dup-token';
+    const server = createGavetaServer({ vaultRoot, port, token });
+    const response = await server.app.inject({
+      method: 'GET',
+      url: '/api/notes',
+      headers: {
+        host: [hostHeader, hostHeader],
+        [GAVETA_TOKEN_HEADER]: token,
+      } as unknown as { host: string; [GAVETA_TOKEN_HEADER]: string },
+    });
+    expect(response.statusCode).toBe(403);
+    await server.close();
+  });
+});
+
 it('does not leak stack traces on errors', async () => {
   await withVaultCopy(async (vaultRoot) => {
     const token = 'stack-token';
