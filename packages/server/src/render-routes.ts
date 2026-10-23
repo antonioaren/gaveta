@@ -67,10 +67,10 @@ export function registerRenderRoutes(
         throw new GavetaError('E_HTML_INVALID');
       }
       const allowed = new Set(collectNoteAttachmentPaths(normalized.html, note.path));
-      assertNoteAttachmentPathAllowed(relative, allowed);
-      const absolute = await resolveInsideVault(options.vaultRoot, relative);
+      const vaultRelative = assertNoteAttachmentPathAllowed(relative, allowed);
+      const absolute = await resolveInsideVault(options.vaultRoot, vaultRelative);
       const body = await readFile(absolute);
-      return { body, path: relative };
+      return { body, path: vaultRelative };
     });
     const contentType = contentTypeForPath(result.path);
     return reply

@@ -29,9 +29,9 @@ it('blocks sensitive vault paths for render file serving', () => {
 
 it('allows only paths referenced by the note', () => {
   const allowed = new Set(['attachments/pixel.png']);
-  expect(() => {
-    assertNoteAttachmentPathAllowed('attachments/pixel.png', allowed);
-  }).not.toThrow();
+  expect(assertNoteAttachmentPathAllowed('attachments/pixel.png', allowed)).toBe(
+    'attachments/pixel.png',
+  );
   expect(() => {
     assertNoteAttachmentPathAllowed('attachments/other.png', allowed);
   }).toThrow();

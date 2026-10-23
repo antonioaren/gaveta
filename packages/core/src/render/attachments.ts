@@ -48,16 +48,20 @@ export function isBlockedRenderVaultPath(relativePath: string): boolean {
   return false;
 }
 
+/** Returns the allowlisted vault-relative path (from the note-derived set, not the request). */
 export function assertNoteAttachmentPathAllowed(
   relativePath: string,
   allowed: ReadonlySet<string>,
-): void {
+): string {
   if (isBlockedRenderVaultPath(relativePath)) {
     throw pathOutsideVault();
   }
-  if (!allowed.has(relativePath)) {
-    throw pathOutsideVault();
+  for (const vaultRelative of allowed) {
+    if (vaultRelative === relativePath) {
+      return vaultRelative;
+    }
   }
+  throw pathOutsideVault();
 }
 
 function addVaultResource(src: string | null, notePath: string, found: Set<string>): void {
