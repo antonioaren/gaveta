@@ -106,10 +106,9 @@ describe('T2.10 global graph XSS labels', () => {
       const commandStatus = page.locator('.graph-view__ghost-command');
       await commandStatus.waitFor({ state: 'visible' });
       const statusText = await commandStatus.innerText();
-      const command =
-        statusText.startsWith('gaveta new')
-          ? statusText
-          : await page.evaluate(() => navigator.clipboard.readText());
+      const command = statusText.startsWith('gaveta new')
+        ? statusText
+        : await page.evaluate(() => navigator.clipboard.readText());
       expect(command).toMatch(/^gaveta new --type doc -- '/);
       expect(command).toContain(ghostTitle);
       expect(command).not.toMatch(/^gaveta new --type doc -- "/);

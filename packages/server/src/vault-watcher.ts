@@ -1,23 +1,15 @@
 import chokidar, { type FSWatcher } from 'chokidar';
 import path from 'node:path';
-import { performance } from 'node:perf_hooks';
-import type { VaultEventBus, VaultNoteEvent } from './vault-events.ts';
-import { coalesceMovesByNoteId, coalescePendingChanges } from './vault-batch.ts';
-import type { RecentUnlink } from './vault-move.ts';
+import type { VaultNoteEvent } from './vault-events.ts';
 import {
   isAtomicTempRelativePath,
   isGavetaInternalRelativePath,
   isHtmlNoteRelativePath,
-  shouldIndexVaultRelativePath,
   toVaultRelativePath,
 } from './vault-paths.ts';
 import type { VaultIndexSession } from './vault-index.ts';
-import {
-  markChokidar,
-  markDebounceFlush,
-  markIndexUpdated,
-  takePipelineTrace,
-} from './live-pipeline-trace.ts';
+import { markChokidar } from './live-pipeline-trace.ts';
+import { createVaultWatcherCore, type VaultWatcherCore } from './vault-watcher-core.ts';
 
 export interface VaultWatcher {
   close(): Promise<void>;
@@ -26,71 +18,16 @@ export interface VaultWatcher {
 export interface CreateVaultWatcherOptions {
   readonly vaultRoot: string;
   readonly session: VaultIndexSession;
-  readonly bus: VaultEventBus;
+  readonly bus: import('./vault-events.ts').VaultEventBus;
   readonly debounceMs?: number;
+  readonly maxWaitMs?: number;
   readonly movePairWindowMs?: number;
 }
 
-interface PendingChange {
-  readonly kind: 'change' | 'add' | 'unlink';
-  readonly relativePath: string;
-}
-
 export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWatcher {
-  const debounceMs = options.debounceMs ?? 50;
-  const movePairWindowMs = options.movePairWindowMs ?? 200;
-  const pending = new Map<string, PendingChange>();
-  const recentUnlinks = new Map<string, RecentUnlink>();
-  let flushTimer: ReturnType<typeof setTimeout> | null = null;
+  const core: VaultWatcherCore = createVaultWatcherCore(options);
+
   let closed = false;
-
-  const scheduleFlush = (): void => {
-    if (closed) {
-      return;
-    }
-    if (flushTimer !== null) {
-      clearTimeout(flushTimer);
-    }
-    flushTimer = setTimeout(() => {
-      flushTimer = null;
-      void flushPending();
-    }, debounceMs);
-  };
-
-  const flushPending = async (): Promise<void> => {
-    if (closed) {
-      pending.clear();
-      return;
-    }
-    if (pending.size === 0) {
-      return;
-    }
-    const deduped = coalescePendingChanges([...pending.values()]);
-    pending.clear();
-    const flushAt = performance.now();
-    for (const change of deduped) {
-      if (change.kind !== 'moved') {
-        markDebounceFlush(change.relativePath, flushAt);
-      }
-    }
-    const batch = await coalesceMovesByNoteId(deduped, options.vaultRoot, options.session);
-    for (const change of batch) {
-      const event = await options.session.applyFileChange(change, recentUnlinks, movePairWindowMs);
-      if (event !== null) {
-        markIndexUpdated(event.path, performance.now());
-        const pipeline = takePipelineTrace(event.path, performance.now());
-        options.bus.emitNote(pipeline === undefined ? event : { ...event, pipeline });
-      }
-    }
-  };
-
-  const queue = (change: PendingChange): void => {
-    if (!shouldIndexVaultRelativePath(change.relativePath)) {
-      return;
-    }
-    pending.set(change.relativePath, change);
-    scheduleFlush();
-  };
 
   const watcher: FSWatcher = chokidar.watch(options.vaultRoot, {
     ignoreInitial: true,
@@ -120,7 +57,7 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
     },
   });
 
-  const onPath = (kind: PendingChange['kind'], absolutePath: string): void => {
+  const onPath = (kind: 'change' | 'add' | 'unlink', absolutePath: string): void => {
     if (closed) {
       return;
     }
@@ -129,7 +66,7 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
       return;
     }
     markChokidar(relative);
-    queue({ kind, relativePath: relative });
+    core.queue({ kind, relativePath: relative });
   };
 
   watcher.on('change', (absolutePath) => {
@@ -145,11 +82,7 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
   return {
     async close(): Promise<void> {
       closed = true;
-      if (flushTimer !== null) {
-        clearTimeout(flushTimer);
-        flushTimer = null;
-      }
-      pending.clear();
+      await core.close();
       await watcher.close();
     },
   };
