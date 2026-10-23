@@ -53,6 +53,21 @@ export function isPublicShellRoute(method: string, normalizedPath: string): bool
   return false;
 }
 
+/** Isolated note iframe HTML and subresources; session token is not used (render ticket instead). */
+export function isRenderRoute(method: string, normalizedPath: string): boolean {
+  const verb = method.toUpperCase();
+  if (verb !== 'GET' && verb !== 'HEAD') {
+    return false;
+  }
+  return normalizedPath === '/render' || normalizedPath.startsWith('/render/');
+}
+
 export function requiresSessionToken(method: string, normalizedPath: string): boolean {
-  return !isPublicShellRoute(method, normalizedPath);
+  if (isPublicShellRoute(method, normalizedPath)) {
+    return false;
+  }
+  if (isRenderRoute(method, normalizedPath)) {
+    return false;
+  }
+  return true;
 }

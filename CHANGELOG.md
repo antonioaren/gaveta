@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `gaveta export` and `exportVaultToMarkdown`: export one note, a folder, or `--all` to Markdown with folder hierarchy, attachment copy, `--links wiki|relative`, `--dry-run`, `--force`, and per-file `W_EXPORT_LOSSY` reporting (REQ-MIG-08).
 - Core `importMarkdownFolder` API: recursive Markdown import (folder or single `.md` file) with two-pass link resolution, attachment deduplication, `dryRun`, `onConflict`, and atomic batch writes (`continueOnError`).
 - `gaveta serve` / `gv serve`: read-only local API on `127.0.0.1` with per-session token, constant-time token check, strict Host/Origin validation, security headers on every response, and endpoints for `notes`, `read`, `links`, `backlinks`, `graph`, `search`, `doctor`, and authenticated `/api/session` (no token in API bodies; app bootstraps from `?token=` on the serve URL).
+- `GET /render/:id` on the local server: sanitized note HTML with injected vault theme, strict CSP (`REQ-SEC-01`), vault-only scripts, and a `postMessage` navigation bridge for the viewer (`REQ-APP-02`). Sandboxed iframes authenticate with a short-lived HMAC ticket from `GET /api/render-ticket?id=…` (`?t=` on render URLs; session token never in the query). Render responses use `frame-ancestors 'self'` and omit `X-Frame-Options: DENY`.
 
 ## [0.1.0] - 2026-10-22
 

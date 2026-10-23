@@ -1,6 +1,11 @@
 import { GavetaError } from '@gaveta/core';
 import { expect, it } from 'vitest';
-import { isPublicShellRoute, normalizeServePath, requiresSessionToken } from './route-access.ts';
+import {
+  isPublicShellRoute,
+  isRenderRoute,
+  normalizeServePath,
+  requiresSessionToken,
+} from './route-access.ts';
 
 it('normalizes collapsed slashes and decodes percent-encoding before access checks', () => {
   expect(normalizeServePath('//api/notes')).toBe('/api/notes');
@@ -21,4 +26,12 @@ it('treats only the shell allowlist as public', () => {
 
 it('rejects traversal segments in the path', () => {
   expect(() => normalizeServePath('/assets/../api/notes')).toThrow(GavetaError);
+});
+
+it('classifies render routes as ticket-only without a session token', () => {
+  expect(isRenderRoute('GET', '/render/01NOTE')).toBe(true);
+  expect(isRenderRoute('GET', '/render/static/theme.css')).toBe(true);
+  expect(requiresSessionToken('GET', '/render/01NOTE')).toBe(false);
+  expect(requiresSessionToken('GET', normalizeServePath('//render/01NOTE'))).toBe(false);
+  expect(requiresSessionToken('GET', normalizeServePath('/%72ender/01NOTE'))).toBe(false);
 });

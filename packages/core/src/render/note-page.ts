@@ -1,0 +1,277 @@
+import { isUlid } from '../contract.ts';
+import { GavetaError } from '../errors.ts';
+import { escapeAttr, escapeText } from '../links/path.ts';
+import { GavetaRefError, notesForId, refCandidates } from '../links/ref.ts';
+import { suggestNotes } from '../links/suggest.ts';
+import {
+  MERMAID_BOOT_BASENAME,
+  MERMAID_MIN_BASENAME,
+  MERMAID_BOOT_ROLE,
+  MERMAID_LIB_ROLE,
+  MERMAID_SCRIPT_ATTR,
+} from '../mermaid/assets.ts';
+import { normalizeNote } from '../normalize.ts';
+import { parse } from 'parse5';
+import type { DefaultTreeAdapterMap } from 'parse5';
+import { serializeOuter } from 'parse5';
+import type { IndexedNote, VaultIndex } from '../sqlite/store.ts';
+
+type ParseDocument = DefaultTreeAdapterMap['document'];
+type ParseElement = DefaultTreeAdapterMap['element'];
+type ParseChild = DefaultTreeAdapterMap['childNode'];
+
+function serializeChild(child: ParseChild): string {
+  return serializeOuter(child);
+}
+
+const CSP_HTTP_EQUIV = 'content-security-policy';
+
+export const RENDER_STATIC_PREFIX = '/render/static';
+export const RENDER_NOTE_FILE_PREFIX = '/render';
+
+export interface BuildNoteRenderPageInput {
+  readonly noteId: string;
+  readonly notePath: string;
+  readonly title: string;
+  readonly sourceHtml: string;
+  readonly renderTicket: string;
+  readonly remoteAllowlist: readonly string[];
+}
+
+export function appendRenderTicketQuery(path: string, ticket: string): string {
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}t=${encodeURIComponent(ticket)}`;
+}
+
+export function readRenderNoteId(raw: string): string {
+  if (typeof raw !== 'string') {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  const trimmed = raw.trim();
+  if (!isUlid(trimmed)) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return trimmed;
+}
+
+export function resolveRenderNote(index: VaultIndex, id: string): IndexedNote {
+  const noteId = readRenderNoteId(id);
+  const matches = notesForId(index, noteId);
+  if (matches.length === 0) {
+    throw new GavetaRefError('E_REF_NOT_FOUND', {}, { suggestions: suggestNotes(index, noteId) });
+  }
+  if (matches.length > 1) {
+    throw new GavetaRefError('E_REF_AMBIGUOUS', {}, { candidates: refCandidates(matches) });
+  }
+  const note = matches[0];
+  if (note === undefined || note.id === null) {
+    throw new GavetaError('E_META_MISSING');
+  }
+  return note;
+}
+
+export function buildNoteRenderCsp(): string {
+  return [
+    "default-src 'none'",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "font-src 'self'",
+    "script-src 'self'",
+    "connect-src 'none'",
+    "frame-ancestors 'self'",
+  ].join('; ');
+}
+
+export function buildNoteRenderPage(input: BuildNoteRenderPageInput): string {
+  const normalized = normalizeNote(input.sourceHtml, {
+    notePath: input.notePath,
+    remoteAllowlist: input.remoteAllowlist,
+  });
+  if (!normalized.ok || normalized.html === null) {
+    throw new GavetaError('E_HTML_INVALID');
+  }
+  const bodyInner = extractBodyInner(normalized.html);
+  const ticket = input.renderTicket;
+  const rewritten = rewriteAssetUrls(bodyInner, input.noteId, input.notePath, ticket);
+  const csp = buildNoteRenderCsp();
+  const title = escapeText(input.title);
+  const staticUrl = (basename: string): string =>
+    appendRenderTicketQuery(`${RENDER_STATIC_PREFIX}/${basename}`, ticket);
+  const headParts = [
+    '<!doctype html>',
+    '<html lang="es">',
+    '<head>',
+    '<meta charset="utf-8">',
+    `<meta http-equiv="${CSP_HTTP_EQUIV}" content="${escapeAttr(csp)}">`,
+    `<title>${title}</title>`,
+    `<link rel="stylesheet" href="${escapeAttr(staticUrl('theme.css'))}">`,
+  ];
+  if (htmlContainsMermaid(normalized.html)) {
+    headParts.push(
+      `<script defer src="${escapeAttr(staticUrl(MERMAID_MIN_BASENAME))}" ${MERMAID_SCRIPT_ATTR}="${MERMAID_LIB_ROLE}"></script>`,
+      `<script defer src="${escapeAttr(staticUrl(MERMAID_BOOT_BASENAME))}" ${MERMAID_SCRIPT_ATTR}="${MERMAID_BOOT_ROLE}"></script>`,
+    );
+  }
+  headParts.push(
+    `<script defer src="${escapeAttr(staticUrl('render-bridge.js'))}" ${MERMAID_SCRIPT_ATTR}="render-bridge"></script>`,
+    '</head>',
+    '<body>',
+    rewritten,
+    '</body>',
+    '</html>',
+  );
+  return headParts.join('');
+}
+
+function extractBodyInner(html: string): string {
+  let document: ParseDocument;
+  try {
+    document = parse(html, { scriptingEnabled: false });
+  } catch {
+    throw new GavetaError('E_HTML_INVALID');
+  }
+  const body = findElement(document, 'body');
+  if (body === null) {
+    throw new GavetaError('E_HTML_INVALID');
+  }
+  return body.childNodes.map((child) => serializeChild(child)).join('');
+}
+
+function findElement(node: ParseChild | ParseDocument, tagName: string): ParseElement | null {
+  if ('tagName' in node && node.tagName.toLowerCase() === tagName) {
+    return node;
+  }
+  if (!('childNodes' in node)) {
+    return null;
+  }
+  for (const child of node.childNodes) {
+    const found = findElement(child, tagName);
+    if (found !== null) {
+      return found;
+    }
+  }
+  return null;
+}
+
+function rewriteAssetUrls(
+  bodyHtml: string,
+  noteId: string,
+  notePath: string,
+  ticket: string,
+): string {
+  let document: ParseDocument;
+  try {
+    document = parse(`<body>${bodyHtml}</body>`, {
+      scriptingEnabled: false,
+      sourceCodeLocationInfo: true,
+    });
+  } catch {
+    return bodyHtml;
+  }
+  const body = findElement(document, 'body');
+  if (body === null) {
+    return bodyHtml;
+  }
+  walkElements(body, (element) => {
+    if (element.tagName.toLowerCase() === 'img') {
+      rewriteMediaSrc(element, 'src', noteId, notePath, ticket);
+    }
+    if (element.tagName.toLowerCase() === 'source') {
+      rewriteMediaSrc(element, 'src', noteId, notePath, ticket);
+    }
+  });
+  return body.childNodes.map((child) => serializeChild(child)).join('');
+}
+
+function rewriteMediaSrc(
+  element: ParseElement,
+  attribute: string,
+  noteId: string,
+  notePath: string,
+  ticket: string,
+): void {
+  const attr = element.attrs.find((entry) => entry.name === attribute);
+  if (attr === undefined) {
+    return;
+  }
+  const value = attr.value.trim();
+  if (value.length === 0 || value.startsWith('data:') || value.startsWith('/render/')) {
+    return;
+  }
+  if (/^[a-z]+:/iu.test(value)) {
+    return;
+  }
+  const vaultRelative = joinNoteRelative(notePath, value);
+  const path = `${RENDER_NOTE_FILE_PREFIX}/${noteId}/file/${encodePathSegments(vaultRelative)}`;
+  attr.value = appendRenderTicketQuery(path, ticket);
+}
+
+function joinNoteRelative(notePath: string, href: string): string {
+  const slash = notePath.lastIndexOf('/');
+  const dir = slash === -1 ? '' : notePath.slice(0, slash);
+  const segments = href.split('/').filter((part) => part.length > 0);
+  const stack = dir.length === 0 ? [] : dir.split('/');
+  for (const segment of segments) {
+    if (segment === '.') {
+      continue;
+    }
+    if (segment === '..') {
+      stack.pop();
+      continue;
+    }
+    stack.push(segment);
+  }
+  return stack.join('/');
+}
+
+function encodePathSegments(vaultRelative: string): string {
+  return vaultRelative
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+}
+
+function htmlContainsMermaid(html: string): boolean {
+  let document: ParseDocument;
+  try {
+    document = parse(html, { scriptingEnabled: false });
+  } catch {
+    return false;
+  }
+  let found = false;
+  for (const child of document.childNodes) {
+    if (!('tagName' in child)) {
+      continue;
+    }
+    walkElements(child, (element) => {
+      if (found || element.tagName.toLowerCase() !== 'pre') {
+        return;
+      }
+      const classAttr = element.attrs.find((entry) => entry.name === 'class');
+      const classes = classAttr?.value.split(/\s+/u) ?? [];
+      if (classes.includes('mermaid')) {
+        found = true;
+      }
+    });
+  }
+  return found;
+}
+
+function walkElements(
+  root: ParseElement | ParseDocument,
+  visit: (element: ParseElement) => void,
+): void {
+  const stack: ParseChild[] = [...root.childNodes];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (current === undefined || !('tagName' in current)) {
+      continue;
+    }
+    visit(current);
+    for (const child of current.childNodes) {
+      stack.push(child);
+    }
+  }
+}

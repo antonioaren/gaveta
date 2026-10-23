@@ -22,6 +22,14 @@ export const APP_SHELL_HEADERS: Readonly<Record<string, string>> = {
   'content-security-policy': APP_SHELL_CSP,
 };
 
+const RENDER_TRANSPORT_HEADERS: Readonly<Record<string, string>> = {
+  'cache-control': 'no-store',
+  'x-content-type-options': 'nosniff',
+  'referrer-policy': 'no-referrer',
+  'cross-origin-resource-policy': 'same-origin',
+  'content-security-policy': "frame-ancestors 'self'",
+};
+
 export function applySecurityHeaders(reply: FastifyReply): void {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
     reply.header(name, value);
@@ -30,6 +38,18 @@ export function applySecurityHeaders(reply: FastifyReply): void {
 
 export function applyAppShellHeaders(reply: FastifyReply): void {
   for (const [name, value] of Object.entries(APP_SHELL_HEADERS)) {
+    reply.header(name, value);
+  }
+}
+
+export function applyRenderTransportHeaders(reply: FastifyReply): void {
+  for (const [name, value] of Object.entries(RENDER_TRANSPORT_HEADERS)) {
+    if (
+      name === 'content-security-policy' &&
+      reply.getHeader('content-security-policy') !== undefined
+    ) {
+      continue;
+    }
     reply.header(name, value);
   }
 }
