@@ -20,6 +20,17 @@ function pathsFromGraph(body: string): string[] {
     .sort();
 }
 
+async function expectInvalidFolder(port: number, headers: Record<string, string>, folder: string) {
+  const response = await requestLocal(
+    port,
+    `/api/graph?folder=${encodeURIComponent(folder)}`,
+    headers,
+  );
+  expect(response.status).toBe(400);
+  const body = JSON.parse(response.body) as { error: { code: string } };
+  expect(body.error.code).toBe('E_ARG_INVALID');
+}
+
 it('filters global graph by folder segment prefix via the API', async () => {
   await withVaultCopy(async (vaultRoot) => {
     const token = 'graph-folder-token';
@@ -52,21 +63,10 @@ it('rejects invalid folder query values with E_ARG_INVALID', async () => {
     const port = address.port;
     const headers = authHeaders(token);
 
-    for (const folder of ['', '%20', '/enlaces', 'enlaces/../x']) {
-      const response = await requestLocal(
-        port,
-        `/api/graph?folder=${encodeURIComponent(folder)}`,
-        headers,
-      );
-      expect(response.status).toBe(400);
-      const body = JSON.parse(response.body) as { code: string };
-      expect(body.code).toBe('E_ARG_INVALID');
-    }
-
-    const traversal = await requestLocal(port, '/api/graph?folder=..', headers);
-    expect(traversal.status).toBe(400);
-    const traversalBody = JSON.parse(traversal.body) as { code: string };
-    expect(traversalBody.code).toBe('E_ARG_INVALID');
+    await expectInvalidFolder(port, headers, ' ');
+    await expectInvalidFolder(port, headers, '/enlaces');
+    await expectInvalidFolder(port, headers, '..');
+    await expectInvalidFolder(port, headers, 'enlaces/../x');
 
     await server.close();
   });

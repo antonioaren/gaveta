@@ -1,8 +1,17 @@
-const CONTROL_OR_NEWLINE = /[\u0000-\u001F\u007F]/u;
-
 /** Strip control characters and newlines from untrusted ghost titles. */
 export function sanitizeGhostTitle(title: string): string {
-  return title.replace(CONTROL_OR_NEWLINE, '');
+  let sanitized = '';
+  for (const char of title) {
+    const code = char.codePointAt(0);
+    if (code !== undefined && code <= 0x1f) {
+      continue;
+    }
+    if (code === 0x7f) {
+      continue;
+    }
+    sanitized += char;
+  }
+  return sanitized;
 }
 
 /** POSIX single-quoted shell word: '...' with embedded quotes as '\'' */

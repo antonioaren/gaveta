@@ -6,6 +6,8 @@ import { resetVaultSocketHubForTests } from '../live/vault-socket-hub.ts';
 import { useGlobalGraph } from './useGlobalGraph.ts';
 
 interface MockSocket {
+  readonly send: ReturnType<typeof vi.fn>;
+  readonly close: ReturnType<typeof vi.fn>;
   readonly addEventListener: ReturnType<typeof vi.fn>;
 }
 
@@ -14,6 +16,8 @@ let sockets: MockSocket[] = [];
 function createMockSocket(): MockSocket {
   const listeners = new Map<string, Set<(event: unknown) => void>>();
   const socket: MockSocket = {
+    send: vi.fn(),
+    close: vi.fn(),
     addEventListener: vi.fn((type: string, handler: (event: unknown) => void) => {
       const set = listeners.get(type) ?? new Set();
       set.add(handler);
@@ -31,8 +35,7 @@ function createMockSocket(): MockSocket {
 
 function emitMessage(socket: MockSocket, payload: unknown): void {
   const handler = socket.addEventListener.mock.calls.find(([type]) => type === 'message')?.[1] as
-    | ((event: { data: string }) => void)
-    | undefined;
+    ((event: { data: string }) => void) | undefined;
   handler?.({ data: JSON.stringify(payload) });
 }
 

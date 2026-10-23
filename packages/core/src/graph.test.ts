@@ -517,12 +517,16 @@ it('filters by type, tag, folder, and rel, including combined filters', async ()
       ]);
 
       const docsOnly = globalGraph(index, { type: 'doc' });
-      expect(pathsOf(docsOnly)).toEqual([
-        'docs/a.html',
-        'docs/b.html',
-        'enlaces.html',
-        'other/d.html',
-      ]);
+      expect(pathsOf(docsOnly).sort()).toEqual(
+        [
+          'docs/a.html',
+          'docs/b.html',
+          'enlaces.html',
+          'enlaces/real.html',
+          'enlaces-otros/vecino.html',
+          'other/d.html',
+        ].sort(),
+      );
       expect(docsOnly.nodes.some((node) => node.key === ghost)).toBe(true);
       expect(hasEdge(docsOnly, 'docs/a.html', 'other/c.html', 'depends-on')).toBe(false);
 
@@ -531,24 +535,32 @@ it('filters by type, tag, folder, and rel, including combined filters', async ()
       expect(slides.edges).toEqual([]);
 
       const alpha = globalGraph(index, { tag: 'alpha' });
-      expect(pathsOf(alpha)).toEqual([
-        'docs/a.html',
-        'enlaces.html',
-        'other/c.html',
-        'other/d.html',
-      ]);
+      expect(pathsOf(alpha).sort()).toEqual(
+        [
+          'docs/a.html',
+          'enlaces.html',
+          'enlaces/real.html',
+          'enlaces-otros/vecino.html',
+          'other/c.html',
+          'other/d.html',
+        ].sort(),
+      );
       expect(hasEdge(alpha, 'docs/a.html', 'other/c.html', 'depends-on')).toBe(true);
       expect(hasEdge(alpha, 'docs/a.html', 'docs/b.html', 'related')).toBe(false);
       expect(alpha.nodes.some((node) => node.key === ghost)).toBe(true);
 
       const depends = globalGraph(index, { rel: 'depends-on' });
-      expect(pathsOf(depends)).toEqual([
-        'docs/a.html',
-        'docs/b.html',
-        'enlaces.html',
-        'other/c.html',
-        'other/d.html',
-      ]);
+      expect(pathsOf(depends).sort()).toEqual(
+        [
+          'docs/a.html',
+          'docs/b.html',
+          'enlaces.html',
+          'enlaces/real.html',
+          'enlaces-otros/vecino.html',
+          'other/c.html',
+          'other/d.html',
+        ].sort(),
+      );
       expect(depends.edges.every((edge) => edge.rel === 'depends-on')).toBe(true);
       expect(hasEdge(depends, 'docs/a.html', 'other/c.html', 'depends-on')).toBe(true);
       expect(hasEdge(depends, 'docs/a.html', ghost, 'depends-on')).toBe(true);

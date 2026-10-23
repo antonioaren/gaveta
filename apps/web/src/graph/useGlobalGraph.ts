@@ -30,9 +30,13 @@ export function useGlobalGraph(filters: GraphFilterState): {
     setReloadToken((value) => value + 1);
   }, []);
 
-  useEffect(() => subscribeConnectionsRefresh(() => {
-    reload();
-  }), [reload]);
+  useEffect(
+    () =>
+      subscribeConnectionsRefresh(() => {
+        reload();
+      }),
+    [reload],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
