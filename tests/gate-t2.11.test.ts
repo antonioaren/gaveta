@@ -21,6 +21,8 @@ it('gate-t2.11.sh --check prepares a demo vault and passes smoke checks', () => 
     expect(existsSync(join(vault, 'importados/salud/nota-rota.html'))).toBe(true);
     expect(existsSync(join(vault, 'importados/artefactos/panel-kpi-demo.html'))).toBe(true);
     expect(existsSync(join(vault, 'importados/demo/recarga-en-vivo.html'))).toBe(true);
+    expect(existsSync(join(vault, 'importados/grafo/nota-huerfana-t2-11.html'))).toBe(true);
+    expect(existsSync(join(vault, 'importados/grafo/enlace-al-fantasma.html'))).toBe(true);
   } finally {
     rmSync(vault, { recursive: true, force: true });
   }

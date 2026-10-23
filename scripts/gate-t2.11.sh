@@ -3,7 +3,7 @@
 # Safe to re-run: uses GAVETA_GATE_VAULT (default: $TMPDIR/gaveta-gate-t2.11).
 set -euo pipefail
 
-readonly GATE_VERSION=2
+readonly GATE_VERSION=3
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly SHOWCASE="${REPO_ROOT}/fixtures/showcase"
@@ -104,6 +104,24 @@ HTML
 </section>
 HTML
 
+  log "Añadiendo nota huérfana y enlace fantasma para /grafo"
+  gaveta new "Nota huérfana T2.11" --type doc --in importados/grafo --from - --json <<'HTML' >/dev/null
+<h1>Nota huérfana T2.11</h1>
+<section id="cuerpo">
+  <p>Sin enlaces entrantes ni salientes (para probar «Ocultar huérfanas»).</p>
+</section>
+HTML
+
+  gaveta new "Enlace al fantasma" --type doc --in importados/grafo --from - --json <<'HTML' >/dev/null
+<h1>Enlace al fantasma</h1>
+<section id="cuerpo">
+  <p>
+    Destino pendiente:
+    <a data-g-pending="Puerta fantasma T2.11">crear nota</a>
+  </p>
+</section>
+HTML
+
   printf '%s' "${GATE_VERSION}" >"${STAMP_FILE}"
 }
 
@@ -112,7 +130,22 @@ verify_vault() {
   [[ -f "${GATE_VAULT}/importados/tareas/tareas-basicas.html" ]] || die "falta import tareas-basicas"
   [[ -f "${GATE_VAULT}/importados/salud/nota-rota.html" ]] || die "falta nota-rota de demo"
   [[ -f "${GATE_VAULT}/importados/demo/recarga-en-vivo.html" ]] || die "falta nota recarga en vivo"
+  [[ -f "${GATE_VAULT}/importados/grafo/nota-huerfana-t2-11.html" ]] || die "falta nota huérfana de grafo"
+  [[ -f "${GATE_VAULT}/importados/grafo/enlace-al-fantasma.html" ]] || die "falta nota con enlace fantasma"
   gaveta doctor --json >/dev/null || true
+  gaveta graph --json | node -e '
+const fs = require("node:fs");
+const body = JSON.parse(fs.readFileSync(0, "utf8"));
+const nodes = body.data?.nodes ?? [];
+const hasGhost = nodes.some((node) => node.ghost === true);
+const hasOrphan = nodes.some(
+  (node) =>
+    node.ghost !== true &&
+    node.path === "importados/grafo/nota-huerfana-t2-11.html",
+);
+if (!hasGhost) process.exit(1);
+if (!hasOrphan) process.exit(1);
+' || die "el grafo de demo debe incluir un fantasma y la nota huérfana"
 }
 
 read_serve_envelope() {
