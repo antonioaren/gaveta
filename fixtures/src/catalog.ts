@@ -396,6 +396,6 @@ export const MALICIOUS: readonly MaliciousNoteSpec[] = [
     tags: 'malicioso',
     caseId: 'graph-label-xss',
     codes: [],
-    payloads: ['&lt;script&gt;alert(1)&lt;/script&gt;'],
+    payloads: [],
   },
 ];

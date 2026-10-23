@@ -37,7 +37,7 @@ interface PendingChange {
 }
 
 export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWatcher {
-  const debounceMs = options.debounceMs ?? 40;
+  const debounceMs = options.debounceMs ?? 50;
   const movePairWindowMs = options.movePairWindowMs ?? 200;
   const pending = new Map<string, PendingChange>();
   const recentUnlinks = new Map<string, RecentUnlink>();
@@ -88,8 +88,8 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
   const watcher: FSWatcher = chokidar.watch(options.vaultRoot, {
     ignoreInitial: true,
     awaitWriteFinish: {
-      stabilityThreshold: 25,
-      pollInterval: 10,
+      stabilityThreshold: 50,
+      pollInterval: 25,
     },
     ignored: (absolutePath) => {
       const relative = toVaultRelativePath(options.vaultRoot, absolutePath);
