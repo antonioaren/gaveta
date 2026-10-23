@@ -29,12 +29,13 @@ import { CliFailure } from './failure.ts';
 import { renderHelp } from './help.ts';
 import { readCommandInput } from './input.ts';
 import { commands } from './registry.ts';
-import type {
-  CommandContext,
-  CommandResult,
-  CommandSpec,
-  CommandSubSpec,
-  CommandWarning,
+import {
+  STRING_LIST_SEPARATOR,
+  type CommandContext,
+  type CommandResult,
+  type CommandSpec,
+  type CommandSubSpec,
+  type CommandWarning,
 } from './types.ts';
 
 export interface CliIo {
@@ -463,6 +464,10 @@ function registerLeafCommand(
     if (option.kind === 'boolean') {
       built.default(false);
     }
+    if (option.kind === 'stringList') {
+      built.default([]);
+      built.argParser((value: string, previous: string[]) => [...previous, value]);
+    }
     command.addOption(built);
   }
   const optionSpec = { options, name: spec.name };
@@ -543,7 +548,10 @@ const GLOBAL_OPTION_KEYS = new Set(['json', 'vault', 'from']);
 function readCommandOptions(
   value: unknown,
   spec: {
-    readonly options: readonly { readonly name: string; readonly kind?: 'string' | 'boolean' }[];
+    readonly options: readonly {
+      readonly name: string;
+      readonly kind?: 'string' | 'boolean' | 'stringList';
+    }[];
   },
 ): Readonly<Record<string, string>> {
   if (!isRecord(value)) {
@@ -561,6 +569,22 @@ function readCommandOptions(
       throw new CliFailure('E_ARG_INVALID', {}, { problem: 'La opción no existe.' });
     }
     if (entry === undefined) {
+      continue;
+    }
+    if (kinds.get(key) === 'stringList') {
+      if (!Array.isArray(entry)) {
+        throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });
+      }
+      const values: string[] = [];
+      for (const item of entry) {
+        if (typeof item !== 'string' || item.length === 0) {
+          throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });
+        }
+        values.push(item);
+      }
+      if (values.length > 0) {
+        options[key] = values.join(STRING_LIST_SEPARATOR);
+      }
       continue;
     }
     if (kinds.get(key) === 'boolean') {

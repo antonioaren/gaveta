@@ -1,9 +1,14 @@
-import { exportVaultToMarkdown, GavetaError, type ExportVaultReport } from '@gaveta/core';
+import { exportVaultToMarkdown, GavetaError } from '@gaveta/core';
 import type { CommandResult, CommandSpec, CommandWarning } from '../types.ts';
+import {
+  buildExportCliData,
+  renderMigrationSummary,
+  type ExportCliData,
+} from './migration-report.ts';
 
-function aggregateWarnings(report: ExportVaultReport): CommandWarning[] {
+function aggregateWarnings(data: ExportCliData): CommandWarning[] {
   const warnings: CommandWarning[] = [];
-  for (const note of report.notes) {
+  for (const note of data.notes) {
     for (const warning of note.warnings) {
       warnings.push({
         code: warning.code,
@@ -14,35 +19,33 @@ function aggregateWarnings(report: ExportVaultReport): CommandWarning[] {
   return warnings;
 }
 
-function renderHuman(report: ExportVaultReport): string {
-  if (report.dryRun) {
-    if (report.blocked) {
-      const lines = ['La exportación se bloquearía por conflictos:'];
-      for (const conflict of report.conflicts) {
+function renderHuman(data: ExportCliData): string {
+  const labels = {
+    created: 'notas',
+    overwritten: 'sobrescritas',
+    renamed: 'renombradas',
+    skipped: 'omitidas',
+    failed: 'conflictos',
+    attachments: 'adjuntos',
+  };
+  const summary = renderMigrationSummary(data.summary, labels);
+  if (data.dryRun) {
+    if (data.blocked) {
+      const lines = [`Vista previa bloqueada: ${summary}.`, 'Conflictos:'];
+      for (const conflict of data.conflicts) {
         lines.push(`- ${conflict.path} (${conflict.detail})`);
       }
       return `${lines.join('\n')}\n`;
     }
-    if (report.notes.length === 0) {
-      return 'No se escribiría ningún archivo.\n';
-    }
-    const lines = ['Se escribirían:'];
-    for (const note of report.notes) {
-      lines.push(`- ${note.path}`);
-    }
-    for (const attachment of report.attachments) {
-      lines.push(`- ${attachment}`);
-    }
-    return `${lines.join('\n')}\n`;
+    return `Vista previa de exportación a ${data.outDir}: ${summary}.\n`;
   }
-  const count = report.notes.length;
-  return `Exportadas ${String(count)} nota(s) a ${report.outDir}.\n`;
+  return `Exportación completada en ${data.outDir}: ${summary}.\n`;
 }
 
 export const exportCommand: CommandSpec = {
   name: 'export',
   summary: 'Exporta notas del vault a Markdown.',
-  example: 'gaveta export --all --to md --out ./gaveta-export --dry-run --json',
+  example: 'gaveta export --all --to md --out ./export-md --links wiki --dry-run --json',
   requiresVault: true,
   input: 'none',
   args: [
@@ -116,10 +119,11 @@ export const exportCommand: CommandSpec = {
       dryRun: context.options.dryRun === 'true',
       force: context.options.force === 'true',
     });
+    const data = buildExportCliData(report);
     return {
-      data: report,
-      human: renderHuman(report),
-      warnings: aggregateWarnings(report),
+      data,
+      human: renderHuman(data),
+      warnings: aggregateWarnings(data),
     };
   },
 };
