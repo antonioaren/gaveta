@@ -45,7 +45,8 @@ import {
   rejectDepthWithoutRef,
   toSearchOptions,
 } from './query.ts';
-import { applyAppShellHeaders, applySecurityHeaders, isApiPath } from './security-headers.ts';
+import { isPublicShellRoute, normalizeServePath, requiresSessionToken } from './route-access.ts';
+import { applyAppShellHeaders, applySecurityHeaders } from './security-headers.ts';
 import { registerWebApp } from './static-web.ts';
 import { VaultIndexSession } from './vault-index.ts';
 
@@ -102,16 +103,19 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       throw new GavetaError('E_ARG_INVALID');
     }
-    if (isApiPath(request.url) && !readRequestToken(request.headers, token)) {
+    const normalizedPath = normalizeServePath(request.url);
+    if (
+      requiresSessionToken(request.method, normalizedPath) &&
+      !readRequestToken(request.headers, token)
+    ) {
       throw new GavetaError('E_AUTH_REQUIRED');
     }
   });
 
   app.addHook('onSend', async (request, reply, payload) => {
     await Promise.resolve();
-    if (isApiPath(request.url)) {
-      applySecurityHeaders(reply);
-    } else if (options.webRoot !== undefined) {
+    const normalizedPath = normalizeServePath(request.url);
+    if (options.webRoot !== undefined && isPublicShellRoute(request.method, normalizedPath)) {
       applyAppShellHeaders(reply);
     } else {
       applySecurityHeaders(reply);

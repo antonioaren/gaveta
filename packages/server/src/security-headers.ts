@@ -33,8 +33,3 @@ export function applyAppShellHeaders(reply: FastifyReply): void {
     reply.header(name, value);
   }
 }
-
-export function isApiPath(url: string): boolean {
-  const path = url.split('?')[0] ?? url;
-  return path.startsWith('/api/');
-}

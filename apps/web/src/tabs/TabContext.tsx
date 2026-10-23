@@ -12,14 +12,14 @@ export function TabProvider({ children }: { children: ReactNode }) {
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
   const openTab = useCallback(
-    (ref: string, title: string) => {
+    (ref: string, title: string, path: string, noteId: string | null) => {
       const id = tabIdForRef(ref);
       setTabs((current) => {
         const existing = current.find((tab) => tab.id === id);
         if (existing !== undefined) {
           return current;
         }
-        return [...current, { id, ref, title }];
+        return [...current, { id, ref, path, title, noteId }];
       });
       setActiveTabId(id);
       void navigate(`/nota/${encodeURIComponent(ref)}`);

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { NoteListItem } from '../api/types.ts';
 import { buildFolderTree, collectTags, collectTypes, type FolderNode } from './build-tree.ts';
+import { noteRenderId, viewerRefForNote } from '../notes/viewer-ref.ts';
 import { useTabs } from '../tabs/useTabs.ts';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -92,7 +93,7 @@ export function NoteExplorer({ notes, loading, error }: NoteExplorerProps) {
           depth={0}
           activeRef={activeRef}
           onOpen={(note) => {
-            tabState.openTab(note.path, note.title);
+            tabState.openTab(viewerRefForNote(note), note.title, note.path, noteRenderId(note));
           }}
         />
       </nav>

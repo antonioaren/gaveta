@@ -412,6 +412,13 @@ const expected = {
     message: 'Los assets de .gaveta/ son más antiguos que esta versión de la CLI.',
     hint: 'Ejecuta gaveta update dentro del vault o gaveta init para refrescar theme.css sin tocar las notas.',
   },
+  W_WEB_VIEWER_MISSING: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+    message: 'El visor web no está compilado; solo corre la API de lectura.',
+    hint: 'En la raíz del repositorio ejecuta `pnpm build:web` y vuelve a arrancar gaveta serve.',
+  },
 } as const;
 
 it('lists every stable code in catalog order with its Spanish text', () => {
