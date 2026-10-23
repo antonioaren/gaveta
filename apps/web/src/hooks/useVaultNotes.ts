@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { apiJson } from '../api/client.ts';
 import type { NoteListItem, NotesResponse } from '../api/types.ts';
+import { useVaultWebSocket } from '../live/useVaultWebSocket.ts';
 
 export function useVaultNotes(): {
   readonly notes: readonly NoteListItem[];
@@ -10,6 +11,13 @@ export function useVaultNotes(): {
   const [notes, setNotes] = useState<readonly NoteListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
+
+  const reload = useCallback(() => {
+    setRefreshToken((value) => value + 1);
+  }, []);
+
+  useVaultWebSocket(reload);
 
   useEffect(() => {
     void (async () => {
@@ -26,7 +34,7 @@ export function useVaultNotes(): {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [refreshToken]);
 
   return { notes, loading, error };
 }

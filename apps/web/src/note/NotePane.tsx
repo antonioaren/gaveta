@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
 import { useTabs } from '../tabs/useTabs.ts';
 import { isGavetaNavigateMessage } from './navigate-message.ts';
+import { useNoteReloadKey } from '../live/useNoteReloadKey.ts';
 import { NoteRenderFrame } from './NoteRenderFrame.tsx';
 
 const NO_RENDER_ID_MESSAGE =
@@ -50,6 +51,9 @@ export function NotePane() {
     };
   }, [tabState]);
 
+  const noteId = activeTab?.noteId ?? null;
+  const reloadKey = useNoteReloadKey(noteId);
+
   if (activeTab === null) {
     return (
       <section className="note-pane note-pane--empty" aria-label="Área de nota">
@@ -57,8 +61,6 @@ export function NotePane() {
       </section>
     );
   }
-
-  const noteId = activeTab.noteId;
 
   return (
     <section className="note-pane" aria-label="Área de nota">
@@ -70,7 +72,7 @@ export function NotePane() {
         <p className="note-pane__placeholder">{NO_RENDER_ID_MESSAGE}</p>
       ) : (
         <NoteRenderFrame
-          key={noteId}
+          key={`${noteId}-${String(reloadKey)}`}
           noteId={noteId}
           title={activeTab.title}
           onIframeWindow={(window) => {

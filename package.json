@@ -25,6 +25,7 @@
     "@gaveta/core": "workspace:*",
     "@gaveta/fixtures": "workspace:*",
     "@types/node": "catalog:",
+    "@types/ws": "8.18.1",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "10.13.0",
     "eslint-config-prettier": "10.1.8",
@@ -34,6 +35,7 @@
     "prettier": "3.9.10",
     "typescript": "catalog:",
     "typescript-eslint": "8.72.0",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "ws": "8.21.0"
   }
 }
