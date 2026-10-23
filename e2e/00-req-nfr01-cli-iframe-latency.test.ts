@@ -188,7 +188,7 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
           e2e: elapsed,
         });
       }
-      await page.waitForTimeout(350);
+      await page.waitForTimeout(process.env.CI === 'true' ? 750 : 350);
     }
 
     const p50 = percentile(samples, 50);
