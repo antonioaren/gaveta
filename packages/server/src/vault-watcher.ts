@@ -45,6 +45,9 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
   let closed = false;
 
   const scheduleFlush = (): void => {
+    if (closed) {
+      return;
+    }
     if (flushTimer !== null) {
       clearTimeout(flushTimer);
     }
@@ -55,6 +58,10 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
   };
 
   const flushPending = async (): Promise<void> => {
+    if (closed) {
+      pending.clear();
+      return;
+    }
     if (pending.size === 0) {
       return;
     }
@@ -142,8 +149,8 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
         clearTimeout(flushTimer);
         flushTimer = null;
       }
+      pending.clear();
       await watcher.close();
-      await flushPending();
     },
   };
 }
