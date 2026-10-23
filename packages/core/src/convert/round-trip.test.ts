@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  exportWarningDetails,
   listLossyMarkdownFixtureNotes,
+  listMarkdownFixtureNotePaths,
   listMdastEquivalentFixturePaths,
+  lossyFixtureByPath,
   roundTripMarkdownFixture,
   roundTripMarkdownSource,
   warningCodes,
@@ -17,6 +20,10 @@ describe('markdown round-trip (REQ-MIG-11)', () => {
     for (const relativePath of paths) {
       const result = roundTripMarkdownFixture(relativePath);
       expect(result.mdastEquivalent, relativePath).toBe(true);
+      if (warningCodes(result.importWarnings).length === 0) {
+        expect(result.exportLossDetails, relativePath).toEqual([]);
+        expect(warningCodes(result.exportWarnings), relativePath).toEqual([]);
+      }
     }
   });
 
@@ -30,22 +37,34 @@ describe('markdown round-trip (REQ-MIG-11)', () => {
       for (const code of entry.requireExportWarnings ?? []) {
         expect(warningCodes(result.exportWarnings), entry.path).toContain(code);
       }
+      for (const detail of entry.requireExportLossDetails ?? []) {
+        expect(result.exportLossDetails, `${entry.path}:${detail}`).toContain(detail);
+        expect(exportWarningDetails(result.exportWarnings), entry.path).toContain(detail);
+      }
     }
   });
 
-  it('preserves note semantics on html → md → html for imported corpus notes', async () => {
-    await withMarkdownImportVault(async (vaultRoot) => {
-      const snapshots = await roundTripHtmlNoteInVault({
-        vaultRoot,
-        notePath: 'corpus/grupo-a/nota-001.html',
-        markdownRelativePath: 'corpus/grupo-a/nota-001.md',
+  it.each(listMarkdownFixtureNotePaths())(
+    'preserves note semantics on html → md → html for %s',
+    async (relativePath) => {
+      const notePath = relativePath.replace(/\.md$/i, '.html');
+      const lossy = lossyFixtureByPath(relativePath);
+      await withMarkdownImportVault(async (vaultRoot) => {
+        const snapshots = await roundTripHtmlNoteInVault({
+          vaultRoot,
+          notePath,
+          markdownRelativePath: relativePath,
+        });
+        expect(snapshots.after.id).toBe(snapshots.before.id);
+        expect(snapshots.after.title).toBe(snapshots.before.title);
+        expect(snapshots.after.tags).toEqual(snapshots.before.tags);
+        expect(snapshots.after.tasks).toEqual(snapshots.before.tasks);
+        if (lossy === undefined) {
+          expect(snapshots.after.links).toEqual(snapshots.before.links);
+        }
       });
-      expect(snapshots.after.id).toBe(snapshots.before.id);
-      expect(snapshots.after.title).toBe(snapshots.before.title);
-      expect(snapshots.after.tags).toEqual(snapshots.before.tags);
-      expect(snapshots.after.tasks).toEqual(snapshots.before.tasks);
-    });
-  });
+    },
+  );
 
   it('flags wikilink embeds as lossy on import', () => {
     const source = '![[pixel.png]]\n';

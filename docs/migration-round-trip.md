@@ -15,7 +15,7 @@ This document defines how Gaveta tests **import** and **export** symmetry on `fi
 
 **Supported subset:** every manifest note except those listed in `fixtures/markdown/manifest.json` → `roundTrip.lossyMarkdown`.
 
-**Lossy notes:** must **not** be mdast-equivalent. When `requireImportWarnings` / `requireExportWarnings` are set on a lossy entry, the round-trip must emit those codes (for example `W_IMPORT_UNSUPPORTED` for collapsed Obsidian callout kinds or `wiki-embed`).
+**Lossy notes:** must **not** be mdast-equivalent (except when only import metadata differs but the body mdast still matches). When `requireImportWarnings` / `requireExportWarnings` / `requireExportLossDetails` are set on a lossy entry, the round-trip must emit those codes and `W_EXPORT_LOSSY` params (`detail`) for each listed loss. Import-time degradations are stamped on `<article data-g-import-losses="…">` and re-exported as `import-loss:<detail>`.
 
 ## HTML → Markdown → HTML
 

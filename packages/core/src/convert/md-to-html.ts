@@ -133,7 +133,8 @@ export function finalizeMarkdownHtml(
   }
   head.push(`<meta name="gaveta:created" content="${escapeAttr(created)}">`);
   head.push(`<meta name="gaveta:updated" content="${escapeAttr(options.now)}">`);
-  const shell = `<!doctype html><html lang="es"><head>${head.join('')}</head><body>${converted.body}</body></html>`;
+  const body = stampImportLossesOnContent(converted.body, converted.warnings);
+  const shell = `<!doctype html><html lang="es"><head>${head.join('')}</head><body>${body}</body></html>`;
   const normalizeOptions =
     options.remoteAllowlist === undefined
       ? { notePath: options.notePath }
@@ -276,9 +277,36 @@ function renderMarkdownChunk(
   sourcePath: string,
   warnings: MarkdownConvertWarning[],
 ): string {
-  const withCallouts = preprocessCallouts(chunk, warnings);
+  const withHtmlBlocks = preprocessEmbeddedHtmlBlocks(chunk, warnings);
+  const withTables = preprocessTableColumnAlignment(withHtmlBlocks, warnings);
+  const withRemote = preprocessRemoteImages(withTables, warnings);
+  const withCallouts = preprocessCallouts(withRemote, warnings);
   const withEmbeds = preprocessWikiEmbeds(withCallouts, sourcePath, warnings);
   return markdownToHtmlFragment(withEmbeds);
+}
+
+function preprocessTableColumnAlignment(input: string, warnings: MarkdownConvertWarning[]): string {
+  if (/\|[^|\n]*:[-][-]+:[^|\n]*\|/.test(input)) {
+    warnings.push({
+      code: 'W_IMPORT_UNSUPPORTED',
+      params: { detail: 'table-column-alignment' },
+    });
+  }
+  return input;
+}
+
+function preprocessEmbeddedHtmlBlocks(input: string, warnings: MarkdownConvertWarning[]): string {
+  if (/<\s*div[\s>]/i.test(input)) {
+    warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'embedded-html-block' } });
+  }
+  return input;
+}
+
+function preprocessRemoteImages(input: string, warnings: MarkdownConvertWarning[]): string {
+  return input.replace(/!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g, (match) => {
+    warnings.push({ code: 'W_IMPORT_UNSUPPORTED', params: { detail: 'remote-image' } });
+    return match;
+  });
 }
 
 function wrapForType(type: NoteType, inner: string): string {
@@ -296,6 +324,25 @@ function wrapForType(type: NoteType, inner: string): string {
     return trimmed;
   }
   return `<article>\n${trimmed}\n</article>`;
+}
+
+function stampImportLossesOnContent(
+  body: string,
+  warnings: readonly MarkdownConvertWarning[],
+): string {
+  const tokens = warnings
+    .filter((warning) => warning.code === 'W_IMPORT_UNSUPPORTED')
+    .map((warning) => warning.params?.detail)
+    .filter((detail): detail is string => typeof detail === 'string' && detail.length > 0);
+  if (tokens.length === 0) {
+    return body;
+  }
+  const unique = [...new Set(tokens)];
+  const marker = ` data-g-import-losses="${escapeAttr(unique.join(','))}"`;
+  if (body.includes('<article')) {
+    return body.replace(/<article(\s|>)/, `<article${marker}$1`);
+  }
+  return body;
 }
 
 function defaultShell(type: NoteType): string {
@@ -403,7 +450,10 @@ function preprocessCallouts(input: string, warnings: MarkdownConvertWarning[]): 
       index += 1;
     }
     const inner = markdownToHtmlFragment(fragmentLines.join('\n\n'));
-    out.push(`<aside class="callout" data-kind="${escapeAttr(kind)}">\n${inner}\n</aside>`);
+    const foldAttr = start.fold !== null ? ' data-g-callout-fold=""' : '';
+    out.push(
+      `<aside class="callout" data-kind="${escapeAttr(kind)}"${foldAttr}>\n${inner}\n</aside>`,
+    );
   }
   return out.join('\n');
 }

@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `gaveta import` and `gaveta export` human output lists each failed source or export conflict with stable error code and Spanish reason (not only counts).
 - Markdown import warns on mapped Obsidian callout kinds and `![[…]]` embeds (`W_IMPORT_UNSUPPORTED`); callout HTML uses paragraph breaks so md→html→md stays stable for supported callouts.
+- HTML export emits one `W_EXPORT_LOSSY` warning per loss with a stable `detail` (tables, footnotes, slides, callouts, tasks, remote images, embedded HTML, and import carry-over). Single-note export builds the link target map from the full vault scan; refs without `.html` resolve when the note exists.
 
 ## [0.1.0] - 2026-10-22
 

@@ -115,16 +115,121 @@ export function convertHtmlToMarkdown(
     gavetaTasks,
   });
 
+  scanStructuralExportLosses(document, ctx, noteType);
+  recordImportCarryoverLosses(document, ctx);
+
   const markdown = `${frontMatter}\n${restoreWikilinks(bodyMarkdown).trim()}\n`;
   const warnings: HtmlToMarkdownWarning[] = [];
-  if (losses.length > 0 || gavetaLinks.length > 0 || gavetaTasks.length > 0) {
+  for (const loss of losses) {
+    warnings.push({ code: 'W_EXPORT_LOSSY', params: { detail: loss.detail } });
+  }
+  for (const link of gavetaLinks) {
     warnings.push({
       code: 'W_EXPORT_LOSSY',
-      params: { count: losses.length + gavetaLinks.length + gavetaTasks.length },
+      params: { detail: `link:rel:${link.rel}` },
+    });
+  }
+  for (const task of gavetaTasks) {
+    warnings.push({
+      code: 'W_EXPORT_LOSSY',
+      params: { detail: `task:priority:${task.priority}` },
     });
   }
 
   return { markdown, warnings, losses };
+}
+
+function recordExportLoss(ctx: ConvertContext, detail: string): void {
+  if (!ctx.losses.some((entry) => entry.detail === detail)) {
+    ctx.losses.push({ detail });
+  }
+}
+
+function recordImportCarryoverLosses(document: ParseDocument, ctx: ConvertContext): void {
+  const body = findFirstElement(document, 'body');
+  const article = findFirstElement(document, 'article');
+  const raw =
+    (body !== null ? readAttr(body, 'data-g-import-losses') : null) ??
+    (article !== null ? readAttr(article, 'data-g-import-losses') : null);
+  if (raw === null || raw.length === 0) {
+    return;
+  }
+  for (const token of raw.split(',')) {
+    const detail = token.trim();
+    if (detail.length > 0) {
+      recordExportLoss(ctx, `import-loss:${detail}`);
+    }
+  }
+}
+
+function scanStructuralExportLosses(
+  document: ParseDocument,
+  ctx: ConvertContext,
+  noteType: NoteType,
+): void {
+  if (noteType === 'slides') {
+    recordExportLoss(ctx, 'slides:marp-separators');
+  }
+  const body = findFirstElement(document, 'body');
+  if (body === null) {
+    return;
+  }
+  walkElements(body, (element) => {
+    const tag = element.tagName;
+    if (tag === 'section' && readAttr(element, 'id') === 'footnotes') {
+      recordExportLoss(ctx, 'footnote:gfm');
+    }
+    if (tag === 'aside' && classIncludes(element, 'callout')) {
+      const kind = readAttr(element, 'data-kind') ?? 'info';
+      const obsidianKind = EXPORT_CALLOUT_KIND[kind] ?? 'info';
+      if (obsidianKind !== kind) {
+        recordExportLoss(ctx, 'callout:kind-map');
+      }
+      if (readAttr(element, 'data-g-callout-fold') !== null) {
+        recordExportLoss(ctx, 'callout:fold-state');
+      }
+    }
+    if (tag === 'img') {
+      const src = readAttr(element, 'src');
+      if (src !== null && /^https?:\/\//i.test(src)) {
+        recordExportLoss(ctx, 'image:remote-url');
+      }
+    }
+    if (tag === 'li' && hasAttribute(element, 'data-g-task')) {
+      const due = readAttr(element, 'data-g-due');
+      const label = taskLabelText(element);
+      if (
+        due !== null ||
+        label.includes('📅') ||
+        label.includes('✅') ||
+        label.includes('⏳') ||
+        label.includes('[due::') ||
+        label.includes('[completion::')
+      ) {
+        recordExportLoss(ctx, 'task:obsidian-date-syntax');
+      }
+    }
+  });
+}
+
+function walkElements(root: ParseElement, visit: (element: ParseElement) => void): void {
+  const stack: ParseElement[] = [root];
+  while (stack.length > 0) {
+    const element = stack.pop();
+    if (element === undefined) {
+      continue;
+    }
+    visit(element);
+    for (const child of element.childNodes) {
+      if (isElementNode(child)) {
+        stack.push(child);
+      }
+    }
+  }
+}
+
+function hasAttribute(element: ParseElement, name: string): boolean {
+  return readAttr(element, name) !== null;
 }
 
 interface FrontMatterInput {
@@ -283,7 +388,7 @@ function isLossyBlock(element: ParseElement): boolean {
 
 function embedLossyHtml(element: ParseElement, ctx: ConvertContext): string {
   const serialized = sanitizeEmbeddedHtml(serializeOuter(element));
-  ctx.losses.push({ detail: `embedded-html:${element.tagName}` });
+  recordExportLoss(ctx, `embedded-html:${element.tagName}`);
   return serialized;
 }
 

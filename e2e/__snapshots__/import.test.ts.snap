@@ -99,7 +99,10 @@ exports[`gaveta import and export > imports the markdown fixture, exports it bac
       "path": "contenido/tablas.html",
       "sourceMd": "contenido/tablas.md",
       "title": "Tablas GFM",
-      "warningCodes": [],
+      "warningCodes": [
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+      ],
     },
     {
       "action": "create",
@@ -567,7 +570,10 @@ exports[`gaveta import and export > imports the markdown fixture, exports it bac
       "path": "no-soportado/bloques-html.html",
       "sourceMd": "no-soportado/bloques-html.md",
       "title": "Bloques HTML crudos",
-      "warningCodes": [],
+      "warningCodes": [
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+      ],
     },
     {
       "action": "create",
@@ -602,7 +608,10 @@ exports[`gaveta import and export > imports the markdown fixture, exports it bac
       "path": "no-soportado/enlace-remoto.html",
       "sourceMd": "no-soportado/enlace-remoto.md",
       "title": "Recurso remoto",
-      "warningCodes": [],
+      "warningCodes": [
+        "W_IMPORT_UNSUPPORTED",
+        "W_IMPORT_UNSUPPORTED",
+      ],
     },
     {
       "action": "create",

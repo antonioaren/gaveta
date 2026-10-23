@@ -3,6 +3,7 @@
  *
  * Equivalence rules are documented in docs/migration-round-trip.md.
  */
+import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -18,9 +19,12 @@ import { visit } from 'unist-util-visit';
 import type { Root as MdastRoot } from 'mdast';
 import { parseNote } from '../parser.ts';
 import type { WarningCode } from '../errors.ts';
+import { isUlid } from '../contract.ts';
 import { importMarkdownFolder } from '../import/folder.ts';
+import { scanNoteFiles } from '../sqlite/scan.ts';
 import { readVaultText } from '../vault/paths.ts';
 import { initVault } from '../vault/init.ts';
+import type { HtmlExportTarget } from './html-to-md.ts';
 import { convertHtmlToMarkdown, type HtmlToMarkdownWarning } from './html-to-md.ts';
 import {
   convertMarkdownToHtml,
@@ -36,6 +40,7 @@ export interface MarkdownRoundTripResult {
   readonly mdastEquivalent: boolean;
   readonly importWarnings: readonly MarkdownConvertWarning[];
   readonly exportWarnings: readonly HtmlToMarkdownWarning[];
+  readonly exportLossDetails: readonly string[];
 }
 
 export interface NoteSemanticSnapshot {
@@ -110,6 +115,7 @@ export function roundTripMarkdownSource(
     mdastEquivalent,
     importWarnings: converted.warnings,
     exportWarnings: exported.warnings,
+    exportLossDetails: exported.losses.map((loss) => loss.detail),
   };
 }
 
@@ -126,6 +132,16 @@ export function listMdastEquivalentFixturePaths(): readonly string[] {
 
 export function listLossyMarkdownFixtureNotes(): readonly MarkdownRoundTripLossyNote[] {
   return loadMarkdownManifest().roundTrip.lossyMarkdown;
+}
+
+export function listMarkdownFixtureNotePaths(): readonly string[] {
+  return loadMarkdownManifest().notePaths;
+}
+
+export function lossyFixtureByPath(relativePath: string): MarkdownRoundTripLossyNote | undefined {
+  return loadMarkdownManifest().roundTrip.lossyMarkdown.find(
+    (entry) => entry.path === relativePath,
+  );
 }
 
 export function noteSemanticSnapshot(html: string): NoteSemanticSnapshot {
@@ -157,16 +173,23 @@ export async function roundTripHtmlNoteInVault(options: {
   readonly markdownRelativePath: string;
 }): Promise<{ readonly before: NoteSemanticSnapshot; readonly after: NoteSemanticSnapshot }> {
   const htmlBefore = await readVaultText(options.vaultRoot, options.notePath);
-  const exported = convertHtmlToMarkdown(htmlBefore, { notePath: options.notePath });
+  const resolveTarget = await buildVaultExportTargetResolver(options.vaultRoot);
+  const exported = convertHtmlToMarkdown(htmlBefore, {
+    notePath: options.notePath,
+    resolveTarget,
+  });
   const tempParent = join(options.vaultRoot, '..', 'round-trip-md');
   const { mkdir, writeFile, rm } = await import('node:fs/promises');
   await mkdir(tempParent, { recursive: true });
-  const mdFile = join(tempParent, options.markdownRelativePath.split('/').pop() ?? 'nota.md');
+  const mdFile = join(tempParent, options.markdownRelativePath);
+  await mkdir(join(tempParent, posix.dirname(options.markdownRelativePath)), { recursive: true });
   await writeFile(mdFile, exported.markdown, 'utf8');
+  const inFolder = posix.dirname(options.notePath.replace(/\.html$/i, ''));
   try {
     await importMarkdownFolder({
       vaultRoot: options.vaultRoot,
       sourcePath: mdFile,
+      ...(inFolder.length > 0 && inFolder !== '.' ? { in: inFolder } : {}),
       onConflict: 'overwrite',
     });
   } finally {
@@ -202,6 +225,43 @@ export function warningCodes(
   warnings: readonly { readonly code: WarningCode }[],
 ): readonly WarningCode[] {
   return warnings.map((warning) => warning.code);
+}
+
+async function buildVaultExportTargetResolver(
+  vaultRoot: string,
+): Promise<(id: string) => HtmlExportTarget | null> {
+  const scanned = await scanNoteFiles(vaultRoot);
+  const map = new Map<string, HtmlExportTarget>();
+  for (const file of scanned.files) {
+    const html = await readVaultText(vaultRoot, file.relativePath);
+    const parsed = parseNote(html);
+    const note = parsed.note;
+    if (note === null) {
+      continue;
+    }
+    const id = note.metadata.id ?? note.id ?? null;
+    const title = note.title ?? note.metadata.title ?? file.relativePath;
+    if (id !== null && isUlid(id)) {
+      map.set(id, { id, title, path: file.relativePath });
+    }
+  }
+  return (id: string) => map.get(id) ?? null;
+}
+
+export function exportWarningDetails(
+  warnings: readonly HtmlToMarkdownWarning[],
+): readonly string[] {
+  const details: string[] = [];
+  for (const warning of warnings) {
+    if (warning.code !== 'W_EXPORT_LOSSY') {
+      continue;
+    }
+    const detail = warning.params?.detail;
+    if (typeof detail === 'string') {
+      details.push(detail);
+    }
+  }
+  return details;
 }
 
 function normalizeMdastTree(tree: MdastRoot): void {

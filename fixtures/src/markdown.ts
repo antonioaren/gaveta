@@ -22,6 +22,7 @@ export interface MarkdownRoundTripLossyNote {
   reason: string;
   requireImportWarnings?: WarningCodeName[];
   requireExportWarnings?: WarningCodeName[];
+  requireExportLossDetails?: string[];
 }
 
 type WarningCodeName = 'W_IMPORT_UNSUPPORTED' | 'W_EXPORT_LOSSY';
@@ -126,6 +127,11 @@ function readLossyMarkdown(value: unknown): MarkdownRoundTripLossyNote[] {
       index,
       'requireExportWarnings',
     );
+    const requireExportLossDetails = readOptionalStringArray(
+      record.requireExportLossDetails,
+      index,
+      'requireExportLossDetails',
+    );
     const lossyNote: MarkdownRoundTripLossyNote = { path, reason };
     if (requireImportWarnings !== undefined) {
       lossyNote.requireImportWarnings = requireImportWarnings;
@@ -133,8 +139,25 @@ function readLossyMarkdown(value: unknown): MarkdownRoundTripLossyNote[] {
     if (requireExportWarnings !== undefined) {
       lossyNote.requireExportWarnings = requireExportWarnings;
     }
+    if (requireExportLossDetails !== undefined) {
+      lossyNote.requireExportLossDetails = requireExportLossDetails;
+    }
     return lossyNote;
   });
+}
+
+function readOptionalStringArray(
+  value: unknown,
+  index: number,
+  label: string,
+): string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(value) || !value.every((item) => typeof item === 'string')) {
+    throw new Error(`roundTrip.lossyMarkdown[${String(index)}].${label} must be a string array`);
+  }
+  return value;
 }
 
 function readOptionalWarningCodes(

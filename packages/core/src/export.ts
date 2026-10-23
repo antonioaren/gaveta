@@ -115,8 +115,8 @@ export async function exportVaultToMarkdown(
   try {
     const scanned = await scanNoteFiles(vaultRoot);
     const scannedPaths = scanned.files.map((file) => file.relativePath);
-    const targets = await buildTargetMapFromVault(vaultRoot, scannedPaths);
     const notePaths = selectNotePaths(index, ref, all, scannedPaths);
+    const targets = await buildTargetMapFromVault(vaultRoot, scannedPaths);
     const attachments = new Set<string>();
     const plannedNotes: PlannedNote[] = [];
 
@@ -223,6 +223,12 @@ function selectNotePaths(
   }
   if (scannedPaths.includes(inspected.path)) {
     return [inspected.path];
+  }
+  if (!inspected.path.endsWith('.html')) {
+    const withHtml = `${inspected.path}.html`;
+    if (scannedPaths.includes(withHtml)) {
+      return [withHtml];
+    }
   }
   if (inspected.path.endsWith('.html')) {
     throw new GavetaError('E_REF_NOT_FOUND');
