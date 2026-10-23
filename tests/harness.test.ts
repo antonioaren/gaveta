@@ -44,7 +44,7 @@ function listFiles(directory: string): string[] {
 }
 
 const requiredCheckScript =
-  'pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build:web && pnpm test:e2e && pnpm audit --audit-level=high';
+  'pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm test:nfr && pnpm build:web && pnpm test:e2e && pnpm audit --audit-level=high';
 
 describe('T0.3 local check', () => {
   it('runs the same format, lint, typecheck, coverage, e2e, and audit steps as CI', () => {
