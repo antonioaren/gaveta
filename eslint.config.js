@@ -13,6 +13,7 @@ export default tseslint.config(
       'pnpm-lock.yaml',
       'packages/core/src/theme/mermaid.min.js',
       'packages/core/src/theme/mermaid-boot.js',
+      'packages/server/assets/render-bridge.js',
     ],
   },
   eslint.configs.recommended,

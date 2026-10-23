@@ -6,7 +6,9 @@ import {
   localGraph,
   outgoingLinks,
   readNote,
+  readRenderNoteId,
   readVaultConfig,
+  resolveRenderNote,
 } from '@gaveta/core';
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import {
@@ -15,6 +17,7 @@ import {
   assertSingleHostHeader,
   assertServeHost,
   buildAppUrl,
+  createRenderTicketSecret,
   createSessionToken,
   readRequestToken,
 } from './auth.ts';
@@ -45,8 +48,20 @@ import {
   rejectDepthWithoutRef,
   toSearchOptions,
 } from './query.ts';
-import { isPublicShellRoute, normalizeServePath, requiresSessionToken } from './route-access.ts';
-import { applyAppShellHeaders, applySecurityHeaders } from './security-headers.ts';
+import { readRenderTicketFromRequest } from './render-access.ts';
+import { createRenderTicket, renderTicketExpiresAt } from './render-ticket.ts';
+import { registerRenderRoutes } from './render-routes.ts';
+import {
+  isPublicShellRoute,
+  isRenderRoute,
+  normalizeServePath,
+  requiresSessionToken,
+} from './route-access.ts';
+import {
+  applyAppShellHeaders,
+  applyRenderTransportHeaders,
+  applySecurityHeaders,
+} from './security-headers.ts';
 import { registerWebApp } from './static-web.ts';
 import { VaultIndexSession } from './vault-index.ts';
 
@@ -55,6 +70,7 @@ export interface CreateGavetaServerOptions {
   readonly host?: string;
   readonly port?: number;
   readonly token?: string;
+  readonly renderTicketSecret?: string;
   readonly cliVersion?: string;
   /** Built output of @gaveta/web; when set, gaveta serve also serves the viewer shell. */
   readonly webRoot?: string;
@@ -80,6 +96,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
   const host = options.host ?? GAVETA_SERVE_HOST;
   assertServeHost(host);
   const token = options.token ?? createSessionToken();
+  const renderTicketSecret = options.renderTicketSecret ?? createRenderTicketSecret();
   const requestedPort = options.port ?? GAVETA_SERVE_DEFAULT_PORT;
   const vaultSession = new VaultIndexSession(options.vaultRoot);
   let boundPort = requestedPort;
@@ -110,12 +127,20 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
     ) {
       throw new GavetaError('E_AUTH_REQUIRED');
     }
+    if (isRenderRoute(request.method, normalizedPath)) {
+      readRenderTicketFromRequest(request);
+    }
   });
 
   app.addHook('onSend', async (request, reply, payload) => {
     await Promise.resolve();
     const normalizedPath = normalizeServePath(request.url);
-    if (options.webRoot !== undefined && isPublicShellRoute(request.method, normalizedPath)) {
+    if (isRenderRoute(request.method, normalizedPath)) {
+      applyRenderTransportHeaders(reply);
+    } else if (
+      options.webRoot !== undefined &&
+      isPublicShellRoute(request.method, normalizedPath)
+    ) {
       applyAppShellHeaders(reply);
     } else {
       applySecurityHeaders(reply);
@@ -123,7 +148,14 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
     return payload;
   });
 
-  registerReadRoutes(app, options, vaultSession, () => boundPort);
+  registerReadRoutes(app, options, vaultSession, () => boundPort, renderTicketSecret);
+  registerRenderRoutes(
+    app,
+    options,
+    vaultSession,
+    { ticketSecret: renderTicketSecret },
+    () => boundPort,
+  );
 
   app.setErrorHandler((error, _request, reply) => {
     sendError(reply, error);
@@ -190,6 +222,7 @@ function registerReadRoutes(
   options: CreateGavetaServerOptions,
   vaultSession: VaultIndexSession,
   port: () => number,
+  renderTicketSecret: string,
 ): void {
   app.get(BOOTSTRAP_PATH, (_request, reply) => {
     const data = {
@@ -197,6 +230,23 @@ function registerReadRoutes(
       port: port(),
     };
     return reply.send(apiSuccess(data));
+  });
+
+  app.get('/api/render-ticket', async (request, reply) => {
+    const id = readRenderNoteId(readQueryParam(request, 'id') ?? '');
+    await vaultSession.withIndex(async (index) => {
+      resolveRenderNote(index, id);
+      return Promise.resolve();
+    });
+    const ticket = createRenderTicket(renderTicketSecret, id);
+    const expiresAt = renderTicketExpiresAt(ticket);
+    return reply.send(
+      apiSuccess({
+        id,
+        ticket,
+        expiresAt,
+      }),
+    );
   });
 
   app.get('/api/notes', async (_request, reply) => {

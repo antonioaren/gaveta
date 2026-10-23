@@ -7,6 +7,10 @@ export function createSessionToken(): string {
   return randomBytes(32).toString('base64url');
 }
 
+export function createRenderTicketSecret(): string {
+  return randomBytes(32).toString('base64url');
+}
+
 export function readBearerToken(authorization: string | undefined): string | undefined {
   if (authorization === undefined) {
     return undefined;

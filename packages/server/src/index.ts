@@ -20,4 +20,10 @@ export {
   type GavetaServerAddress,
 } from './create-server.ts';
 
-export { buildAppUrl, createSessionToken } from './auth.ts';
+export { buildAppUrl, createRenderTicketSecret, createSessionToken } from './auth.ts';
+export {
+  GAVETA_NAVIGATE_MESSAGE_TYPE,
+  parseGavetaNavigateMessage,
+  type GavetaNavigateMessage,
+} from '@gaveta/core';
+export { isRenderRoute, normalizeServePath, requiresSessionToken } from './route-access.ts';

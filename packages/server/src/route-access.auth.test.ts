@@ -18,14 +18,7 @@ function writeMinimalWebRoot(dir: string): void {
   writeFileSync(join(dir, 'assets', 'app.js'), 'ok', 'utf8');
 }
 
-const BYPASS_PATHS = [
-  '/api/notes',
-  '/%61pi/notes',
-  '//api/notes',
-  '/api',
-  '/API/notes',
-  '/render/01NOTE',
-] as const;
+const BYPASS_PATHS = ['/api/notes', '/%61pi/notes', '//api/notes', '/api', '/API/notes'] as const;
 
 it('deny-by-default: encoded, slash and case variants still require a token', async () => {
   await withVaultCopy(async (vaultRoot) => {
@@ -40,6 +33,9 @@ it('deny-by-default: encoded, slash and case variants still require a token', as
       const denied = await requestLocal(port, path);
       expect(denied.status, path).toBe(401);
     }
+
+    const renderDenied = await requestLocal(port, '/render/01JB7Z3K9QX4T5M2N8V6R0WYHC');
+    expect(renderDenied.status).toBe(401);
 
     const allowed = await requestLocal(port, '/api/notes', authHeaders(token));
     expect(allowed.status).toBe(200);
@@ -61,8 +57,12 @@ it('does not serve the SPA shell for unknown client paths', async () => {
     expect(typo.status).toBe(404);
     expect(typo.body).not.toContain('shell');
 
-    const renderMissing = await requestLocal(port, '/render/falta', authHeaders(token));
-    expect(renderMissing.status).toBe(404);
+    const renderMissing = await requestLocal(
+      port,
+      '/render/01JB7Z3K9QX4T5M2N8V6R0WYHD',
+      authHeaders(token),
+    );
+    expect(renderMissing.status).toBe(401);
 
     const nota = await requestLocal(port, '/nota/demo');
     expect(nota.status).toBe(200);

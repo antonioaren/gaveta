@@ -150,12 +150,35 @@ export {
   DEFAULT_MERMAID_BOOT_JS,
   DEFAULT_MERMAID_LICENSE,
   DEFAULT_MERMAID_MIN_JS,
+  MERMAID_BOOT_BASENAME,
   MERMAID_META,
+  MERMAID_MIN_BASENAME,
   MERMAID_VAULT_ASSETS,
   mermaidAssetHref,
 } from './mermaid/assets.ts';
 
 export { isTrustedMermaidScript, sanitizeMermaidSource } from './mermaid/normalize.ts';
+
+export {
+  assertNoteAttachmentPathAllowed,
+  collectNoteAttachmentPaths,
+  isBlockedRenderVaultPath,
+} from './render/attachments.ts';
+
+export {
+  GAVETA_NAVIGATE_MESSAGE_TYPE,
+  parseGavetaNavigateMessage,
+  type GavetaNavigateMessage,
+} from './render/navigate-message.ts';
+
+export {
+  appendRenderTicketQuery,
+  buildNoteRenderCsp,
+  buildNoteRenderPage,
+  readRenderNoteId,
+  resolveRenderNote,
+  RENDER_STATIC_PREFIX,
+} from './render/note-page.ts';
 
 export { doctorVault } from './doctor.ts';
 

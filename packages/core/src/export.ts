@@ -1,7 +1,5 @@
 import { copyFile, lstat, mkdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { parse } from 'parse5';
-import type { DefaultTreeAdapterMap } from 'parse5';
 import { isUlid } from './contract.ts';
 import {
   convertHtmlToMarkdown,
@@ -10,7 +8,8 @@ import {
   type HtmlToMarkdownWarning,
 } from './convert/html-to-md.ts';
 import { GavetaError } from './errors.ts';
-import { inspectVaultPath, isProducedHref, resolveVaultHref } from './links/path.ts';
+import { inspectVaultPath } from './links/path.ts';
+import { collectNoteAttachmentPaths } from './render/attachments.ts';
 import { resolveRef } from './links/ref.ts';
 import { parseNote } from './parser.ts';
 import { scanNoteFiles } from './sqlite/scan.ts';
@@ -19,9 +18,6 @@ import { pathOutsideVault } from './vault/errors.ts';
 import { hasNodeErrorCode } from './vault/node-error.ts';
 import { isInsideVault, readVaultText, resolveInsideVault } from './vault/paths.ts';
 import { writeAtomic } from './vault/atomic.ts';
-
-type ParseChild = DefaultTreeAdapterMap['childNode'];
-type ParseElement = DefaultTreeAdapterMap['element'];
 
 export type ExportFormat = 'md';
 
@@ -126,7 +122,7 @@ export async function exportVaultToMarkdown(
 
     for (const notePath of notePaths) {
       const html = await readVaultText(vaultRoot, notePath);
-      for (const attachment of collectAttachmentPaths(html, notePath)) {
+      for (const attachment of collectNoteAttachmentPaths(html, notePath)) {
         attachments.add(attachment);
       }
       const converted = convertHtmlToMarkdown(html, {
@@ -301,87 +297,6 @@ async function preflightExportDestinations(input: {
 
 function htmlPathToMd(notePath: string): string {
   return notePath.replace(/\.html$/i, '.md');
-}
-
-function collectAttachmentPaths(html: string, notePath: string): string[] {
-  const document = parse(html, { scriptingEnabled: false });
-  const found = new Set<string>();
-  for (const child of document.childNodes) {
-    walkTree(child, (element) => {
-      const tag = element.tagName;
-      if (tag === 'a') {
-        addVaultResource(readAttr(element, 'href'), notePath, found, false);
-        return;
-      }
-      if (tag === 'img' || tag === 'source' || tag === 'video' || tag === 'audio') {
-        addVaultResource(readAttr(element, 'src'), notePath, found, false);
-        if (tag === 'video') {
-          addVaultResource(readAttr(element, 'poster'), notePath, found, false);
-        }
-      }
-    });
-  }
-  return [...found].sort();
-}
-
-function addVaultResource(
-  src: string | null,
-  notePath: string,
-  found: Set<string>,
-  allowHtml: boolean,
-): void {
-  if (src === null || src.length === 0) {
-    return;
-  }
-  if (!isProducedHref(src)) {
-    return;
-  }
-  const resolved = resolveVaultHref(notePath, src);
-  if (resolved === null) {
-    if (src.startsWith('#')) {
-      return;
-    }
-    throw pathOutsideVault();
-  }
-  if (!allowHtml && (resolved.endsWith('.html') || resolved.endsWith('.md'))) {
-    return;
-  }
-  found.add(resolved);
-}
-
-function walkTree(node: ParseChild, visit: (element: ParseElement) => void): void {
-  if (isElement(node)) {
-    visit(node);
-  }
-  const children = childNodesOf(node);
-  for (const child of children) {
-    walkTree(child, visit);
-  }
-}
-
-function childNodesOf(node: ParseChild): readonly ParseChild[] {
-  if ('childNodes' in node && Array.isArray(node.childNodes)) {
-    return node.childNodes;
-  }
-  return [];
-}
-
-function isElement(node: ParseChild): node is ParseElement {
-  return (
-    node.nodeName !== '#text' &&
-    node.nodeName !== '#comment' &&
-    node.nodeName !== '#document' &&
-    'tagName' in node
-  );
-}
-
-function readAttr(element: ParseElement, name: string): string | null {
-  for (const attr of element.attrs) {
-    if (attr.name.toLowerCase() === name) {
-      return attr.value;
-    }
-  }
-  return null;
 }
 
 async function copyVaultAttachment(
