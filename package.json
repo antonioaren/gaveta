@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:nfr": "vitest run --config vitest.nfr.config.ts",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts e2e/00-req-nfr01-cli-iframe-latency.test.ts && vitest run --config vitest.e2e.config.ts --exclude e2e/00-req-nfr01-cli-iframe-latency.test.ts",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:nfr && pnpm test:coverage && pnpm build:web && pnpm test:e2e && pnpm audit --audit-level=high",
     "dev": "pnpm --filter @gaveta/web dev",
     "build:web": "pnpm --filter @gaveta/web build"

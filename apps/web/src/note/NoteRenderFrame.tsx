@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { appendRenderReloadQuery } from './render-frame.ts';
+import {
+  attachLiveReloadFollowUp,
+  navigateIframeToRenderGeneration,
+} from './live-iframe-reload.ts';
 import { useRenderFrameUrl } from './useRenderFrameUrl.ts';
 
 interface NoteRenderFrameProps {
@@ -18,7 +21,12 @@ export function NoteRenderFrame({
   onIframeLoad,
 }: NoteRenderFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const latestReloadGenerationRef = useRef(reloadGeneration);
   const renderSrc = useRenderFrameUrl(noteId);
+
+  useEffect(() => {
+    latestReloadGenerationRef.current = reloadGeneration;
+  }, [reloadGeneration]);
 
   useEffect(() => {
     if (reloadGeneration === 0 || renderSrc === null) {
@@ -28,7 +36,8 @@ export function NoteRenderFrame({
     if (iframe === null) {
       return;
     }
-    iframe.src = appendRenderReloadQuery(renderSrc, reloadGeneration);
+    navigateIframeToRenderGeneration(iframe, renderSrc, reloadGeneration);
+    return attachLiveReloadFollowUp(iframe, renderSrc, () => latestReloadGenerationRef.current);
   }, [reloadGeneration, renderSrc]);
 
   const syncWindow = (): void => {
