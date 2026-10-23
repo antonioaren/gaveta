@@ -601,9 +601,12 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
         .waitFor({ timeout: 30_000 });
       const elapsed = performance.now() - startedAt;
       samples.push(elapsed);
-      const pipeline = readE2ePipelineSample(
-        await page.evaluate(() => Reflect.get(globalThis, '__gavetaLastPipeline') ?? null),
-      );
+      const pipelineJson = await page.evaluate((): string | null => {
+        const sample: unknown = Reflect.get(globalThis, '__gavetaLastPipeline');
+        return sample === undefined ? null : JSON.stringify(sample);
+      });
+      const pipeline =
+        pipelineJson === null ? null : readE2ePipelineSample(JSON.parse(pipelineJson) as unknown);
       if (pipeline !== null) {
         stageRows.push({
           chokidar: pipeline.serverStages.chokidar,
