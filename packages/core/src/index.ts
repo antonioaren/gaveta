@@ -180,6 +180,13 @@ export {
   RENDER_STATIC_PREFIX,
 } from './render/note-page.ts';
 
+export {
+  buildRenderTypeLayout,
+  collectSlideThumbTargets,
+  type RenderTypeLayout,
+  type SlideThumbTarget,
+} from './render/type-views.ts';
+
 export { doctorVault } from './doctor.ts';
 
 export type { DoctorFinding, DoctorFix, DoctorReport, DoctorVaultOptions } from './doctor.ts';

@@ -14,6 +14,8 @@ export default tseslint.config(
       'packages/core/src/theme/mermaid.min.js',
       'packages/core/src/theme/mermaid-boot.js',
       'packages/server/assets/render-bridge.js',
+      'packages/server/assets/render-slides.js',
+      'packages/server/assets/render-todo.js',
     ],
   },
   eslint.configs.recommended,

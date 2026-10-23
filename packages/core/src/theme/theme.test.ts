@@ -39,6 +39,9 @@ const UI_TOKENS = [
   '--color-accent-doc',
   '--color-accent-slides',
   '--color-accent-todo',
+  '--color-accent-dashboard',
+  '--color-accent-design',
+  '--color-accent-artifact',
 ] as const;
 
 const TEXT_CONTRAST = 4.5;

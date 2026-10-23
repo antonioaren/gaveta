@@ -10,7 +10,10 @@ import {
   MERMAID_LIB_ROLE,
   MERMAID_SCRIPT_ATTR,
 } from '../mermaid/assets.ts';
+import type { NoteType } from '../contract.ts';
 import { normalizeNote } from '../normalize.ts';
+import { parseNote } from '../parser.ts';
+import { buildRenderTypeLayout } from './type-views.ts';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
 import { serializeOuter } from 'parse5';
@@ -99,6 +102,8 @@ export function buildNoteRenderPage(input: BuildNoteRenderPageInput): string {
   const bodyInner = extractBodyInner(normalized.html);
   const ticket = input.renderTicket;
   const rewritten = rewriteAssetUrls(bodyInner, input.noteId, input.notePath, ticket);
+  const noteType = readRenderNoteType(normalized.html);
+  const layout = buildRenderTypeLayout(noteType, rewritten);
   const csp = buildNoteRenderCsp(input.port);
   const title = escapeText(input.title);
   const staticUrl = (basename: string): string =>
@@ -108,6 +113,7 @@ export function buildNoteRenderPage(input: BuildNoteRenderPageInput): string {
     '<html lang="es">',
     '<head>',
     '<meta charset="utf-8">',
+    `<meta name="gaveta:type" content="${escapeAttr(noteType)}">`,
     `<meta http-equiv="${CSP_HTTP_EQUIV}" content="${escapeAttr(csp)}">`,
     `<title>${title}</title>`,
     `<link rel="stylesheet" href="${escapeAttr(staticUrl('theme.css'))}">`,
@@ -118,15 +124,29 @@ export function buildNoteRenderPage(input: BuildNoteRenderPageInput): string {
       `<script defer src="${escapeAttr(staticUrl(MERMAID_BOOT_BASENAME))}" ${MERMAID_SCRIPT_ATTR}="${MERMAID_BOOT_ROLE}"></script>`,
     );
   }
+  for (const scriptName of layout.scripts) {
+    headParts.push(
+      `<script defer src="${escapeAttr(staticUrl(scriptName))}" ${MERMAID_SCRIPT_ATTR}="render-view"></script>`,
+    );
+  }
   headParts.push(
     `<script defer src="${escapeAttr(staticUrl('render-bridge.js'))}" ${MERMAID_SCRIPT_ATTR}="render-bridge"></script>`,
     '</head>',
     '<body>',
-    rewritten,
+    layout.html,
     '</body>',
     '</html>',
   );
   return headParts.join('');
+}
+
+function readRenderNoteType(html: string): NoteType {
+  const parsed = parseNote(html);
+  const type = parsed.note?.type;
+  if (type === null || type === undefined) {
+    return 'doc';
+  }
+  return type;
 }
 
 function extractBodyInner(html: string): string {
