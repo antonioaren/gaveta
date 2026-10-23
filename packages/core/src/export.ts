@@ -52,6 +52,31 @@ export interface ExportedNoteReport {
   readonly losses: readonly { readonly detail: string }[];
 }
 
+/** Detects `.md` output paths that would collide on case-insensitive filesystems. */
+export function exportMdPathCaseCollisions(mdPaths: readonly string[]): ExportConflict[] {
+  const conflicts: ExportConflict[] = [];
+  const byFolded = new Map<string, string>();
+  for (const mdPath of mdPaths) {
+    const folded = mdPath.toLowerCase();
+    const previous = byFolded.get(folded);
+    if (previous !== undefined && previous !== mdPath) {
+      conflicts.push({
+        path: mdPath,
+        code: 'E_PATH_EXISTS',
+        detail: 'case-collision',
+      });
+      conflicts.push({
+        path: previous,
+        code: 'E_PATH_EXISTS',
+        detail: 'case-collision',
+      });
+      continue;
+    }
+    byFolded.set(folded, mdPath);
+  }
+  return conflicts.sort((left, right) => left.path.localeCompare(right.path));
+}
+
 export interface ExportVaultReport {
   readonly dryRun: boolean;
   readonly blocked: boolean;
@@ -244,26 +269,9 @@ async function preflightExportDestinations(input: {
   readonly attachments: readonly string[];
   readonly force: boolean;
 }): Promise<ExportConflict[]> {
-  const conflicts: ExportConflict[] = [];
-  const byFolded = new Map<string, string>();
-  for (const note of input.notes) {
-    const folded = note.mdPath.toLowerCase();
-    const previous = byFolded.get(folded);
-    if (previous !== undefined && previous !== note.mdPath) {
-      conflicts.push({
-        path: note.mdPath,
-        code: 'E_PATH_EXISTS',
-        detail: 'case-collision',
-      });
-      conflicts.push({
-        path: previous,
-        code: 'E_PATH_EXISTS',
-        detail: 'case-collision',
-      });
-      continue;
-    }
-    byFolded.set(folded, note.mdPath);
-  }
+  const conflicts: ExportConflict[] = exportMdPathCaseCollisions(
+    input.notes.map((note) => note.mdPath),
+  );
 
   const destinations = new Set<string>();
   for (const note of input.notes) {

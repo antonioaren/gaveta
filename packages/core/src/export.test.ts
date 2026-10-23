@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { vaultPath } from '@gaveta/fixtures';
-import { exportVaultToMarkdown } from './export.ts';
+import { exportMdPathCaseCollisions, exportVaultToMarkdown } from './export.ts';
 import { initVault } from './vault/init.ts';
 import { openVaultIndex } from './sqlite/store.ts';
 import { GavetaError } from './errors.ts';

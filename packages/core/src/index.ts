@@ -169,7 +169,11 @@ export { convertMarkdownToHtml, finalizeMarkdownHtml } from './convert/md-to-htm
 
 export { convertHtmlToMarkdown } from './convert/html-to-md.ts';
 
-export { exportVaultToMarkdown, resolveInsideExport } from './export.ts';
+export {
+  exportMdPathCaseCollisions,
+  exportVaultToMarkdown,
+  resolveInsideExport,
+} from './export.ts';
 
 export type {
   FinalizeMarkdownOptions,
