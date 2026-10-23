@@ -132,7 +132,7 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
     const started = await startServe(vault);
     const { url } = started.json.data;
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'networkidle' });
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.getByRole('button', { name: 'Destino enlace' }).click();
     const frame = page.frameLocator('[data-testid="note-render-frame"]');
     await frame.locator('#resumen').waitFor();
