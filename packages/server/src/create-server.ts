@@ -48,6 +48,7 @@ import {
   rejectDepthWithoutRef,
   toSearchOptions,
 } from './query.ts';
+import { readRenderTicketFromRequest } from './render-access.ts';
 import { createRenderTicket, renderTicketExpiresAt } from './render-ticket.ts';
 import { registerRenderRoutes } from './render-routes.ts';
 import {
@@ -126,6 +127,9 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
     ) {
       throw new GavetaError('E_AUTH_REQUIRED');
     }
+    if (isRenderRoute(request.method, normalizedPath)) {
+      readRenderTicketFromRequest(request);
+    }
   });
 
   app.addHook('onSend', async (request, reply, payload) => {
@@ -133,7 +137,10 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
     const normalizedPath = normalizeServePath(request.url);
     if (isRenderRoute(request.method, normalizedPath)) {
       applyRenderTransportHeaders(reply);
-    } else if (options.webRoot !== undefined && isPublicShellRoute(request.method, normalizedPath)) {
+    } else if (
+      options.webRoot !== undefined &&
+      isPublicShellRoute(request.method, normalizedPath)
+    ) {
       applyAppShellHeaders(reply);
     } else {
       applySecurityHeaders(reply);
@@ -142,7 +149,13 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
   });
 
   registerReadRoutes(app, options, vaultSession, () => boundPort, renderTicketSecret);
-  registerRenderRoutes(app, options, vaultSession, { ticketSecret: renderTicketSecret });
+  registerRenderRoutes(
+    app,
+    options,
+    vaultSession,
+    { ticketSecret: renderTicketSecret },
+    () => boundPort,
+  );
 
   app.setErrorHandler((error, _request, reply) => {
     sendError(reply, error);

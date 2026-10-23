@@ -32,6 +32,7 @@ export function registerRenderRoutes(
   options: CreateGavetaServerOptions,
   vaultSession: VaultIndexSession,
   renderOptions: RegisterRenderRoutesOptions,
+  port: () => number,
 ): void {
   const secret = renderOptions.ticketSecret;
 
@@ -95,11 +96,12 @@ export function registerRenderRoutes(
         notePath: note.path,
         title: note.title,
         sourceHtml,
+        port: port(),
         renderTicket: ticket,
         remoteAllowlist: config.remoteAllowlist,
       });
     });
-    const csp = buildNoteRenderCsp();
+    const csp = buildNoteRenderCsp(port());
     return reply.type('text/html; charset=utf-8').header('Content-Security-Policy', csp).send(page);
   });
 }

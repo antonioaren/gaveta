@@ -63,10 +63,13 @@ it('serves render HTML with a strict CSP header when the render ticket is valid'
     const response = await requestLocal(address.port, renderPath(NOTE_ID, ticket));
     expect(response.status).toBe(200);
     const csp = String(response.headers['content-security-policy'] ?? '');
-    expect(csp).toBe(buildNoteRenderCsp());
+    expect(csp).toBe(buildNoteRenderCsp(address.port));
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("frame-ancestors 'self'");
     expect(response.headers['x-frame-options']).toBeUndefined();
+    expect(String(response.headers['cross-origin-resource-policy']).toLowerCase()).toBe(
+      'cross-origin',
+    );
     expect(response.body).not.toContain('alert(1)');
     await server.close();
   });
@@ -281,4 +284,31 @@ it('does not serve attachment symlinks that escape the vault', async () => {
     await server.close();
     rmSync(parent, { recursive: true, force: true });
   }
+});
+
+it('requires a render ticket even when the path is encoded or has collapsed slashes', async () => {
+  await withMaliciousVault(async (vaultRoot) => {
+    const server = createGavetaServer({
+      vaultRoot,
+      port: 0,
+      token: SESSION_TOKEN,
+      renderTicketSecret: RENDER_SECRET,
+    });
+    const address = await server.listen();
+    const sessionOnly = await requestLocal(
+      address.port,
+      `//render/${NOTE_ID}`,
+      authHeaders(SESSION_TOKEN),
+    );
+    expect(sessionOnly.status).toBe(401);
+
+    const encoded = await requestLocal(
+      address.port,
+      `/%72ender/${NOTE_ID}`,
+      authHeaders(SESSION_TOKEN),
+    );
+    expect(encoded.status).toBe(401);
+
+    await server.close();
+  });
 });

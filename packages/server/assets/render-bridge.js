@@ -18,8 +18,11 @@
         return;
       }
       var explicit = anchor.getAttribute('href');
-      if (explicit !== null && explicit.trim().length > 0) {
-        return;
+      if (explicit !== null) {
+        var trimmedHref = explicit.trim();
+        if (trimmedHref.length > 0 && trimmedHref !== '#') {
+          return;
+        }
       }
       var ref = anchor.getAttribute('data-g-to') || anchor.getAttribute('data-g-pending');
       if (ref === null || ref.trim().length === 0) {

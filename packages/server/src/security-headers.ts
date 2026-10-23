@@ -22,11 +22,12 @@ export const APP_SHELL_HEADERS: Readonly<Record<string, string>> = {
   'content-security-policy': APP_SHELL_CSP,
 };
 
+/** Opaque-origin sandboxed iframes (allow-scripts, no allow-same-origin) must load render subresources. */
 const RENDER_TRANSPORT_HEADERS: Readonly<Record<string, string>> = {
   'cache-control': 'no-store',
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
-  'cross-origin-resource-policy': 'same-origin',
+  'cross-origin-resource-policy': 'cross-origin',
   'content-security-policy': "frame-ancestors 'self'",
 };
 

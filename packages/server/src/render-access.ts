@@ -15,11 +15,7 @@ export function readRenderTicketFromRequest(request: FastifyRequest): string {
   return ticket;
 }
 
-export function assertRenderTicketForNote(
-  secret: string,
-  ticket: string,
-  noteId: string,
-): void {
+export function assertRenderTicketForNote(secret: string, ticket: string, noteId: string): void {
   if (!verifyRenderTicket(secret, noteId, ticket)) {
     throw new GavetaError('E_AUTH_REQUIRED');
   }

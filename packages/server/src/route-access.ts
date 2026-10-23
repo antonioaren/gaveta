@@ -71,3 +71,18 @@ export function requiresSessionToken(method: string, normalizedPath: string): bo
   }
   return true;
 }
+
+/** Canonical path (plus query) for Fastify routing and access checks. */
+export function rewriteServeUrl(rawUrl: string | undefined): string | undefined {
+  if (rawUrl === undefined) {
+    return rawUrl;
+  }
+  const question = rawUrl.indexOf('?');
+  const pathPart = question === -1 ? rawUrl : rawUrl.slice(0, question);
+  const query = question === -1 ? '' : rawUrl.slice(question);
+  try {
+    return normalizeServePath(pathPart) + query;
+  } catch {
+    return rawUrl;
+  }
+}

@@ -96,22 +96,31 @@ it('runs mermaid and posts gaveta:navigate from a sandboxed allow-scripts iframe
     writeFileSync(join(vault, 'render-iframe.html'), buildRenderNoteHtml(), 'utf8');
     const started = await startServe(vault);
     const ticket = await fetchRenderTicket(started.port, started.token, NOTE_ID);
-    const renderUrl = `http://127.0.0.1:${String(started.port)}/render/${NOTE_ID}?t=${encodeURIComponent(ticket)}`;
+    const shellOrigin = `http://127.0.0.1:${String(started.port)}`;
+    const renderUrl = `${shellOrigin}/render/${NOTE_ID}?t=${encodeURIComponent(ticket)}`;
     const page = await browser.newPage();
-    await page.setContent(
-      `<!doctype html><html><body>
-<iframe id="gaveta-render" sandbox="allow-scripts" src="${renderUrl}"></iframe>
-<script>
-window.__gavetaNav = null;
-window.addEventListener('message', (event) => {
-  const frame = document.getElementById('gaveta-render');
-  if (frame === null || event.source !== frame.contentWindow) {
-    return;
-  }
-  window.__gavetaNav = event.data;
-});
-</script>
-</body></html>`,
+    await page.goto(`${shellOrigin}/`, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(
+      ({ iframeSrc }) => {
+        document.body.innerHTML = '';
+        const iframe = document.createElement('iframe');
+        iframe.id = 'gaveta-render';
+        iframe.setAttribute('sandbox', 'allow-scripts');
+        iframe.src = iframeSrc;
+        document.body.appendChild(iframe);
+        window.__gavetaNav = null;
+        window.addEventListener('message', (event) => {
+          const frame = document.getElementById('gaveta-render');
+          if (frame instanceof HTMLIFrameElement) {
+            const childWindow = frame.contentWindow;
+            if (childWindow !== null && event.source !== childWindow) {
+              return;
+            }
+          }
+          window.__gavetaNav = event.data;
+        });
+      },
+      { iframeSrc: renderUrl },
     );
     const frame = page.frameLocator('#gaveta-render');
     await frame.locator('pre.mermaid svg').waitFor({ timeout: 30_000 });

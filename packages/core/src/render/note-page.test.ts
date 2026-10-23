@@ -14,15 +14,18 @@ import {
 
 const TICKET = '01M5HGV8800000000000000011.1700000060.fake-signature-for-unit-test';
 
+const TEST_SERVE_PORT = 4711;
+
 it('buildNoteRenderCsp matches REQ-SEC-01 with hardening directives', () => {
-  const csp = buildNoteRenderCsp();
+  const origin = `http://127.0.0.1:${String(TEST_SERVE_PORT)}`;
+  const csp = buildNoteRenderCsp(TEST_SERVE_PORT);
   expect(csp).toContain("default-src 'none'");
   expect(csp).toContain("object-src 'none'");
   expect(csp).toContain("base-uri 'none'");
-  expect(csp).toContain("style-src 'self' 'unsafe-inline'");
-  expect(csp).toContain("img-src 'self' data:");
-  expect(csp).toContain("font-src 'self'");
-  expect(csp).toContain("script-src 'self'");
+  expect(csp).toContain(`style-src 'self' ${origin} 'unsafe-inline'`);
+  expect(csp).toContain(`img-src 'self' ${origin} data:`);
+  expect(csp).toContain(`font-src 'self' ${origin}`);
+  expect(csp).toContain(`script-src 'self' ${origin}`);
   expect(csp).toContain("frame-ancestors 'self'");
 });
 
@@ -49,6 +52,7 @@ it('strips script tags and event handlers from malicious fixture notes', async (
     notePath: note.path,
     title: note.title,
     sourceHtml: source,
+    port: TEST_SERVE_PORT,
     renderTicket: TICKET,
     remoteAllowlist: [],
   });
@@ -73,6 +77,7 @@ it('includes the navigation bridge script from same origin only', () => {
     notePath: 'nota-x.html',
     title: 'Nota X',
     sourceHtml: source,
+    port: TEST_SERVE_PORT,
     renderTicket: TICKET,
     remoteAllowlist: [],
   });

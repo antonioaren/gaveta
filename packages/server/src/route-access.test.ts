@@ -5,6 +5,7 @@ import {
   isRenderRoute,
   normalizeServePath,
   requiresSessionToken,
+  rewriteServeUrl,
 } from './route-access.ts';
 
 it('normalizes collapsed slashes and decodes percent-encoding before access checks', () => {
@@ -26,6 +27,11 @@ it('treats only the shell allowlist as public', () => {
 
 it('rejects traversal segments in the path', () => {
   expect(() => normalizeServePath('/assets/../api/notes')).toThrow(GavetaError);
+});
+
+it('rewrites encoded and collapsed-slash URLs before routing', () => {
+  expect(rewriteServeUrl('//render/01NOTE')).toBe('/render/01NOTE');
+  expect(rewriteServeUrl('/%72ender/01NOTE?t=abc')).toBe('/render/01NOTE?t=abc');
 });
 
 it('classifies render routes as ticket-only without a session token', () => {

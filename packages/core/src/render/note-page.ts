@@ -34,6 +34,7 @@ export interface BuildNoteRenderPageInput {
   readonly notePath: string;
   readonly title: string;
   readonly sourceHtml: string;
+  readonly port: number;
   readonly renderTicket: string;
   readonly remoteAllowlist: readonly string[];
 }
@@ -70,15 +71,18 @@ export function resolveRenderNote(index: VaultIndex, id: string): IndexedNote {
   return note;
 }
 
-export function buildNoteRenderCsp(): string {
+const SERVE_HOST = '127.0.0.1';
+
+export function buildNoteRenderCsp(port: number): string {
+  const origin = `http://${SERVE_HOST}:${String(port)}`;
   return [
     "default-src 'none'",
     "object-src 'none'",
     "base-uri 'none'",
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data:",
-    "font-src 'self'",
-    "script-src 'self'",
+    `style-src 'self' ${origin} 'unsafe-inline'`,
+    `img-src 'self' ${origin} data:`,
+    `font-src 'self' ${origin}`,
+    `script-src 'self' ${origin}`,
     "connect-src 'none'",
     "frame-ancestors 'self'",
   ].join('; ');
@@ -95,7 +99,7 @@ export function buildNoteRenderPage(input: BuildNoteRenderPageInput): string {
   const bodyInner = extractBodyInner(normalized.html);
   const ticket = input.renderTicket;
   const rewritten = rewriteAssetUrls(bodyInner, input.noteId, input.notePath, ticket);
-  const csp = buildNoteRenderCsp();
+  const csp = buildNoteRenderCsp(input.port);
   const title = escapeText(input.title);
   const staticUrl = (basename: string): string =>
     appendRenderTicketQuery(`${RENDER_STATIC_PREFIX}/${basename}`, ticket);
