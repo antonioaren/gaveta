@@ -1,5 +1,6 @@
 import chokidar, { type FSWatcher } from 'chokidar';
 import path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import type { VaultEventBus, VaultNoteEvent } from './vault-events.ts';
 import { coalesceMovesByNoteId, coalescePendingChanges } from './vault-batch.ts';
 import type { RecentUnlink } from './vault-move.ts';
@@ -11,6 +12,12 @@ import {
   toVaultRelativePath,
 } from './vault-paths.ts';
 import type { VaultIndexSession } from './vault-index.ts';
+import {
+  markChokidar,
+  markDebounceFlush,
+  markIndexUpdated,
+  takePipelineTrace,
+} from './live-pipeline-trace.ts';
 
 export interface VaultWatcher {
   close(): Promise<void>;
@@ -30,7 +37,7 @@ interface PendingChange {
 }
 
 export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWatcher {
-  const debounceMs = options.debounceMs ?? 75;
+  const debounceMs = options.debounceMs ?? 40;
   const movePairWindowMs = options.movePairWindowMs ?? 200;
   const pending = new Map<string, PendingChange>();
   const recentUnlinks = new Map<string, RecentUnlink>();
@@ -39,7 +46,7 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
 
   const scheduleFlush = (): void => {
     if (flushTimer !== null) {
-      return;
+      clearTimeout(flushTimer);
     }
     flushTimer = setTimeout(() => {
       flushTimer = null;
@@ -53,11 +60,19 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
     }
     const deduped = coalescePendingChanges([...pending.values()]);
     pending.clear();
+    const flushAt = performance.now();
+    for (const change of deduped) {
+      if (change.kind !== 'moved') {
+        markDebounceFlush(change.relativePath, flushAt);
+      }
+    }
     const batch = await coalesceMovesByNoteId(deduped, options.vaultRoot, options.session);
     for (const change of batch) {
       const event = await options.session.applyFileChange(change, recentUnlinks, movePairWindowMs);
       if (event !== null) {
-        options.bus.emitNote(event);
+        markIndexUpdated(event.path, performance.now());
+        const pipeline = takePipelineTrace(event.path, performance.now());
+        options.bus.emitNote(pipeline === undefined ? event : { ...event, pipeline });
       }
     }
   };
@@ -73,8 +88,8 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
   const watcher: FSWatcher = chokidar.watch(options.vaultRoot, {
     ignoreInitial: true,
     awaitWriteFinish: {
-      stabilityThreshold: 50,
-      pollInterval: 25,
+      stabilityThreshold: 25,
+      pollInterval: 10,
     },
     ignored: (absolutePath) => {
       const relative = toVaultRelativePath(options.vaultRoot, absolutePath);
@@ -106,6 +121,7 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
     if (relative === null) {
       return;
     }
+    markChokidar(relative);
     queue({ kind, relativePath: relative });
   };
 

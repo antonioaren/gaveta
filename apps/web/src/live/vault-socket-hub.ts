@@ -1,4 +1,6 @@
 import { getSessionToken } from '../auth/session-token.ts';
+import { recordLivePipelineFromServer } from './live-pipeline-client.ts';
+import type { LivePipelineTracePayload } from './live-pipeline-types.ts';
 import type { VaultNoteEvent } from './vault-events.ts';
 import { vaultWebSocketUrl } from './vault-events.ts';
 
@@ -63,6 +65,24 @@ function scheduleReconnect(): void {
   }, backoffMs);
 }
 
+function parsePipelineTrace(value: unknown): LivePipelineTracePayload | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  if (record.anchor !== 'writeFinished' || typeof record.path !== 'string') {
+    return undefined;
+  }
+  if (typeof record.stages !== 'object' || record.stages === null) {
+    return undefined;
+  }
+  return {
+    anchor: 'writeFinished',
+    path: record.path,
+    stages: record.stages as LivePipelineTracePayload['stages'],
+  };
+}
+
 function handleMessage(message: MessageEvent): void {
   let parsed: unknown;
   try {
@@ -99,11 +119,25 @@ function handleMessage(message: MessageEvent): void {
     record.type === 'note:removed' ||
     record.type === 'note:moved'
   ) {
+    const pipeline = parsePipelineTrace(record.pipeline);
     const event: VaultNoteEvent = {
       type: record.type,
       path: String(record.path),
       id: record.id === null || typeof record.id === 'string' ? record.id : null,
+      ...(pipeline === undefined ? {} : { pipeline }),
     };
+    if (pipeline !== undefined) {
+      const writeAnchor = (globalThis as { __gavetaWriteFinishedAt?: number }).__gavetaWriteFinishedAt;
+      const wsReceivedMs =
+        writeAnchor === undefined
+          ? undefined
+          : Math.max(0, performance.now() - writeAnchor);
+      recordLivePipelineFromServer(
+        event.path,
+        pipeline.stages,
+        wsReceivedMs ?? pipeline.stages.wsSent ?? 0,
+      );
+    }
     if (typeof record.from === 'string') {
       dispatch({ ...event, from: record.from });
     } else {

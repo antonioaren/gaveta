@@ -4,11 +4,13 @@ export function requestLocal(
   port: number,
   path: string,
   headers: Record<string, string> = {},
+  hostHeader?: string,
 ): Promise<{
   status: number;
   body: string;
   headers: http.IncomingHttpHeaders;
 }> {
+  const host = hostHeader ?? `127.0.0.1:${String(port)}`;
   return new Promise((resolve, reject) => {
     const request = http.request(
       {
@@ -17,7 +19,7 @@ export function requestLocal(
         path,
         method: 'GET',
         headers: {
-          host: `127.0.0.1:${String(port)}`,
+          host,
           ...headers,
         },
       },
