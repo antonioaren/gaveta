@@ -72,16 +72,21 @@ export function takePipelineTrace(
     }
     return Math.round(Math.max(0, stamp - origin) * 1000) / 1000;
   };
+  const chokidar = toOffset(trace.chokidarAt);
+  const debounceFlush = toOffset(trace.debounceFlushAt);
+  const indexUpdated = toOffset(trace.indexUpdatedAt);
+  const wsSent = toOffset(atWsSent);
+  const stages: LivePipelineStages = {
+    writeFinished: 0,
+    ...(chokidar !== undefined ? { chokidar } : {}),
+    ...(debounceFlush !== undefined ? { debounceFlush } : {}),
+    ...(indexUpdated !== undefined ? { indexUpdated } : {}),
+    ...(wsSent !== undefined ? { wsSent } : {}),
+  };
   return {
     anchor: 'writeFinished',
     path: trace.path,
-    stages: {
-      writeFinished: 0,
-      chokidar: toOffset(trace.chokidarAt),
-      debounceFlush: toOffset(trace.debounceFlushAt),
-      indexUpdated: toOffset(trace.indexUpdatedAt),
-      wsSent: toOffset(atWsSent),
-    },
+    stages,
   };
 }
 
