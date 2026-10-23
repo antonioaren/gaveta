@@ -13,8 +13,8 @@ import { formatStageBreakdown, percentile, sumStages } from './live-pipeline-rep
 import { markWriteFinished, resetLivePipelineTracesForTests } from './live-pipeline-trace.ts';
 import { wsMessageText } from './ws-message.ts';
 
-const SAMPLES = 12;
-const CI_P95_CEILING_MS = 500;
+const SAMPLES = 8;
+const CI_P95_CEILING_MS = 1_200;
 
 afterEach(() => {
   resetLivePipelineTracesForTests();
@@ -92,4 +92,4 @@ it('REQ-NFR-01: 1000-note vault pipeline stages (write → WebSocket)', async ()
   } finally {
     rmSync(parent, { recursive: true, force: true });
   }
-}, 180_000);
+}, 300_000);

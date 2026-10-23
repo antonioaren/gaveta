@@ -66,8 +66,12 @@ export function takePipelineTrace(
   trace.wsSentAt = atWsSent;
   activeByPath.delete(relativePath);
   const origin = trace.writeFinishedAt;
-  const toOffset = (stamp: number | undefined): number | undefined =>
-    stamp === undefined ? undefined : Math.max(0, stamp - origin);
+  const toOffset = (stamp: number | undefined): number | undefined => {
+    if (stamp === undefined) {
+      return undefined;
+    }
+    return Math.round(Math.max(0, stamp - origin) * 1000) / 1000;
+  };
   return {
     anchor: 'writeFinished',
     path: trace.path,
