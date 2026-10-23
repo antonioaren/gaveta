@@ -85,3 +85,4 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 - 2026-10-23 · T2.2 · Pending WebSocket upgrades do not count toward the authed cap but can still exhaust FDs. · Cap unauthenticated pending sockets separately (for example 16) and close overflow with `1013`.
 - 2026-10-23 · T2.8 · Parallel `/api/links`, `/api/backlinks`, and `/api/graph` fetches race when `ref` changes quickly. · `AbortController` on cleanup plus a `cancelled` flag before `setState`; extract `fetchConnectionsBundle` for tests.
 - 2026-10-23 · T2.8 · FTS snippets use literal `<mark>` markers from SQLite, not HTML. · Parse with `indexOf` into React `<mark class="palette__mark">` children; strip any other tags.
+- 2026-10-23 · T2.8 · Search hits without a ULID cannot open `/render` (render tickets need an id). · Resolve via `/api/notes` or `/api/read` before `openTab`; show the same Spanish not-indexed message as the note pane when id is still missing.
