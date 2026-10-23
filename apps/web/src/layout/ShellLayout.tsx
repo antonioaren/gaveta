@@ -4,6 +4,7 @@ import { NoteExplorer } from '../explorer/NoteExplorer.tsx';
 import { useVaultNotes } from '../hooks/useVaultNotes.ts';
 import { NotePane } from '../note/NotePane.tsx';
 import { TabBar } from '../tabs/TabBar.tsx';
+import { SearchPaletteHost } from '../search/SearchPalette.tsx';
 import { TabProvider } from '../tabs/TabContext.tsx';
 
 export function ShellLayout() {
@@ -12,6 +13,7 @@ export function ShellLayout() {
 
   return (
     <TabProvider>
+      <SearchPaletteHost />
       <div className="shell">
         <header className="topbar">
           <div className="topbar__brand">

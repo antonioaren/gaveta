@@ -74,3 +74,20 @@ export interface GraphResponse {
   readonly nodes: readonly GraphNodeView[];
   readonly edges: readonly GraphEdgeView[];
 }
+
+export interface SearchHitView {
+  readonly path: string;
+  readonly id: string | null;
+  readonly title: string;
+  readonly type: NoteListItem['type'] | 'dashboard' | 'design' | 'artifact' | null;
+  readonly tags: readonly string[];
+  readonly snippet: string;
+}
+
+export interface SearchResponse {
+  readonly query: string;
+  readonly type: string | null;
+  readonly tag: string | null;
+  readonly limit: number;
+  readonly hits: readonly SearchHitView[];
+}
