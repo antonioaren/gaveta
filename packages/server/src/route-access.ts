@@ -1,4 +1,5 @@
 import { GavetaError } from '@gaveta/core';
+import { GAVETA_WS_PATH } from './constants.ts';
 
 export function normalizeServePath(rawUrl: string): string {
   const question = rawUrl.indexOf('?');
@@ -62,11 +63,18 @@ export function isRenderRoute(method: string, normalizedPath: string): boolean {
   return normalizedPath === '/render' || normalizedPath.startsWith('/render/');
 }
 
+export function isWebSocketUpgradeRoute(method: string, normalizedPath: string): boolean {
+  return method.toUpperCase() === 'GET' && normalizedPath === GAVETA_WS_PATH;
+}
+
 export function requiresSessionToken(method: string, normalizedPath: string): boolean {
   if (isPublicShellRoute(method, normalizedPath)) {
     return false;
   }
   if (isRenderRoute(method, normalizedPath)) {
+    return false;
+  }
+  if (isWebSocketUpgradeRoute(method, normalizedPath)) {
     return false;
   }
   return true;

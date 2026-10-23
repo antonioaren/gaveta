@@ -63,7 +63,10 @@ import {
   applySecurityHeaders,
 } from './security-headers.ts';
 import { registerWebApp } from './static-web.ts';
+import { VaultEventBus } from './vault-events.ts';
+import { createVaultWatcher, type VaultWatcher } from './vault-watcher.ts';
 import { VaultIndexSession } from './vault-index.ts';
+import { registerVaultWebSocket } from './websocket.ts';
 
 export interface CreateGavetaServerOptions {
   readonly vaultRoot: string;
@@ -74,6 +77,8 @@ export interface CreateGavetaServerOptions {
   readonly cliVersion?: string;
   /** Built output of @gaveta/web; when set, gaveta serve also serves the viewer shell. */
   readonly webRoot?: string;
+  /** Shorter auth window for WebSocket tests. */
+  readonly webSocketAuthTimeoutMs?: number;
 }
 
 export interface GavetaServerAddress {
@@ -99,6 +104,8 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
   const renderTicketSecret = options.renderTicketSecret ?? createRenderTicketSecret();
   const requestedPort = options.port ?? GAVETA_SERVE_DEFAULT_PORT;
   const vaultSession = new VaultIndexSession(options.vaultRoot);
+  const vaultEvents = new VaultEventBus();
+  let vaultWatcher: VaultWatcher | null = null;
   let boundPort = requestedPort;
   let shutdownPromise: Promise<void> | null = null;
   let resolveShutdown: (() => void) | null = null;
@@ -167,6 +174,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
       if (options.webRoot !== undefined) {
         await registerWebApp(app, options.webRoot);
       }
+      await registerVaultWebSocket(app, token, vaultEvents, options.webSocketAuthTimeoutMs);
       await app.listen({
         host,
         port: requestedPort,
@@ -177,6 +185,11 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
         throw new GavetaError('E_ARG_INVALID');
       }
       boundPort = address.port;
+      vaultWatcher = createVaultWatcher({
+        vaultRoot: options.vaultRoot,
+        session: vaultSession,
+        bus: vaultEvents,
+      });
       return {
         host,
         port: boundPort,
@@ -190,6 +203,10 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
         process.off('SIGTERM', onSignal);
         onSignal = null;
       }
+      if (vaultWatcher !== null) {
+        await vaultWatcher.close();
+        vaultWatcher = null;
+      }
       await app.close();
       vaultSession.close();
       if (resolveShutdown !== null) {
@@ -202,12 +219,17 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
           resolveShutdown = resolve;
         });
         onSignal = (): void => {
-          void app.close().then(() => {
+          void (async () => {
+            if (vaultWatcher !== null) {
+              await vaultWatcher.close();
+              vaultWatcher = null;
+            }
+            await app.close();
             vaultSession.close();
             if (resolveShutdown !== null) {
               resolveShutdown();
             }
-          });
+          })();
         };
         process.once('SIGINT', onSignal);
         process.once('SIGTERM', onSignal);

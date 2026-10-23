@@ -15,13 +15,17 @@
   },
   "dependencies": {
     "@fastify/static": "10.1.1",
+    "@fastify/websocket": "11.2.0",
     "@gaveta/core": "workspace:*",
+    "chokidar": "4.0.3",
     "fastify": "5.12.2"
   },
   "devDependencies": {
     "@gaveta/fixtures": "workspace:*",
     "@types/node": "catalog:",
+    "@types/ws": "8.18.1",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "ws": "8.21.0"
   }
 }
