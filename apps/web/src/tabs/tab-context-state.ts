@@ -15,6 +15,7 @@ export interface TabContextValue {
   openTab(ref: string, title: string, path: string, noteId: string | null): void;
   closeTab(tabId: string): void;
   activateTab(tabId: string): void;
+  remapNotePath(fromPath: string, toPath: string, noteId: string | null, title?: string): void;
 }
 
 export const TabContext = createContext<TabContextValue | null>(null);

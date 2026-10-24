@@ -59,6 +59,31 @@ export function TabProvider({ children }: { children: ReactNode }) {
     [navigate, tabs],
   );
 
+  const remapNotePath = useCallback(
+    (fromPath: string, toPath: string, noteId: string | null, title?: string) => {
+      setTabs((current) =>
+        current.map((tab) => {
+          const matches =
+            tab.path === fromPath ||
+            (noteId !== null && (tab.ref === noteId || tab.noteId === noteId));
+          if (!matches) {
+            return tab;
+          }
+          const ref = noteId ?? toPath;
+          return {
+            ...tab,
+            id: ref,
+            ref,
+            path: toPath,
+            title: title ?? tab.title,
+            noteId,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
   const value = useMemo<TabContextValue>(
     () => ({
       tabs,
@@ -66,8 +91,9 @@ export function TabProvider({ children }: { children: ReactNode }) {
       openTab,
       closeTab,
       activateTab,
+      remapNotePath,
     }),
-    [tabs, activeTabId, openTab, closeTab, activateTab],
+    [tabs, activeTabId, openTab, closeTab, activateTab, remapNotePath],
   );
 
   return <TabContext.Provider value={value}>{children}</TabContext.Provider>;

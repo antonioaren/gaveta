@@ -355,9 +355,153 @@ select {
 }
 
 .note-pane__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
   padding: var(--space-4);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
+}
+
+.note-pane__header-main {
+  min-width: 0;
+}
+
+.note-ops-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.note-ops-menu__button {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-elevated);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.note-ops-menu__button--danger {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-border));
+}
+
+.explorer-context-menu {
+  position: fixed;
+  z-index: 40;
+  min-width: 10rem;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated);
+  box-shadow: var(--shadow-md);
+}
+
+.explorer-context-menu__item {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: start;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.explorer-context-menu__item:hover {
+  background: var(--color-surface);
+}
+
+.explorer-context-menu__item--danger {
+  color: var(--color-danger);
+}
+
+.note-ops-dialog {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  max-width: min(32rem, calc(100vw - 2rem));
+  box-shadow: var(--shadow-md);
+}
+
+.note-ops-dialog::backdrop {
+  background: color-mix(in srgb, var(--color-bg) 30%, transparent);
+}
+
+.note-ops-dialog__panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.note-ops-dialog__title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.note-ops-dialog__subtitle {
+  margin: var(--space-1) 0 0;
+  color: var(--color-muted);
+}
+
+.note-ops-dialog__backlink-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 12rem;
+  overflow: auto;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.note-ops-dialog__backlink-source {
+  font-weight: 600;
+  display: block;
+}
+
+.note-ops-dialog__backlink-context {
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.note-ops-dialog__warning,
+.note-ops-dialog__hint,
+.note-ops-dialog__error {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.note-ops-dialog__error {
+  color: var(--color-danger);
+}
+
+.note-ops-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.button {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  background: var(--color-accent);
+  color: var(--color-on-accent, #fff);
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.button--danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
 }
 
 .note-pane__title {
