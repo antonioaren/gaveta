@@ -8,6 +8,7 @@ interface ExplorerFolderContextMenuProps {
   readonly folder: string;
   readonly onClose: () => void;
   readonly onSelect: (kind: FolderOpKind, folder: string) => void;
+  readonly onExport: (folder: string, label: string) => void;
 }
 
 export function ExplorerFolderContextMenu({
@@ -17,6 +18,7 @@ export function ExplorerFolderContextMenu({
   folder,
   onClose,
   onSelect,
+  onExport,
 }: ExplorerFolderContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +52,19 @@ export function ExplorerFolderContextMenu({
       aria-label="Acciones de la carpeta"
       data-testid="explorer-folder-context-menu"
     >
+      <button
+        type="button"
+        role="menuitem"
+        className="explorer-context-menu__item"
+        data-testid="explorer-folder-export"
+        onClick={() => {
+          const label = folder.length === 0 ? 'vault' : folder.split('/').pop() ?? folder;
+          onExport(folder, label);
+          onClose();
+        }}
+      >
+        Exportar a Markdown
+      </button>
       <button
         type="button"
         role="menuitem"

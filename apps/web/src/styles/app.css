@@ -1499,3 +1499,124 @@ select {
     border-top: 1px solid var(--color-border);
   }
 }
+
+.migration-host {
+  min-height: 100%;
+}
+
+.migration-host__file-input {
+  display: none;
+}
+
+.migration-host--drag .shell {
+  outline: 2px dashed var(--color-accent);
+  outline-offset: -4px;
+}
+
+.migration-host__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--color-bg) 20%, transparent);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--color-bg) 35%, transparent);
+  padding: var(--space-4);
+}
+
+.migration-modal {
+  width: min(40rem, 100%);
+  max-height: min(80vh, 36rem);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.modal__header,
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal__footer {
+  border-bottom: none;
+  border-top: 1px solid var(--color-border);
+  justify-content: flex-end;
+}
+
+.modal__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal__close {
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-muted);
+}
+
+.modal__body {
+  overflow: auto;
+  padding: var(--space-4);
+}
+
+.migration-modal__body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.migration-modal__summary {
+  margin: 0;
+}
+
+.migration-modal__error {
+  margin: 0;
+  color: var(--color-danger);
+}
+
+.migration-modal__table-wrap {
+  max-height: 14rem;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.migration-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.migration-table th,
+.migration-table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.button--primary {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
