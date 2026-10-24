@@ -20,7 +20,7 @@ const STABLE_ID = '01JB7Z3K9QX4T5M2N8V6R0WYHE';
 const STABLE_NOW = '2026-10-22T12:00:00.000Z';
 
 const children: ReturnType<typeof spawn>[] = [];
-let browser: Browser | undefined;
+let browser: Browser;
 let screenshotDir: string;
 
 function resolveScreenshotDir(): string {
@@ -43,7 +43,7 @@ beforeAll(async () => {
 }, 180_000);
 
 afterAll(async () => {
-  await browser?.close();
+  await browser.close();
 });
 
 afterEach(() => {
@@ -210,7 +210,10 @@ it('REQ-APP-17: ghost graph opens the dialog with the title prefilled', async ()
     const dialog = page.getByRole('dialog', { name: 'Nueva nota' });
     await dialog.waitFor({ state: 'visible' });
     expect(await dialog.getByLabel('Título').inputValue()).toBe('Nota fantasma');
-    await page.screenshot({ path: join(screenshotDir, 'new-note-dialog-ghost.png'), fullPage: true });
+    await page.screenshot({
+      path: join(screenshotDir, 'new-note-dialog-ghost.png'),
+      fullPage: true,
+    });
     await page.close();
   } finally {
     rmSync(parent, { recursive: true, force: true });
