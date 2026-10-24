@@ -20,7 +20,9 @@ it('fast-forwards main without a version bump and refreshes untouched vault them
     const bare = join(parent, 'origin.git');
     const checkout = join(parent, 'checkout');
     const bump = join(parent, 'bump');
-    runGit(parent, ['clone', '--bare', '--branch', 'main', `file://${REPO_ROOT}`, bare]);
+    runGit(parent, ['clone', '--bare', `file://${REPO_ROOT}`, bare]);
+    runGit(bare, ['branch', '-f', 'main', 'HEAD']);
+    runGit(bare, ['symbolic-ref', 'HEAD', 'refs/heads/main']);
     runGit(parent, ['clone', bare, checkout]);
     runGit(checkout, ['config', 'user.email', 'gaveta@test.local']);
     runGit(checkout, ['config', 'user.name', 'Gaveta E2E']);
