@@ -43,6 +43,9 @@ import { validateNote } from './validate.ts';
 import type { VaultConfig } from './vault/config.ts';
 import { readVaultConfig } from './vault/config.ts';
 import { hasNodeErrorCode } from './vault/node-error.ts';
+import { createVaultFolder } from './ops/folder.ts';
+import { normalizeVaultFolder } from './ops/folder-path.ts';
+import { patchOptionalMeta } from './ops/meta-patch.ts';
 import { readVaultText, resolveInsideVault, writeVaultText } from './vault/paths.ts';
 
 type ParseChild = DefaultTreeAdapterMap['childNode'];
@@ -71,6 +74,8 @@ const CREATE_KEYS = [
 
 const READ_KEYS = ['vaultRoot', 'ref', 'as'] as const;
 const EDIT_KEYS = ['vaultRoot', 'ref', 'html', 'section', 'mode', 'ifMatch', 'scope'] as const;
+const FOLDER_CREATE_KEYS = ['vaultRoot', 'folder'] as const;
+const META_KEYS = ['vaultRoot', 'ref', 'tags', 'aliases', 'ifMatch'] as const;
 type EditScope = 'article' | 'document';
 const LINK_KEYS = ['vaultRoot', 'from', 'to', 'rel', 'text', 'section', 'ifMatch'] as const;
 
@@ -364,6 +369,55 @@ export async function linkNote(options: unknown): Promise<LinkNoteResult> {
       type: saved.type,
       section: sectionId,
       added: true,
+      links: savedLinks(resolved.links, resolved.warnings, session.index),
+      warnings: [...session.warnings, ...warningList(resolved.warnings)],
+    };
+  });
+}
+
+export async function createFolder(options: unknown): Promise<{ readonly folder: string }> {
+  const record = readRecord(options, FOLDER_CREATE_KEYS);
+  const vaultRoot = requiredString(record.vaultRoot);
+  const folder = normalizeVaultFolder(requiredString(record.folder));
+  await createVaultFolder(vaultRoot, folder);
+  return { folder };
+}
+
+export async function editNoteMeta(options: unknown): Promise<EditNoteResult> {
+  const input = readMetaEdit(options);
+  return withSession(input.vaultRoot, async (session) => {
+    const target = resolveRef(session.index, input.ref);
+    const original = await readVaultText(session.root, target.path);
+    assertMatch(noteContentHash(original), input.ifMatch);
+    const patched = patchOptionalMeta(original, input.tags, input.aliases);
+    const resolved = resolveFor(session, patched, target.path);
+    const resolveGate = gate(resolved.errors);
+    if (!resolveGate.ok) {
+      return failure(session, resolveGate);
+    }
+    const validated = validateNote(resolved.html, validateOptions(session, target.path));
+    const validateGate = gate(asLikes(validated.diagnostics));
+    if (!validateGate.ok) {
+      return failure(session, validateGate);
+    }
+    if (validated.note === null) {
+      throw new GavetaError('E_META_MISSING');
+    }
+    if (validated.note.id === null || validated.note.type === null) {
+      throw new GavetaError('E_META_MISSING');
+    }
+    if (resolved.html !== original) {
+      await writeVaultText(session.root, target.path, resolved.html);
+      await session.index.upsert(target.path);
+    }
+    return {
+      ok: true,
+      id: validated.note.id,
+      path: target.path,
+      hash: noteContentHash(resolved.html),
+      title: validated.note.title ?? target.title,
+      type: validated.note.type,
+      section: null,
       links: savedLinks(resolved.links, resolved.warnings, session.index),
       warnings: [...session.warnings, ...warningList(resolved.warnings)],
     };
@@ -1385,6 +1439,32 @@ function readRead(options: unknown): {
     vaultRoot: requiredString(record.vaultRoot),
     ref: requiredString(record.ref),
     as: asValue,
+  };
+}
+
+function readMetaEdit(options: unknown): {
+  readonly vaultRoot: string;
+  readonly ref: string;
+  readonly tags: readonly string[] | undefined;
+  readonly aliases: readonly string[] | undefined;
+  readonly ifMatch: string | undefined;
+} {
+  const record = readRecord(options, META_KEYS);
+  const hasTags = Object.hasOwn(record, 'tags');
+  const hasAliases = Object.hasOwn(record, 'aliases');
+  if (!hasTags && !hasAliases) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  const ifMatch = optionalString(record.ifMatch);
+  if (ifMatch !== undefined && !CONTENT_HASH.test(ifMatch)) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return {
+    vaultRoot: requiredString(record.vaultRoot),
+    ref: requiredString(record.ref),
+    tags: hasTags ? readNameList(record.tags) : undefined,
+    aliases: hasAliases ? readNameList(record.aliases) : undefined,
+    ifMatch,
   };
 }
 

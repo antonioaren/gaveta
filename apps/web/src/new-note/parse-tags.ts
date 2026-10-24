@@ -1,3 +1,7 @@
+export function formatTagsInput(tags: readonly string[]): string {
+  return tags.join(', ');
+}
+
 export function parseTagsInput(raw: string): string[] {
   const tags: string[] = [];
   const seen = new Set<string>();

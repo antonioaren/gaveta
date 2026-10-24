@@ -13,6 +13,7 @@ import { useTabs } from '../tabs/useTabs.ts';
 import { useNoteLiveState } from '../live/useNoteLiveState.ts';
 import { NoteRenderFrame } from './NoteRenderFrame.tsx';
 import { NoteCodeMode } from './NoteCodeMode.tsx';
+import { NoteMetaPanel } from './NoteMetaPanel.tsx';
 import { useRenderBridgeHost } from './useRenderBridgeHost.ts';
 
 const NO_RENDER_ID_MESSAGE =
@@ -110,6 +111,15 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
     setEditError(null);
     setCodeModeForRef(activeTab.ref);
   }, [activeTab]);
+
+  const listItem = useMemo(() => {
+    if (activeTab === null) {
+      return null;
+    }
+    return (
+      notes.find((note) => note.path === activeTab.path || note.id === activeTab.noteId) ?? null
+    );
+  }, [activeTab, notes]);
 
   const opTarget = useMemo((): NoteOpTarget | null => {
     if (activeTab === null) {
@@ -228,14 +238,24 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
           }}
         />
       ) : (
-        <NoteRenderFrame
-          noteId={noteId}
-          title={activeTab.title}
-          reloadGeneration={reloadKey}
-          onIframeWindow={(window) => {
-            iframeWindowRef.current = window;
-          }}
-        />
+        <>
+          {listItem !== null ? (
+            <NoteMetaPanel
+              key={`${activeTab.ref}-${listItem.tags.join('|')}-${listItem.aliases.join('|')}`}
+              noteRef={activeTab.ref}
+              initialTags={listItem.tags}
+              initialAliases={listItem.aliases}
+            />
+          ) : null}
+          <NoteRenderFrame
+            noteId={noteId}
+            title={activeTab.title}
+            reloadGeneration={reloadKey}
+            onIframeWindow={(window) => {
+              iframeWindowRef.current = window;
+            }}
+          />
+        </>
       )}
     </section>
   );

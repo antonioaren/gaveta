@@ -143,6 +143,10 @@ it('runs registry command examples against a prepared vault', () => {
       'link',
       'update',
       'serve',
+      'mkdir',
+      'mv-folder',
+      'rm-folder',
+      'meta',
     ]);
     for (const command of commands) {
       if (skip.has(command.name)) {
