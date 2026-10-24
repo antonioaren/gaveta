@@ -2,8 +2,10 @@ import {
   GavetaError,
   moveNote,
   openVaultIndex,
+  parseNoteContentHash,
   readNote,
   removeNote,
+  requireNoteContentHash,
   type MoveNoteResult,
   type RemoveNoteResult,
   type VaultIndex,
@@ -14,7 +16,6 @@ import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from 
 const MISSING_REF = 'Falta la referencia.';
 const MISSING_DEST = 'Falta el destino.';
 const BAD_HASH = 'El hash de --if-match tiene que ser sha256: y 64 hexadecimales.';
-const CONTENT_HASH = /^sha256:[0-9a-f]{64}$/;
 
 export const mvCommand: CommandSpec = {
   name: 'mv',
@@ -121,10 +122,11 @@ function readIfMatch(value: string | undefined): string | undefined {
   if (value === undefined) {
     return undefined;
   }
-  if (!CONTENT_HASH.test(value)) {
+  try {
+    return parseNoteContentHash(value);
+  } catch {
     throw new CliFailure('E_ARG_INVALID', {}, { problem: BAD_HASH });
   }
-  return value;
 }
 
 async function assertIfMatch(
@@ -136,9 +138,7 @@ async function assertIfMatch(
     return;
   }
   const note = await readNote({ vaultRoot: root, ref, as: 'html' });
-  if (note.hash !== ifMatch) {
-    throw new GavetaError('E_CONFLICT');
-  }
+  requireNoteContentHash(note.hash, ifMatch);
 }
 
 async function ensureIndexed(index: VaultIndex): Promise<readonly CommandWarning[] | undefined> {

@@ -17,3 +17,6 @@ export const WS_MAX_MESSAGE_BYTES = 4096;
 export const WS_MAX_CONNECTIONS = 32;
 export const WS_MAX_PENDING_CONNECTIONS = 16;
 export const WS_AUTH_TIMEOUT_MS = 5_000;
+
+/** Maximum JSON body size for write API routes. */
+export const API_WRITE_BODY_LIMIT_BYTES = 2 * 1024 * 1024;

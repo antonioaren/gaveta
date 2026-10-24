@@ -452,6 +452,13 @@ export { removeNote } from './ops/remove.ts';
 
 export type { AffectedNote, MoveNoteResult, RemoveNoteResult } from './ops/types.ts';
 
+export {
+  ABSENT_NOTE_HASH,
+  NOTE_CONTENT_HASH_PATTERN,
+  parseNoteContentHash,
+  requireNoteContentHash,
+} from './if-match.ts';
+
 export { createNote, editNote, linkNote, noteContentHash, readNote } from './notes.ts';
 
 export { addTaskToNote, checkTask, listTasks, uncheckTask } from './todos.ts';
