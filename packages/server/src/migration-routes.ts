@@ -8,11 +8,10 @@ import {
 import { mkdir, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
-import { readRequestToken } from './auth.ts';
+import rateLimit from '@fastify/rate-limit';
+import type { FastifyInstance } from 'fastify';
 import { apiSuccess } from './envelope.ts';
-import { assertMigrationRateLimit } from './migration-rate-limit.ts';
-import { API_IMPORT_FILE_BODY_LIMIT_BYTES } from './constants.ts';
+import { API_IMPORT_FILE_BODY_LIMIT_BYTES, GAVETA_TOKEN_HEADER } from './constants.ts';
 import {
   assertAllowedKeys,
   optionalBooleanField,
@@ -33,11 +32,6 @@ import { createZipBuffer } from './migration/zip-buffer.ts';
 export interface MigrationRoutesOptions {
   readonly vaultRoot: string;
   readonly sessionToken: string;
-}
-
-function rateLimitMigration(request: FastifyRequest, route: string, sessionToken: string): void {
-  const client = readRequestToken(request.headers, sessionToken) ?? 'unknown';
-  assertMigrationRateLimit(`${route}:${client}`);
 }
 
 function readOnConflict(body: Record<string, unknown>): ImportOnConflict {
@@ -74,108 +68,119 @@ async function collectFilesRecursive(
   return files;
 }
 
-export function registerMigrationRoutes(
+export async function registerMigrationRoutes(
   app: FastifyInstance,
   options: MigrationRoutesOptions,
-): void {
-  app.post('/api/import/staging', async (request, reply) => {
-    rateLimitMigration(request, 'import-staging', options.sessionToken);
-    const created = await createImportStagingSession();
-    return reply.send(apiSuccess(created));
-  });
+): Promise<void> {
+  await app.register(async (migrationApp) => {
+    await migrationApp.register(rateLimit, {
+      max: 200,
+      timeWindow: '1 minute',
+      keyGenerator: (request) => {
+        const header = request.headers[GAVETA_TOKEN_HEADER];
+        return typeof header === 'string' ? header : 'unknown';
+      },
+    });
 
-  app.post(
-    '/api/import/staging/file',
-    { bodyLimit: API_IMPORT_FILE_BODY_LIMIT_BYTES },
-    async (request, reply) => {
-      rateLimitMigration(request, 'import-staging-file', options.sessionToken);
-      const body = readJsonObjectBody(request);
-      assertAllowedKeys(body, ['stagingId', 'relativePath', 'contentBase64']);
-      const stagingId = requiredStringField(body, 'stagingId');
-      const relativePath = requiredStringField(body, 'relativePath');
-      const encoded = requiredStringField(body, 'contentBase64');
-      let data: Buffer;
-      try {
-        data = Buffer.from(encoded, 'base64');
-      } catch {
-        throw new GavetaError('E_ARG_INVALID');
-      }
-      if (data.length === 0) {
-        throw new GavetaError('E_ARG_INVALID');
-      }
-      await writeImportStagingFile(stagingId, relativePath, data);
-      return reply.send(apiSuccess({ ok: true }));
-    },
-  );
+    migrationApp.post('/api/import/staging', async (_request, reply) => {
+      const created = await createImportStagingSession();
+      return reply.send(apiSuccess(created));
+    });
 
-  app.post('/api/import/preview', async (request, reply) => {
-    rateLimitMigration(request, 'import-preview', options.sessionToken);
-    const body = readJsonObjectBody(request);
-    assertAllowedKeys(body, ['stagingId', 'in', 'exclude', 'onConflict', 'rootName']);
-    const stagingId = requiredStringField(body, 'stagingId');
-    const sourcePath = resolveImportStagingSource(stagingId, optionalStringField(body, 'rootName'));
-    const result = await importMarkdownFolder(
-      buildImportOptions(options.vaultRoot, sourcePath, body, true),
+    migrationApp.post(
+      '/api/import/staging/file',
+      { bodyLimit: API_IMPORT_FILE_BODY_LIMIT_BYTES },
+      async (request, reply) => {
+        const body = readJsonObjectBody(request);
+        assertAllowedKeys(body, ['stagingId', 'relativePath', 'contentBase64']);
+        const stagingId = requiredStringField(body, 'stagingId');
+        const relativePath = requiredStringField(body, 'relativePath');
+        const encoded = requiredStringField(body, 'contentBase64');
+        let data: Buffer;
+        try {
+          data = Buffer.from(encoded, 'base64');
+        } catch {
+          throw new GavetaError('E_ARG_INVALID');
+        }
+        if (data.length === 0) {
+          throw new GavetaError('E_ARG_INVALID');
+        }
+        await writeImportStagingFile(stagingId, relativePath, data);
+        return reply.send(apiSuccess({ ok: true }));
+      },
     );
-    return reply.send(apiSuccess(buildImportApiData(result)));
-  });
 
-  app.post('/api/import/commit', async (request, reply) => {
-    rateLimitMigration(request, 'import-commit', options.sessionToken);
-    const body = readJsonObjectBody(request);
-    assertAllowedKeys(body, [
-      'stagingId',
-      'in',
-      'exclude',
-      'onConflict',
-      'continueOnError',
-      'rootName',
-    ]);
-    const stagingId = requiredStringField(body, 'stagingId');
-    const sourcePath = resolveImportStagingSource(stagingId, optionalStringField(body, 'rootName'));
-    try {
-      const result = await importMarkdownFolder(
-        buildImportOptions(options.vaultRoot, sourcePath, body, false),
+    migrationApp.post('/api/import/preview', async (request, reply) => {
+      const body = readJsonObjectBody(request);
+      assertAllowedKeys(body, ['stagingId', 'in', 'exclude', 'onConflict', 'rootName']);
+      const stagingId = requiredStringField(body, 'stagingId');
+      const sourcePath = resolveImportStagingSource(
+        stagingId,
+        optionalStringField(body, 'rootName'),
       );
-      const data = buildImportApiData(result);
-      return await reply.send(apiSuccess(data));
-    } finally {
-      await disposeImportStagingSession(stagingId);
-    }
-  });
+      const result = await importMarkdownFolder(
+        buildImportOptions(options.vaultRoot, sourcePath, body, true),
+      );
+      return reply.send(apiSuccess(buildImportApiData(result)));
+    });
 
-  app.post('/api/export/preview', async (request, reply) => {
-    rateLimitMigration(request, 'export-preview', options.sessionToken);
-    const body = readJsonObjectBody(request);
-    assertAllowedKeys(body, ['ref', 'all', 'links']);
-    const report = await runExport(options.vaultRoot, body, true);
-    return reply.send(apiSuccess(buildExportApiData(report)));
-  });
+    migrationApp.post('/api/import/commit', async (request, reply) => {
+      const body = readJsonObjectBody(request);
+      assertAllowedKeys(body, [
+        'stagingId',
+        'in',
+        'exclude',
+        'onConflict',
+        'continueOnError',
+        'rootName',
+      ]);
+      const stagingId = requiredStringField(body, 'stagingId');
+      const sourcePath = resolveImportStagingSource(
+        stagingId,
+        optionalStringField(body, 'rootName'),
+      );
+      try {
+        const result = await importMarkdownFolder(
+          buildImportOptions(options.vaultRoot, sourcePath, body, false),
+        );
+        const data = buildImportApiData(result);
+        return await reply.send(apiSuccess(data));
+      } finally {
+        await disposeImportStagingSession(stagingId);
+      }
+    });
 
-  app.post('/api/export/download', async (request, reply) => {
-    rateLimitMigration(request, 'export-download', options.sessionToken);
-    const body = readJsonObjectBody(request);
-    assertAllowedKeys(body, ['ref', 'all', 'links', 'force']);
-    const parent = await mkdtemp(path.join(tmpdir(), 'gaveta-export-'));
-    const outDir = path.join(parent, 'markdown');
-    try {
-      const report = await runExport(options.vaultRoot, body, false, outDir);
-      if (report.blocked) {
-        throw new GavetaError('E_PATH_EXISTS');
+    migrationApp.post('/api/export/preview', async (request, reply) => {
+      const body = readJsonObjectBody(request);
+      assertAllowedKeys(body, ['ref', 'all', 'links']);
+      const report = await runExport(options.vaultRoot, body, true);
+      return reply.send(apiSuccess(buildExportApiData(report)));
+    });
+
+    migrationApp.post('/api/export/download', async (request, reply) => {
+      const body = readJsonObjectBody(request);
+      assertAllowedKeys(body, ['ref', 'all', 'links', 'force']);
+      const parent = await mkdtemp(path.join(tmpdir(), 'gaveta-export-'));
+      const outDir = path.join(parent, 'markdown');
+      try {
+        const report = await runExport(options.vaultRoot, body, false, outDir);
+        if (report.blocked) {
+          throw new GavetaError('E_PATH_EXISTS');
+        }
+        const files = await collectFilesRecursive(outDir);
+        if (files.length === 0) {
+          throw new GavetaError('E_ARG_INVALID');
+        }
+        const zip = createZipBuffer(files);
+        const label = exportArchiveName(body);
+        return await reply
+          .header('content-type', 'application/zip')
+          .header('content-disposition', `attachment; filename="${label}.zip"`)
+          .send(zip);
+      } finally {
+        await rm(parent, { recursive: true, force: true });
       }
-      const files = await collectFilesRecursive(outDir);
-      if (files.length === 0) {
-        throw new GavetaError('E_ARG_INVALID');
-      }
-      const zip = createZipBuffer(files);
-      const label = exportArchiveName(body);
-      return await reply
-        .header('content-type', 'application/zip')
-        .header('content-disposition', `attachment; filename="${label}.zip"`)
-        .send(zip);
-    } finally {
-      await rm(parent, { recursive: true, force: true });
-    }
+    });
   });
 }
 

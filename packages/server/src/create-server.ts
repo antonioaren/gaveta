@@ -174,7 +174,6 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
 
   registerReadRoutes(app, options, vaultSession, () => boundPort, renderTicketSecret);
   registerWriteRoutes(app, options, vaultSession);
-  registerMigrationRoutes(app, { vaultRoot: options.vaultRoot, sessionToken: token });
   registerValidateRoutes(app);
   registerSanitizePasteRoute(app, options);
   registerRenderRoutes(
@@ -195,6 +194,10 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
       if (options.webRoot !== undefined) {
         await registerWebApp(app, options.webRoot);
       }
+      await registerMigrationRoutes(app, {
+        vaultRoot: options.vaultRoot,
+        sessionToken: token,
+      });
       await registerVaultWebSocket(app, token, vaultEvents, options.webSocketAuthTimeoutMs);
       await app.listen({
         host,
