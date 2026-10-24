@@ -96,7 +96,6 @@ it('REQ-APP-14: rename rewrites backlinks with CLI parity', async () => {
     await openNoteX(page, url);
     await page.getByTestId('note-action-rename').click();
     await expectBacklinksDialog(page);
-    await page.screenshot({ path: '/opt/cursor/artifacts/note-ops-backlinks-rename.png' });
     await page.getByTestId('note-rename-title').fill('Equis');
     await page.getByTestId('note-ops-confirm').click();
     await page.waitForTimeout(800);
@@ -162,7 +161,6 @@ it('REQ-APP-14: rm is blocked by backlinks until force', async () => {
     await openNoteX(page, url);
     await page.getByTestId('note-action-delete').click();
     await expectBacklinksDialog(page);
-    await page.screenshot({ path: '/opt/cursor/artifacts/note-ops-backlinks-delete.png' });
     await page.getByTestId('note-ops-confirm').click();
     await page.getByText(/enlaces entrantes/u).waitFor({ state: 'visible' });
     expect(await readVaultText(webVault, NOTE_X.path)).toContain(NOTE_X.title);
