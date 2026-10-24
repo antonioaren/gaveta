@@ -17,6 +17,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
+const SCREENSHOT_DIR = join(REPO_ROOT, 'test-results', 'visual-editor');
 const children: ReturnType<typeof spawn>[] = [];
 let browser: Browser;
 
@@ -44,6 +45,7 @@ function readNoteId(html: string): string | null {
 }
 
 beforeAll(async () => {
+  mkdirSync(SCREENSHOT_DIR, { recursive: true });
   const { execFileSync } = await import('node:child_process');
   execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
   browser = await chromium.launch();
@@ -250,7 +252,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       );
       expect(readFileSync(join(vault, probePath), 'utf8')).toContain('externa');
       await page.screenshot({
-        path: '/opt/cursor/artifacts/screenshots/visual-editor-conflict.png',
+        path: join(SCREENSHOT_DIR, 'visual-editor-conflict.png'),
         fullPage: true,
       });
       await page.close();
@@ -276,7 +278,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       await page.getByTestId('note-edit-button').click();
       await page.getByTestId('visual-editor-surface').waitFor();
       await page.screenshot({
-        path: '/opt/cursor/artifacts/screenshots/visual-editor-showcase.png',
+        path: join(SCREENSHOT_DIR, 'visual-editor-showcase.png'),
         fullPage: true,
       });
       await page.close();
