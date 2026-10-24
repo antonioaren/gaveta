@@ -20,3 +20,12 @@ export const WS_AUTH_TIMEOUT_MS = 5_000;
 
 /** Maximum JSON body size for write API routes. */
 export const API_WRITE_BODY_LIMIT_BYTES = 2 * 1024 * 1024;
+
+/** Maximum total bytes staged for a single import session. */
+export const API_IMPORT_SESSION_MAX_BYTES = 64 * 1024 * 1024;
+
+/** How long an import staging session stays on disk before eviction. */
+export const API_IMPORT_SESSION_TTL_MS = 30 * 60 * 1000;
+
+/** Per-request body limit for a single staged import file upload. */
+export const API_IMPORT_FILE_BODY_LIMIT_BYTES = 8 * 1024 * 1024;

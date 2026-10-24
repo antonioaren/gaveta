@@ -22,9 +22,18 @@ interface NoteExplorerProps {
   readonly loading: boolean;
   readonly error: string | null;
   readonly onNoteOp: (kind: NoteOpKind, target: NoteOpTarget) => void;
+  readonly onExportFolder: (folderPath: string, label: string) => void;
+  readonly onExportNote: (ref: string, label: string) => void;
 }
 
-export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerProps) {
+export function NoteExplorer({
+  notes,
+  loading,
+  error,
+  onNoteOp,
+  onExportFolder,
+  onExportNote,
+}: NoteExplorerProps) {
   const tabState = useTabs();
   const { openNewNote } = useNewNoteDialog();
   const [tagFilter, setTagFilter] = useState<string | null>(null);
@@ -145,6 +154,9 @@ export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerPr
         onSelect={(kind, folder) => {
           setFolderOp({ kind, folder });
         }}
+        onExport={(folder, label) => {
+          onExportFolder(folder, label);
+        }}
       />
 
       <ExplorerNoteContextMenu
@@ -156,6 +168,9 @@ export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerPr
           setMenu(null);
         }}
         onSelect={onNoteOp}
+        onExport={(target) => {
+          onExportNote(target.ref, target.title);
+        }}
       />
 
       <nav className="explorer__tree" aria-label="Árbol de carpetas">
@@ -164,6 +179,7 @@ export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerPr
           depth={0}
           activeRef={activeRef}
           onFolderContextMenu={(event, folderPath) => {
+            event.preventDefault();
             setFolderMenu({ x: event.clientX, y: event.clientY, folder: folderPath });
           }}
           onContextMenu={(event, note) => {
@@ -224,7 +240,6 @@ function FolderBranch({
             className="explorer__folder-label"
             style={{ paddingLeft: `${String(12 + depth * 14)}px` }}
             onContextMenu={(event) => {
-              event.preventDefault();
               onFolderContextMenu(event, child.path);
             }}
             data-testid={`explorer-folder-${child.path}`}
