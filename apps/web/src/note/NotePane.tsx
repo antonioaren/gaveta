@@ -114,9 +114,7 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
               Modo código
             </button>
           ) : null}
-          {opTarget !== null ? (
-            <NoteOpsMenuButtons target={opTarget} onOpen={onNoteOp} />
-          ) : null}
+          {opTarget !== null ? <NoteOpsMenuButtons target={opTarget} onOpen={onNoteOp} /> : null}
         </div>
       </header>
       {deleted ? (
