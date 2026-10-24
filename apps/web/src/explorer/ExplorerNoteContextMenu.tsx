@@ -8,6 +8,7 @@ interface ExplorerNoteContextMenuProps {
   readonly target: NoteOpTarget | null;
   readonly onClose: () => void;
   readonly onSelect: (kind: NoteOpKind, target: NoteOpTarget) => void;
+  readonly onExport: (target: NoteOpTarget) => void;
 }
 
 export function ExplorerNoteContextMenu({
@@ -17,6 +18,7 @@ export function ExplorerNoteContextMenu({
   target,
   onClose,
   onSelect,
+  onExport,
 }: ExplorerNoteContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +52,18 @@ export function ExplorerNoteContextMenu({
       aria-label="Acciones de la nota"
       data-testid="explorer-context-menu"
     >
+      <button
+        type="button"
+        role="menuitem"
+        className="explorer-context-menu__item"
+        data-testid="explorer-context-export"
+        onClick={() => {
+          onExport(target);
+          onClose();
+        }}
+      >
+        Exportar a Markdown
+      </button>
       {(['rename', 'move', 'delete'] as const).map((kind) => (
         <button
           key={kind}

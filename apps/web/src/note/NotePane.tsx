@@ -23,6 +23,7 @@ const NOTE_DELETED_MESSAGE = 'Esta nota fue eliminada del vault.';
 interface NotePaneProps {
   readonly notes: readonly NoteListItem[];
   readonly onNoteOp: (kind: NoteOpKind, target: NoteOpTarget) => void;
+  readonly onExportNote: (ref: string, label: string) => void;
 }
 
 interface EditDraft {
@@ -30,7 +31,7 @@ interface EditDraft {
   readonly hash: string;
 }
 
-export function NotePane({ notes, onNoteOp }: NotePaneProps) {
+export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
   const { ref: encodedRef } = useParams();
   const tabState = useTabs();
   const { openNewNote } = useNewNoteDialog();
@@ -186,7 +187,15 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
               Modo código
             </button>
           ) : null}
-          {opTarget !== null ? <NoteOpsMenuButtons target={opTarget} onOpen={onNoteOp} /> : null}
+          {opTarget !== null ? (
+            <NoteOpsMenuButtons
+              target={opTarget}
+              onOpen={onNoteOp}
+              onExport={() => {
+                onExportNote(opTarget.ref, opTarget.title);
+              }}
+            />
+          ) : null}
         </div>
       </header>
       {editError !== null ? (
