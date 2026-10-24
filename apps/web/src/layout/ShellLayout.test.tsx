@@ -3,6 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setSessionToken, clearSessionToken } from '../auth/session-token.ts';
+
+vi.mock('../note/NotePane.tsx', () => ({
+  NotePane: () => <div aria-label="Área de nota" />,
+}));
+
 import { ShellLayout } from './ShellLayout.tsx';
 
 beforeEach(() => {

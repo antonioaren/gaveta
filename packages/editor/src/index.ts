@@ -12,3 +12,5 @@ export {
 export type { GavetaEditorDocument } from './convert/types.ts';
 export { parseBodyHtmlToDocJson } from './convert/parse-body.ts';
 export { serializeDocJsonToBodyInnerHtml } from './convert/serialize-body.ts';
+export { GavetaDirtyExtension } from './dirty-plugin.ts';
+export { markDirtyBlocksInJson } from './mark-dirty.ts';

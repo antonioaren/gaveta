@@ -4,7 +4,10 @@ import { useVaultWebSocket } from './useVaultWebSocket.ts';
 import { subscribeLocalNoteRemoved } from './local-note-events.ts';
 import { subscribeVaultReconnect } from './vault-socket-hub.ts';
 
-export function useNoteLiveState(noteId: string | null): {
+export function useNoteLiveState(
+  noteId: string | null,
+  paused = false,
+): {
   readonly reloadKey: number;
   readonly deleted: boolean;
 } {
@@ -13,7 +16,7 @@ export function useNoteLiveState(noteId: string | null): {
 
   const onEvent = useCallback(
     (event: { readonly type: string; readonly id: string | null }) => {
-      if (noteId === null || event.id !== noteId) {
+      if (paused || noteId === null || event.id !== noteId) {
         return;
       }
       if (event.type === 'note:removed') {
@@ -33,7 +36,7 @@ export function useNoteLiveState(noteId: string | null): {
         });
       }
     },
-    [noteId],
+    [noteId, paused],
   );
   useVaultWebSocket(onEvent);
 
