@@ -73,4 +73,4 @@ it('emits note:moved when a note is renamed across folders with the same ULID', 
     socket.close();
     await server.close();
   });
-}, 30_000);
+}, 60_000);

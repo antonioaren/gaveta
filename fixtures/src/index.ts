@@ -37,7 +37,13 @@ export type {
   MarkdownFixtureManifest,
   MarkdownRoundTripLossyNote,
 } from './markdown.ts';
-export { VAULT_NAMES, resolveInsideVault, themeHrefFor, vaultPath } from './paths.ts';
+export {
+  FIXTURES_ROOT,
+  VAULT_NAMES,
+  resolveInsideVault,
+  themeHrefFor,
+  vaultPath,
+} from './paths.ts';
 export type { VaultName } from './paths.ts';
 export { slugify } from './slug.ts';
 export { ULID_PATTERN, noteUlid } from './ulid.ts';
