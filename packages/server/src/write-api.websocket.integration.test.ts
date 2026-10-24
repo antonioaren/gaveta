@@ -88,7 +88,7 @@ it('emits note:changed after a write API edit', async () => {
   });
 });
 
-it('emits note:added after a write API create', async () => {
+it('emits note:changed after a write API create', async () => {
   await withVaultCopy(async (vaultRoot) => {
     const token = createSessionToken();
     const server = createGavetaServer({ vaultRoot, port: 0, token });
@@ -98,14 +98,13 @@ it('emits note:added after a write API create', async () => {
     const authOk = await waitForMessage(socket);
     expect(JSON.parse(authOk)).toEqual({ type: 'auth:ok' });
 
-    const added = new Promise<VaultNoteEvent>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error('timed out waiting for note:added'));
-      }, 10_000);
+    const created = new Promise<VaultNoteEvent>((resolve) => {
       socket.on('message', (data) => {
         const parsed = JSON.parse(wsMessageText(data)) as VaultNoteEvent;
-        if (parsed.type === 'note:added' || parsed.type === 'note:changed') {
-          clearTimeout(timer);
+        if (
+          (parsed.type === 'note:added' || parsed.type === 'note:changed') &&
+          parsed.path === 'ws-nueva.html'
+        ) {
           resolve(parsed);
         }
       });
@@ -124,9 +123,12 @@ it('emits note:added after a write API create', async () => {
       JSON.stringify({ title: 'WS Nueva', type: 'doc' }),
     );
     expect(write.status).toBe(200);
+    const createdPath = (JSON.parse(write.body) as { data: { path: string } }).data.path;
+    expect(createdPath).toBe('ws-nueva.html');
 
-    const event = await added;
-    expect(event.path).toMatch(/ws-nueva\.html$/);
+    const event = await created;
+    expect(event.type).toBe('note:changed');
+    expect(event.path).toBe(createdPath);
     socket.close();
     await server.close();
   });
