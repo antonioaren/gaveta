@@ -32,6 +32,9 @@ export function httpStatusForCode(code: string): number {
   if (code === 'E_AUTH_REQUIRED') {
     return 401;
   }
+  if (code === 'E_IF_MATCH_REQUIRED') {
+    return 428;
+  }
   if (code === 'E_ORIGIN_INVALID') {
     return 403;
   }

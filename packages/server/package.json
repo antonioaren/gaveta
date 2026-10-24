@@ -2,7 +2,7 @@
   "name": "@gaveta/server",
   "version": "0.1.0",
   "private": true,
-  "description": "Local read-only API for gaveta serve (Fastify on 127.0.0.1).",
+  "description": "Local read/write API for gaveta serve (Fastify on 127.0.0.1).",
   "type": "module",
   "engines": {
     "node": ">=22.18.0"

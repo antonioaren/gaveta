@@ -21,7 +21,12 @@ import {
   createSessionToken,
   readRequestToken,
 } from './auth.ts';
-import { GAVETA_SERVE_DEFAULT_PORT, GAVETA_SERVE_HOST, GAVETA_TOKEN_HEADER } from './constants.ts';
+import {
+  API_WRITE_BODY_LIMIT_BYTES,
+  GAVETA_SERVE_DEFAULT_PORT,
+  GAVETA_SERVE_HOST,
+  GAVETA_TOKEN_HEADER,
+} from './constants.ts';
 import { apiFailure, apiSuccess } from './envelope.ts';
 import { httpStatusForCode, toApiErrorBody } from './http-error.ts';
 import {
@@ -63,6 +68,7 @@ import {
   applySecurityHeaders,
 } from './security-headers.ts';
 import { registerWebApp } from './static-web.ts';
+import { registerWriteRoutes } from './write-routes.ts';
 import { VaultEventBus } from './vault-events.ts';
 import { createVaultWatcher, type VaultWatcher } from './vault-watcher.ts';
 import { VaultIndexSession } from './vault-index.ts';
@@ -113,6 +119,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
 
   const app = Fastify({
     logger: false,
+    bodyLimit: API_WRITE_BODY_LIMIT_BYTES,
     routerOptions: { ignoreTrailingSlash: true },
   });
 
@@ -124,7 +131,14 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
       typeof request.headers.origin === 'string' ? request.headers.origin : undefined,
       boundPort,
     );
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
+    const method = request.method.toUpperCase();
+    if (
+      method !== 'GET' &&
+      method !== 'HEAD' &&
+      method !== 'POST' &&
+      method !== 'PATCH' &&
+      method !== 'DELETE'
+    ) {
       throw new GavetaError('E_ARG_INVALID');
     }
     const normalizedPath = normalizeServePath(request.url);
@@ -156,6 +170,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
   });
 
   registerReadRoutes(app, options, vaultSession, () => boundPort, renderTicketSecret);
+  registerWriteRoutes(app, options, vaultSession);
   registerRenderRoutes(
     app,
     options,

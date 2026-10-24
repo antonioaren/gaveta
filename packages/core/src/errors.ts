@@ -210,6 +210,13 @@ export const DIAGNOSTICS = {
     message: 'La nota ha cambiado desde la última lectura.',
     hint: 'Hay que volver a leer la nota y reintentar con el hash actual en --if-match.',
   },
+  E_IF_MATCH_REQUIRED: {
+    severity: 'error',
+    exitCode: 1,
+    escalatesToError: false,
+    message: 'Falta el hash de la nota en If-Match.',
+    hint: 'Lee la nota con gaveta read o la API de lectura y reenvía su hash en If-Match.',
+  },
   E_SECTION_NOT_FOUND: {
     severity: 'error',
     exitCode: 4,

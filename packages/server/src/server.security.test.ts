@@ -17,17 +17,23 @@ function authHeaders(token: string): Record<string, string> {
   };
 }
 
-it('rejects POST on read-only API', async () => {
+it('requires If-Match for write API routes', async () => {
   await withVaultCopy(async (vaultRoot) => {
-    const token = 'readonly-token';
+    const token = 'write-token';
     const server = createGavetaServer({ vaultRoot, port, token });
     const response = await server.app.inject({
       method: 'POST',
-      url: '/api/notes',
-      headers: authHeaders(token),
-      payload: '{}',
+      url: '/api/new',
+      headers: {
+        ...authHeaders(token),
+        'content-type': 'application/json',
+      },
+      payload: JSON.stringify({ title: 'Nueva', type: 'doc' }),
     });
-    expect(response.statusCode).toBe(400);
+    expect(response.statusCode).toBe(428);
+    const envelope = JSON.parse(response.body) as { ok: boolean; error: { code: string } };
+    expect(envelope.ok).toBe(false);
+    expect(envelope.error.code).toBe('E_IF_MATCH_REQUIRED');
     await server.close();
   });
 });

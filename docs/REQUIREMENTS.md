@@ -287,6 +287,7 @@ Es lo que imprime `gaveta guide`. La fuente de verdad será un módulo del núcl
 | `E_SKILL_MODIFIED` | La skill instalada fue editada a mano y no se sobrescribe sin `--force` |
 | `E_HAS_BACKLINKS` | `rm` sin `--force` de una nota con backlinks |
 | `E_CONFLICT` | `--if-match` no coincide |
+| `E_IF_MATCH_REQUIRED` | Falta `If-Match` en una escritura de la API |
 | `E_SECTION_NOT_FOUND` | El id de sección no existe en la nota |
 | `E_TASK_NOT_FOUND` | No hay ninguna tarea con ese id en la nota |
 | `W_LINK_PENDING` | Enlace pendiente creado |
