@@ -6,9 +6,14 @@ import type { ApiEnvelope } from './types.ts';
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
-  readonly details: Record<string, unknown> | undefined;
+  readonly details: Readonly<Record<string, unknown>> | undefined;
 
-  constructor(status: number, code: string, message: string, details?: Record<string, unknown>) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details?: Readonly<Record<string, unknown>>,
+  ) {
     super(message);
     this.status = status;
     this.code = code;
@@ -27,17 +32,17 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 
 export async function apiJson<T>(path: string, init?: RequestInit): Promise<ApiEnvelope<T>> {
   const response = await apiFetch(path, init);
-  const body = (await response.json()) as ApiEnvelope<T> & { code?: string; message?: string };
+  const body = (await response.json()) as ApiEnvelope<T> & {
+    code?: string;
+    message?: string;
+    error?: { code?: string; message?: string; details?: Record<string, unknown> };
+    details?: Record<string, unknown>;
+  };
   if (!response.ok || !body.ok) {
-    const errorBody = body as {
-      code?: string;
-      message?: string;
-      error?: { code?: string; message?: string; details?: Record<string, unknown> };
-    };
-    const nested = errorBody.error;
-    const code = errorBody.code ?? nested?.code ?? 'E_INTERNAL';
-    const message = errorBody.message ?? nested?.message ?? 'Error de la API';
-    const details = nested?.details ?? (body as { details?: Record<string, unknown> }).details;
+    const nested = body.error;
+    const code = body.code ?? nested?.code ?? 'E_INTERNAL';
+    const message = body.message ?? nested?.message ?? 'Error de la API';
+    const details = nested?.details ?? body.details;
     throw new ApiError(response.status, code, message, details);
   }
   return body;

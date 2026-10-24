@@ -509,6 +509,12 @@ select {
   font-size: 1.35rem;
 }
 
+.note-pane__error {
+  margin: 0.25rem 0 0;
+  color: var(--color-danger, #b91c1c);
+  font-size: 0.875rem;
+}
+
 .note-pane__path {
   margin: var(--space-1) 0 0;
   font-family: var(--font-mono);

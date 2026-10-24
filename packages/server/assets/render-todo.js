@@ -1,5 +1,5 @@
 /**
- * Todo view: read-only filters by checkbox state (no persistence).
+ * Todo view: filters by checkbox state (persistence is handled by render-bridge.js).
  */
 (function () {
   'use strict';
