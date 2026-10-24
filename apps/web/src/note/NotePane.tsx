@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { NoteListItem } from '../api/types.ts';
 import { fetchNoteHtml } from '../api/note-read.ts';
@@ -8,10 +8,10 @@ import { NoteOpsMenuButtons } from '../note-ops/NoteOpsMenu.tsx';
 import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
 import { noteOpTargetFromListItem } from '../note-ops/note-op-target.ts';
 import { useTabs } from '../tabs/useTabs.ts';
-import { isGavetaNavigateMessage } from './navigate-message.ts';
 import { useNoteLiveState } from '../live/useNoteLiveState.ts';
 import { NoteRenderFrame } from './NoteRenderFrame.tsx';
 import { NoteCodeMode } from './NoteCodeMode.tsx';
+import { useRenderBridgeHost } from './useRenderBridgeHost.ts';
 
 const NO_RENDER_ID_MESSAGE =
   'Esta nota aún no tiene un id en el índice; no se puede previsualizar hasta que se reindexe.';
@@ -61,23 +61,12 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
   const inCodeMode = activeTab !== null && codeModeForRef === activeTab.ref;
   const editingAny = inVisualEdit || inCodeMode;
 
-  useEffect(() => {
-    const onMessage = (event: MessageEvent): void => {
-      if (event.source !== iframeWindowRef.current) {
-        return;
-      }
-      if (!isGavetaNavigateMessage(event.data)) {
-        return;
-      }
-      const ref = event.data.ref;
-      const noteId = isNoteUlid(ref) ? ref : null;
-      tabState.openTab(ref, ref, ref, noteId);
-    };
-    window.addEventListener('message', onMessage);
-    return () => {
-      window.removeEventListener('message', onMessage);
-    };
-  }, [tabState]);
+  const noteRef = activeTab?.ref ?? null;
+  const { taskError } = useRenderBridgeHost({
+    iframeWindowRef,
+    noteRef: editingAny ? null : noteRef,
+    tabState,
+  });
 
   const noteId = activeTab?.noteId ?? null;
   const { reloadKey, deleted } = useNoteLiveState(noteId, editingAny);
@@ -152,6 +141,11 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
         <div className="note-pane__header-main">
           <h1 className="note-pane__title">{activeTab.title}</h1>
           <p className="note-pane__path">{activeTab.path}</p>
+          {taskError !== null && !editingAny ? (
+            <p className="note-pane__error" role="alert">
+              {taskError}
+            </p>
+          ) : null}
         </div>
         <div className="note-pane__actions">
           {showModeButtons ? (

@@ -202,6 +202,36 @@ it('mv via API matches CLI bytes', async () => {
   });
 });
 
+it('todo check via API matches CLI bytes', async () => {
+  await withVaultCopy(async (vaultRoot) => {
+    const cliVault = cloneVault(vaultRoot, 'cli-todo-check');
+    const token = 'parity-todo-check';
+    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const address = await server.listen();
+    const ref = 'enlaces/mas/enlace-20.html';
+    const hash = await noteHash(address.port, token, ref);
+    const api = await postJson(
+      address.port,
+      '/api/todo/check',
+      token,
+      { ref, taskId: 'revisar' },
+      hash,
+    );
+    expect(api.status).toBe(200);
+    gaveta(cliVault, [
+      'todo',
+      'check',
+      ref,
+      'revisar',
+      '--if-match',
+      cliHash(cliVault, ref),
+      '--json',
+    ]);
+    expect(await readVaultText(vaultRoot, ref)).toBe(await readVaultText(cliVault, ref));
+    await server.close();
+  });
+});
+
 it('rm via API matches CLI bytes', async () => {
   await withVaultCopy(async (vaultRoot) => {
     const cliVault = cloneVault(vaultRoot, 'cli-rm');

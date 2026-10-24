@@ -172,6 +172,15 @@ export {
 } from './render/navigate-message.ts';
 
 export {
+  GAVETA_TASK_CHECKED_MESSAGE_TYPE,
+  GAVETA_TASK_TOGGLE_MESSAGE_TYPE,
+  parseGavetaTaskCheckedMessage,
+  parseGavetaTaskToggleMessage,
+  type GavetaTaskCheckedMessage,
+  type GavetaTaskToggleMessage,
+} from './render/task-toggle-message.ts';
+
+export {
   appendRenderTicketQuery,
   buildNoteRenderCsp,
   buildNoteRenderPage,
