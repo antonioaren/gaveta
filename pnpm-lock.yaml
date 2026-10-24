@@ -80,7 +80,6 @@ importers:
 
   apps/web:
     dependencies:
-<<<<<<< HEAD
       '@codemirror/lang-html':
         specifier: 6.4.12
         version: 6.4.12
@@ -93,8 +92,6 @@ importers:
       '@codemirror/view':
         specifier: 6.43.15
         version: 6.43.15
-=======
->>>>>>> 665a919 (fix(ci): sync lockfile after web deps change; merge T3.8 NotePane; sanitize-paste auth tests)
       '@gaveta/editor':
         specifier: workspace:*
         version: link:../../packages/editor

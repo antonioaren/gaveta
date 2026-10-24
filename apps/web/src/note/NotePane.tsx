@@ -167,7 +167,6 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
               {loadingEdit ? 'Abriendo…' : 'Editar'}
             </button>
           ) : null}
-<<<<<<< HEAD
           {showModeButtons ? (
             <button
               type="button"
@@ -178,8 +177,6 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
               Modo código
             </button>
           ) : null}
-=======
->>>>>>> 665a919 (fix(ci): sync lockfile after web deps change; merge T3.8 NotePane; sanitize-paste auth tests)
           {opTarget !== null ? <NoteOpsMenuButtons target={opTarget} onOpen={onNoteOp} /> : null}
         </div>
       </header>
