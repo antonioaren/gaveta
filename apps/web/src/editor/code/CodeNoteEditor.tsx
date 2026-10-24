@@ -1,0 +1,71 @@
+import { html } from '@codemirror/lang-html';
+import { linter, lintGutter } from '@codemirror/lint';
+import { EditorState } from '@codemirror/state';
+import { EditorView, lineNumbers, highlightActiveLineGutter } from '@codemirror/view';
+import { useEffect, useRef, type ReactElement } from 'react';
+import { fetchNoteValidation } from '../../api/note-validate.ts';
+import { createNoteLinter } from './note-linter.ts';
+
+export interface CodeNoteEditorProps {
+  readonly initialValue: string;
+  readonly notePath: string;
+  readonly onChange: (value: string) => void;
+  readonly readOnly?: boolean;
+}
+
+export function CodeNoteEditor({
+  initialValue,
+  notePath,
+  onChange,
+  readOnly = false,
+}: CodeNoteEditorProps): ReactElement {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
+  const onChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host === null) {
+      return;
+    }
+    const noteLinter = createNoteLinter(notePath, fetchNoteValidation);
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: initialValue,
+        extensions: [
+          lineNumbers(),
+          highlightActiveLineGutter(),
+          html(),
+          lintGutter(),
+          linter(noteLinter, { delay: 300 }),
+          EditorView.lineWrapping,
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) {
+              onChangeRef.current(update.state.doc.toString());
+            }
+          }),
+          EditorView.editable.of(!readOnly),
+        ],
+      }),
+      parent: host,
+    });
+    viewRef.current = view;
+    return () => {
+      view.destroy();
+      viewRef.current = null;
+    };
+  }, [initialValue, notePath, readOnly]);
+
+  return (
+    <div
+      className="code-editor"
+      ref={hostRef}
+      aria-label="Editor de código HTML"
+      data-testid="code-note-editor"
+    />
+  );
+}

@@ -31,6 +31,18 @@ export function requiredStringField(record: Record<string, unknown>, key: string
   return value.trim();
 }
 
+/** Like `requiredStringField` but preserves leading and trailing whitespace (for note HTML). */
+export function requiredNoteHtmlField(record: Record<string, unknown>, key: string): string {
+  const value = record[key];
+  if (typeof value !== 'string' || value.includes('\0') || value.length === 0) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  if (value.trim().length === 0) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return value;
+}
+
 export function optionalStringField(
   record: Record<string, unknown>,
   key: string,

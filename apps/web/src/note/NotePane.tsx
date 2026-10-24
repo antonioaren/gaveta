@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { NoteListItem } from '../api/types.ts';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
@@ -9,6 +9,7 @@ import { useTabs } from '../tabs/useTabs.ts';
 import { isGavetaNavigateMessage } from './navigate-message.ts';
 import { useNoteLiveState } from '../live/useNoteLiveState.ts';
 import { NoteRenderFrame } from './NoteRenderFrame.tsx';
+import { NoteCodeMode } from './NoteCodeMode.tsx';
 
 const NO_RENDER_ID_MESSAGE =
   'Esta nota aún no tiene un id en el índice; no se puede previsualizar hasta que se reindexe.';
@@ -24,6 +25,7 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
   const tabState = useTabs();
   const { tabs, activeTabId } = tabState;
   const iframeWindowRef = useRef<Window | null>(null);
+  const [codeModeForRef, setCodeModeForRef] = useState<string | null>(null);
 
   const activeTab = useMemo(() => {
     if (encodedRef !== undefined) {
@@ -82,6 +84,8 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
     };
   }, [activeTab, notes]);
 
+  const inCodeMode = activeTab !== null && codeModeForRef === activeTab.ref;
+
   if (activeTab === null) {
     return (
       <section className="note-pane note-pane--empty" aria-label="Área de nota">
@@ -97,14 +101,38 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
           <h1 className="note-pane__title">{activeTab.title}</h1>
           <p className="note-pane__path">{activeTab.path}</p>
         </div>
-        {opTarget !== null ? (
-          <NoteOpsMenuButtons target={opTarget} onOpen={onNoteOp} className="note-pane__actions" />
-        ) : null}
+        <div className="note-pane__actions">
+          {noteId !== null && !deleted && !inCodeMode ? (
+            <button
+              type="button"
+              className="note-pane__mode-button"
+              data-testid="enter-code-mode"
+              onClick={() => {
+                setCodeModeForRef(activeTab.ref);
+              }}
+            >
+              Modo código
+            </button>
+          ) : null}
+          {opTarget !== null ? <NoteOpsMenuButtons target={opTarget} onOpen={onNoteOp} /> : null}
+        </div>
       </header>
       {deleted ? (
         <p className="note-pane__placeholder">{NOTE_DELETED_MESSAGE}</p>
       ) : noteId === null ? (
         <p className="note-pane__placeholder">{NO_RENDER_ID_MESSAGE}</p>
+      ) : inCodeMode ? (
+        <NoteCodeMode
+          key={activeTab.ref}
+          noteRef={activeTab.ref}
+          path={activeTab.path}
+          onExit={() => {
+            setCodeModeForRef(null);
+          }}
+          onSaved={() => {
+            /* live reload picks up disk changes */
+          }}
+        />
       ) : (
         <NoteRenderFrame
           noteId={noteId}
