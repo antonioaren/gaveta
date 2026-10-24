@@ -102,7 +102,7 @@ describe('T2.10 global graph XSS labels', () => {
       expect(await ghostHeading.innerText()).toBe(ghostTitle);
       expect(await page.locator('.graph-view__ghost-title script').count()).toBe(0);
       await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-      await page.getByRole('button', { name: 'Crear nota (copiar comando)' }).click();
+      await page.getByRole('button', { name: 'Copiar comando CLI' }).click();
       const commandStatus = page.locator('.graph-view__ghost-command');
       await commandStatus.waitFor({ state: 'visible' });
       const statusText = await commandStatus.innerText();

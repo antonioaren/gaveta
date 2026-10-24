@@ -13,6 +13,7 @@ import {
   isTagNodeKey,
   type GraphFilterState,
 } from './filter-graph.ts';
+import { useNewNoteDialog } from '../new-note/useNewNoteDialog.ts';
 import { ghostCreateCommand } from './ghost-create-command.ts';
 import { GRAPH_LEGEND_ITEMS, graphNodeCssClass } from './graph-node-style.ts';
 import { useForceLayout } from './useForceLayout.ts';
@@ -43,6 +44,7 @@ export function GlobalGraphView() {
   const [filters, setFilters] = useState<GraphFilterState>(emptyFilters);
   const { graph, loading, error } = useGlobalGraph(filters);
   const tabState = useTabs();
+  const { openNewNote } = useNewNoteDialog();
   const navigate = useNavigate();
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [selectedGhost, setSelectedGhost] = useState<GraphNodeView | null>(null);
@@ -380,10 +382,22 @@ export function GlobalGraphView() {
                 <p className="graph-view__ghost-hint">Esta nota aún no existe en el vault.</p>
                 <button
                   type="button"
+                  className="topbar__button topbar__button--primary"
+                  onClick={() => {
+                    openNewNote({
+                      title: selectedGhost.title,
+                      replaceTabRef: selectedGhost.title,
+                    });
+                  }}
+                >
+                  Crear nota
+                </button>
+                <button
+                  type="button"
                   className="topbar__button"
                   onClick={() => void copyGhostCommand()}
                 >
-                  Crear nota (copiar comando)
+                  Copiar comando CLI
                 </button>
                 {copyStatus !== null ? (
                   <p className="graph-view__ghost-command" role="status">

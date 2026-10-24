@@ -3,6 +3,7 @@ import { ExplorerNoteContextMenu } from './ExplorerNoteContextMenu.tsx';
 import type { NoteListItem } from '../api/types.ts';
 import { buildFolderTree, collectTags, collectTypes, type FolderNode } from './build-tree.ts';
 import { noteRenderId, viewerRefForNote } from '../notes/viewer-ref.ts';
+import { useNewNoteDialog } from '../new-note/useNewNoteDialog.ts';
 import { useTabs } from '../tabs/useTabs.ts';
 import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
 import { noteOpTargetFromListItem } from '../note-ops/note-op-target.ts';
@@ -22,6 +23,7 @@ interface NoteExplorerProps {
 
 export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerProps) {
   const tabState = useTabs();
+  const { openNewNote } = useNewNoteDialog();
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<NoteListItem['type'] | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; target: NoteOpTarget } | null>(null);
@@ -46,7 +48,18 @@ export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerPr
   return (
     <aside className="explorer" role="navigation" aria-label="Explorador de notas">
       <header className="explorer__header">
-        <h2 className="explorer__title">Explorador</h2>
+        <div className="explorer__header-row">
+          <h2 className="explorer__title">Explorador</h2>
+          <button
+            type="button"
+            className="explorer__new-note"
+            onClick={() => {
+              openNewNote();
+            }}
+          >
+            Nueva nota
+          </button>
+        </div>
         <p className="explorer__hint">{notes.length} notas en el vault</p>
       </header>
 
