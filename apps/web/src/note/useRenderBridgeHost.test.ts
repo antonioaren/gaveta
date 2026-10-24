@@ -11,6 +11,7 @@ const tabState = {
   openTab: vi.fn(),
   closeTab: vi.fn(),
   activateTab: vi.fn(),
+  remapNotePath: vi.fn(),
   tabs: [],
   activeTabId: null,
 } satisfies TabContextValue;

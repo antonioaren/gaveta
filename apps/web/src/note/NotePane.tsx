@@ -142,7 +142,9 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
           <h1 className="note-pane__title">{activeTab.title}</h1>
           <p className="note-pane__path">{activeTab.path}</p>
           {taskError !== null && !editingAny ? (
-            <p className="note-pane__error" role="alert">{taskError}</p>
+            <p className="note-pane__error" role="alert">
+              {taskError}
+            </p>
           ) : null}
         </div>
         <div className="note-pane__actions">
