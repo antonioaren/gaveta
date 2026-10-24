@@ -28,6 +28,7 @@ export const VALIDATOR_CODES = [
   'E_PATH_OUTSIDE_VAULT',
   'W_REMOTE_RESOURCE',
   'W_INLINE_STYLE_REMOVED',
+  'W_LINK_PENDING',
 ] as const;
 
 export type ValidatorCode = (typeof VALIDATOR_CODES)[number];

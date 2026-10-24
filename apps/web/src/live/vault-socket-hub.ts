@@ -1,4 +1,7 @@
 import { getSessionToken } from '../auth/session-token.ts';
+import { pushLiveE2eLog } from './live-e2e-log.ts';
+import { recordLivePipelineFromServer } from './live-pipeline-client.ts';
+import type { LivePipelineTracePayload } from './live-pipeline-types.ts';
 import type { VaultNoteEvent } from './vault-events.ts';
 import { vaultWebSocketUrl } from './vault-events.ts';
 
@@ -63,6 +66,51 @@ function scheduleReconnect(): void {
   }, backoffMs);
 }
 
+function readStageOffset(
+  stages: Record<string, unknown>,
+  key: keyof LivePipelineTracePayload['stages'],
+): number | undefined {
+  const value = stages[key];
+  return typeof value === 'number' ? value : undefined;
+}
+
+function buildStages(rawStages: Record<string, unknown>): LivePipelineTracePayload['stages'] {
+  const stages: Partial<Record<keyof LivePipelineTracePayload['stages'], number>> = {};
+  for (const key of [
+    'writeFinished',
+    'chokidar',
+    'debounceFlush',
+    'indexUpdated',
+    'wsSent',
+  ] as const) {
+    const offset = readStageOffset(rawStages, key);
+    if (offset !== undefined) {
+      stages[key] = offset;
+    }
+  }
+  return stages;
+}
+
+function parsePipelineTrace(value: unknown): LivePipelineTracePayload | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  if (record.anchor !== 'writeFinished' || typeof record.path !== 'string') {
+    return undefined;
+  }
+  if (typeof record.stages !== 'object' || record.stages === null) {
+    return undefined;
+  }
+  const rawStages = record.stages as Record<string, unknown>;
+  const stages = buildStages(rawStages);
+  return {
+    anchor: 'writeFinished',
+    path: record.path,
+    stages,
+  };
+}
+
 function handleMessage(message: MessageEvent): void {
   let parsed: unknown;
   try {
@@ -99,11 +147,30 @@ function handleMessage(message: MessageEvent): void {
     record.type === 'note:removed' ||
     record.type === 'note:moved'
   ) {
+    const pipeline = parsePipelineTrace(record.pipeline);
     const event: VaultNoteEvent = {
       type: record.type,
       path: String(record.path),
       id: record.id === null || typeof record.id === 'string' ? record.id : null,
+      ...(pipeline === undefined ? {} : { pipeline }),
     };
+    if (pipeline !== undefined) {
+      const writeAnchor = (globalThis as { __gavetaWriteFinishedAt?: number })
+        .__gavetaWriteFinishedAt;
+      const wsReceivedMs =
+        writeAnchor === undefined ? undefined : Math.max(0, performance.now() - writeAnchor);
+      recordLivePipelineFromServer(
+        event.path,
+        pipeline.stages,
+        wsReceivedMs ?? pipeline.stages.wsSent ?? 0,
+      );
+    }
+    pushLiveE2eLog({
+      kind: 'ws',
+      eventType: event.type,
+      path: event.path,
+      id: event.id,
+    });
     if (typeof record.from === 'string') {
       dispatch({ ...event, from: record.from });
     } else {
@@ -121,12 +188,16 @@ function connect(): void {
     return;
   }
   intentionalClose = false;
-  socket = new WebSocket(vaultWebSocketUrl());
-  socket.addEventListener('open', () => {
-    socket?.send(JSON.stringify({ type: 'auth', token }));
+  const opened = new WebSocket(vaultWebSocketUrl());
+  socket = opened;
+  opened.addEventListener('open', () => {
+    opened.send(JSON.stringify({ type: 'auth', token }));
   });
-  socket.addEventListener('message', handleMessage);
-  socket.addEventListener('close', (event) => {
+  opened.addEventListener('message', handleMessage);
+  opened.addEventListener('close', (event) => {
+    if (socket !== opened) {
+      return;
+    }
     socket = null;
     authed = false;
     if (event.code === 4401) {

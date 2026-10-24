@@ -64,12 +64,16 @@ export class VaultIndexSession {
         return { type: 'note:removed', path, id };
       }
       if (change.kind === 'add') {
+        const wasIndexed = noteIdForPath(index, path) !== null;
         await index.upsert(path);
         const id = noteIdForPath(index, path);
         const from = pairMoveByNoteId(id, recentUnlinks, Date.now(), movePairWindowMs);
         if (from !== null) {
           recentUnlinks.delete(from);
           return { type: 'note:moved', path, id, from };
+        }
+        if (wasIndexed) {
+          return { type: 'note:changed', path, id };
         }
         return { type: 'note:added', path, id };
       }

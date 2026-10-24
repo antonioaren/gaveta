@@ -75,9 +75,9 @@ export function NotePane() {
         <p className="note-pane__placeholder">{NO_RENDER_ID_MESSAGE}</p>
       ) : (
         <NoteRenderFrame
-          key={`${noteId}-${String(reloadKey)}`}
           noteId={noteId}
           title={activeTab.title}
+          reloadGeneration={reloadKey}
           onIframeWindow={(window) => {
             iframeWindowRef.current = window;
           }}

@@ -6,6 +6,7 @@ import { wsMessageText } from './ws-message.ts';
 import { expectedOrigin } from './auth.ts';
 import { GAVETA_WS_PATH } from './constants.ts';
 import { createGavetaServer } from './index.ts';
+import { markWriteFinished } from './live-pipeline-trace.ts';
 import { withVaultCopy } from './test-helpers.ts';
 
 function percentile(samples: readonly number[], p: number): number {
@@ -53,6 +54,7 @@ it('REQ-NFR-01: watcher to WebSocket p95 stays under 500 ms (20 samples)', async
         socket.on('message', onMessage);
       });
       const start = performance.now();
+      markWriteFinished(notePath, start);
       await writeAtomic(`${vaultRoot}/${notePath}`, `${html}<!-- ${String(index)} -->`);
       await eventPromise;
       samples.push(performance.now() - start);

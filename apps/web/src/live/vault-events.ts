@@ -1,3 +1,5 @@
+import type { LivePipelineTracePayload } from './live-pipeline-types.ts';
+
 export type VaultNoteEventType = 'note:changed' | 'note:added' | 'note:removed' | 'note:moved';
 
 export interface VaultNoteEvent {
@@ -5,6 +7,7 @@ export interface VaultNoteEvent {
   readonly path: string;
   readonly id: string | null;
   readonly from?: string;
+  readonly pipeline?: LivePipelineTracePayload;
 }
 
 export function vaultWebSocketUrl(): string {

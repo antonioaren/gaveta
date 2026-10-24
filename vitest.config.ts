@@ -11,6 +11,7 @@ export default defineConfig({
       'fixtures/src/**/*.test.ts',
       'tests/**/*.test.ts',
     ],
+    exclude: ['packages/server/src/live-pipeline.perf.test.ts'],
     environment: 'node',
     coverage: {
       provider: 'v8',

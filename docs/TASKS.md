@@ -123,7 +123,7 @@ flowchart TB
 - [x] **T2.7 Vistas por tipo.** `doc` con índice lateral, `slides` con miniaturas y modo presentación, y `todo` con filtros (solo lectura). Cubre: REQ-APP-06. Depende de: T2.3.
 - [x] **T2.8 Búsqueda y paleta.** Cmd/Ctrl+K sobre `search` y comandos de navegación. Cubre: REQ-APP-04. Depende de: T2.4.
 - [x] **T2.9 Panel de salud y avisos.** Salida de `doctor` y aviso cuando un cambio externo rompe enlaces o el contrato. Cubre: REQ-APP-07. Depende de: T2.2.
-- [ ] **T2.10 Tests E2E de seguridad y latencia.** Notas maliciosas de `fixtures/` y medida del p95. Cubre: REQ-SEC-01, REQ-NFR-01. Depende de: T2.3, T2.2.
+- [x] **T2.10 Tests E2E de seguridad y latencia.** Notas maliciosas de `fixtures/` y medida del p95. Cubre: REQ-SEC-01, REQ-NFR-01. Depende de: T2.3, T2.2.
 ### 2B. Importar y exportar Markdown (CLI)
 
 Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que ya existen. Solo depende del núcleo de la fase 1, no del visor, así que se puede desarrollar en paralelo a las tareas T2.1 a T2.10.

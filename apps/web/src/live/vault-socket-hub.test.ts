@@ -104,6 +104,49 @@ it('reconnects with backoff and notifies listeners after auth', async () => {
   expect(reconnects.length).toBe(1);
 });
 
+it('ignores close events from a replaced socket', async () => {
+  const events: string[] = [];
+  subscribeVaultEvents((event) => {
+    events.push(event.type);
+  });
+  await vi.waitFor(() => {
+    expect(sockets.length).toBe(1);
+  });
+  const first = sockets[0];
+  if (first === undefined) {
+    throw new Error('expected socket');
+  }
+  emitMessage(first, { type: 'auth:ok' });
+  emitMessage(first, {
+    type: 'note:changed',
+    path: 'a.html',
+    id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+  });
+  expect(events).toEqual(['note:changed']);
+
+  const firstClose = first.addEventListener.mock.calls.find(([type]) => type === 'close')?.[1] as
+    ((event: { code: number }) => void) | undefined;
+  firstClose?.({ code: 1006 });
+  await vi.advanceTimersByTimeAsync(1_000);
+  await vi.waitFor(() => {
+    expect(sockets.length).toBe(2);
+  });
+  const second = sockets[1];
+  if (second === undefined) {
+    throw new Error('expected second socket');
+  }
+  emitMessage(second, { type: 'auth:ok' });
+  emitMessage(second, {
+    type: 'note:changed',
+    path: 'b.html',
+    id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+  });
+  expect(events).toEqual(['note:changed', 'note:changed']);
+
+  firstClose?.({ code: 1006 });
+  expect(sockets.length).toBe(2);
+});
+
 it('does not reconnect after a 4401 auth failure and surfaces a Spanish notice', async () => {
   const failures: string[] = [];
   subscribeVaultAuthFailure((message) => {

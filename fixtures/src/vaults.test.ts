@@ -556,12 +556,22 @@ describe('problems vault (REQ-LINK-11)', () => {
   });
 });
 
+const MALICIOUS_ATTACHMENT_PATHS = [
+  'attachments/pixel.svg',
+  'attachments/hidden-secret.svg',
+] as const;
+
 describe('malicious vault (REQ-SEC-01, REQ-SEC-02)', () => {
   const files = loadNotes('malicious');
 
   it('covers each unsafe payload and keeps path escapes inside the fixture text', () => {
     expect(walk(vaultPath('malicious'))).toEqual(
-      ['.gaveta/config.json', '.gaveta/theme.css', ...MALICIOUS.map((spec) => spec.path)].sort(),
+      [
+        '.gaveta/config.json',
+        '.gaveta/theme.css',
+        ...MALICIOUS.map((spec) => spec.path),
+        ...MALICIOUS_ATTACHMENT_PATHS,
+      ].sort(),
     );
     const specs = new Map(MALICIOUS.map((spec) => [spec.path, spec]));
     const codes = new Set<string>();
@@ -591,6 +601,8 @@ describe('malicious vault (REQ-SEC-01, REQ-SEC-02)', () => {
         'combined',
         'embed',
         'form',
+        'graph-ghost-xss',
+        'graph-label-xss',
         'handler',
         'iframe',
         'inline-style',
@@ -600,7 +612,11 @@ describe('malicious vault (REQ-SEC-01, REQ-SEC-02)', () => {
         'path-traversal',
         'remote-image',
         'remote-stylesheet',
+        'render-asset',
         'script',
+        'xss-source',
+        'xss-target',
+        'xss-todo',
       ].sort(),
     );
     expect([...idsOf(files).values()].every((paths) => paths.length === 1)).toBe(true);
