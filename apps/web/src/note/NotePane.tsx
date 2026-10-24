@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import type { NoteListItem } from '../api/types.ts';
 import { fetchNoteHtml } from '../api/note-read.ts';
 import { VisualNoteEditor } from '../editor/VisualNoteEditor.tsx';
+import { isGhostViewerRef } from '../new-note/ghost-viewer-ref.ts';
+import { useNewNoteDialog } from '../new-note/useNewNoteDialog.ts';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
 import { NoteOpsMenuButtons } from '../note-ops/NoteOpsMenu.tsx';
 import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
@@ -30,6 +32,7 @@ interface EditDraft {
 export function NotePane({ notes, onNoteOp }: NotePaneProps) {
   const { ref: encodedRef } = useParams();
   const tabState = useTabs();
+  const { openNewNote } = useNewNoteDialog();
   const { tabs, activeTabId } = tabState;
   const iframeWindowRef = useRef<Window | null>(null);
   const [codeModeForRef, setCodeModeForRef] = useState<string | null>(null);
@@ -69,6 +72,8 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
   });
 
   const noteId = activeTab?.noteId ?? null;
+  const ghostRef =
+    activeTab !== null && isGhostViewerRef(activeTab.ref, notes) ? activeTab.ref : null;
   const { reloadKey, deleted } = useNoteLiveState(noteId, editingAny);
 
   const startEdit = useCallback(async (): Promise<void> => {
@@ -182,7 +187,22 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
       {deleted ? (
         <p className="note-pane__placeholder">{NOTE_DELETED_MESSAGE}</p>
       ) : noteId === null ? (
-        <p className="note-pane__placeholder">{NO_RENDER_ID_MESSAGE}</p>
+        <div className="note-pane__missing">
+          <p className="note-pane__placeholder">
+            {ghostRef !== null ? 'Esta nota aún no existe en el vault.' : NO_RENDER_ID_MESSAGE}
+          </p>
+          {ghostRef !== null ? (
+            <button
+              type="button"
+              className="topbar__button topbar__button--primary"
+              onClick={() => {
+                openNewNote({ title: ghostRef, replaceTabRef: ghostRef });
+              }}
+            >
+              Crear nota
+            </button>
+          ) : null}
+        </div>
       ) : inCodeMode ? (
         <NoteCodeMode
           key={activeTab.ref}
