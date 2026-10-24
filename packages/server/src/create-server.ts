@@ -174,7 +174,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
 
   registerReadRoutes(app, options, vaultSession, () => boundPort, renderTicketSecret);
   registerWriteRoutes(app, options, vaultSession);
-  registerMigrationRoutes(app, options);
+  registerMigrationRoutes(app, { vaultRoot: options.vaultRoot, sessionToken: token });
   registerValidateRoutes(app);
   registerSanitizePasteRoute(app, options);
   registerRenderRoutes(

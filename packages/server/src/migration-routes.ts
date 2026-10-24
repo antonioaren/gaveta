@@ -8,8 +8,10 @@ import {
 import { mkdir, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
+import { readRequestToken } from './auth.ts';
 import { apiSuccess } from './envelope.ts';
+import { assertMigrationRateLimit } from './migration-rate-limit.ts';
 import { API_IMPORT_FILE_BODY_LIMIT_BYTES } from './constants.ts';
 import {
   assertAllowedKeys,
@@ -30,6 +32,12 @@ import { createZipBuffer } from './migration/zip-buffer.ts';
 
 export interface MigrationRoutesOptions {
   readonly vaultRoot: string;
+  readonly sessionToken: string;
+}
+
+function rateLimitMigration(request: FastifyRequest, route: string, sessionToken: string): void {
+  const client = readRequestToken(request.headers, sessionToken) ?? 'unknown';
+  assertMigrationRateLimit(`${route}:${client}`);
 }
 
 function readOnConflict(body: Record<string, unknown>): ImportOnConflict {
@@ -70,7 +78,8 @@ export function registerMigrationRoutes(
   app: FastifyInstance,
   options: MigrationRoutesOptions,
 ): void {
-  app.post('/api/import/staging', async (_request, reply) => {
+  app.post('/api/import/staging', async (request, reply) => {
+    rateLimitMigration(request, 'import-staging', options.sessionToken);
     const created = await createImportStagingSession();
     return reply.send(apiSuccess(created));
   });
@@ -79,6 +88,7 @@ export function registerMigrationRoutes(
     '/api/import/staging/file',
     { bodyLimit: API_IMPORT_FILE_BODY_LIMIT_BYTES },
     async (request, reply) => {
+      rateLimitMigration(request, 'import-staging-file', options.sessionToken);
       const body = readJsonObjectBody(request);
       assertAllowedKeys(body, ['stagingId', 'relativePath', 'contentBase64']);
       const stagingId = requiredStringField(body, 'stagingId');
@@ -99,6 +109,7 @@ export function registerMigrationRoutes(
   );
 
   app.post('/api/import/preview', async (request, reply) => {
+    rateLimitMigration(request, 'import-preview', options.sessionToken);
     const body = readJsonObjectBody(request);
     assertAllowedKeys(body, ['stagingId', 'in', 'exclude', 'onConflict', 'rootName']);
     const stagingId = requiredStringField(body, 'stagingId');
@@ -110,6 +121,7 @@ export function registerMigrationRoutes(
   });
 
   app.post('/api/import/commit', async (request, reply) => {
+    rateLimitMigration(request, 'import-commit', options.sessionToken);
     const body = readJsonObjectBody(request);
     assertAllowedKeys(body, [
       'stagingId',
@@ -133,6 +145,7 @@ export function registerMigrationRoutes(
   });
 
   app.post('/api/export/preview', async (request, reply) => {
+    rateLimitMigration(request, 'export-preview', options.sessionToken);
     const body = readJsonObjectBody(request);
     assertAllowedKeys(body, ['ref', 'all', 'links']);
     const report = await runExport(options.vaultRoot, body, true);
@@ -140,6 +153,7 @@ export function registerMigrationRoutes(
   });
 
   app.post('/api/export/download', async (request, reply) => {
+    rateLimitMigration(request, 'export-download', options.sessionToken);
     const body = readJsonObjectBody(request);
     assertAllowedKeys(body, ['ref', 'all', 'links', 'force']);
     const parent = await mkdtemp(path.join(tmpdir(), 'gaveta-export-'));
