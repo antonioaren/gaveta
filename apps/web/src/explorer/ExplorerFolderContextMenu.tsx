@@ -58,7 +58,7 @@ export function ExplorerFolderContextMenu({
         className="explorer-context-menu__item"
         data-testid="explorer-folder-export"
         onClick={() => {
-          const label = folder.length === 0 ? 'vault' : folder.split('/').pop() ?? folder;
+          const label = folder.length === 0 ? 'vault' : (folder.split('/').pop() ?? folder);
           onExport(folder, label);
           onClose();
         }}
