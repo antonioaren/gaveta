@@ -16,22 +16,34 @@ import {
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = join(REPO_ROOT, 'fixtures/vaults/backlinks');
-const ARTIFACTS = '/opt/cursor/artifacts';
 const STABLE_ID = '01JB7Z3K9QX4T5M2N8V6R0WYHE';
 const STABLE_NOW = '2026-10-22T12:00:00.000Z';
 
 const children: ReturnType<typeof spawn>[] = [];
-let browser: Browser;
+let browser: Browser | undefined;
+let screenshotDir: string;
+
+function resolveScreenshotDir(): string {
+  const cloud = '/opt/cursor/artifacts';
+  try {
+    mkdirSync(cloud, { recursive: true });
+    return cloud;
+  } catch {
+    const fallback = join(tmpdir(), 'gaveta-e2e-new-note');
+    mkdirSync(fallback, { recursive: true });
+    return fallback;
+  }
+}
 
 beforeAll(async () => {
   const { execFileSync } = await import('node:child_process');
   execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
-  mkdirSync(ARTIFACTS, { recursive: true });
+  screenshotDir = resolveScreenshotDir();
   browser = await chromium.launch();
 }, 180_000);
 
 afterAll(async () => {
-  await browser.close();
+  await browser?.close();
 });
 
 afterEach(() => {
@@ -111,7 +123,7 @@ it('REQ-APP-17: creates a note from the explorer and promotes pending links', as
 
     await page.getByRole('button', { name: 'Nueva nota' }).click();
     await page.getByRole('dialog', { name: 'Nueva nota' }).waitFor({ state: 'visible' });
-    await page.screenshot({ path: join(ARTIFACTS, 'new-note-dialog.png'), fullPage: true });
+    await page.screenshot({ path: join(screenshotDir, 'new-note-dialog.png'), fullPage: true });
     await fillNewNoteDialog(page, 'Nota desde app');
     await page.waitForURL(`**/nota/**`);
 
@@ -119,7 +131,10 @@ it('REQ-APP-17: creates a note from the explorer and promotes pending links', as
     expect(originHtml.includes('data-g-pending')).toBe(false);
     expect(originHtml.includes('data-g-to')).toBe(true);
 
-    await page.screenshot({ path: join(ARTIFACTS, 'new-note-dialog-success.png'), fullPage: true });
+    await page.screenshot({
+      path: join(screenshotDir, 'new-note-dialog-success.png'),
+      fullPage: true,
+    });
     await page.close();
   });
 });
@@ -195,7 +210,7 @@ it('REQ-APP-17: ghost graph opens the dialog with the title prefilled', async ()
     const dialog = page.getByRole('dialog', { name: 'Nueva nota' });
     await dialog.waitFor({ state: 'visible' });
     expect(await dialog.getByLabel('Título').inputValue()).toBe('Nota fantasma');
-    await page.screenshot({ path: join(ARTIFACTS, 'new-note-dialog-ghost.png'), fullPage: true });
+    await page.screenshot({ path: join(screenshotDir, 'new-note-dialog-ghost.png'), fullPage: true });
     await page.close();
   } finally {
     rmSync(parent, { recursive: true, force: true });
