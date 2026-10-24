@@ -1,0 +1,28 @@
+{
+  "name": "@gaveta/editor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TipTap schema derived from the Gaveta authoring contract, with HTML round-trip helpers.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@gaveta/core": "workspace:*",
+    "@tiptap/core": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "parse5": "8.0.1"
+  },
+  "devDependencies": {
+    "@gaveta/fixtures": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

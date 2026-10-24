@@ -143,7 +143,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 
 ## Fase 3 — Editor visual y de código
 
-- [ ] **T3.1 Esquema de TipTap.** DEC-02 ya está aprobada. Prototipar el esquema generado desde `contract.ts`, con el nodo `htmlBlock` para lo desconocido. Depende de: puerta 2.
+- [x] **T3.1 Esquema de TipTap.** DEC-02 ya está aprobada. Prototipar el esquema generado desde `contract.ts`, con el nodo `htmlBlock` para lo desconocido. Depende de: puerta 2.
 - [ ] **T3.2 API de escritura.** Endpoints de escritura en el servidor que llaman a las mismas operaciones del núcleo que la CLI, siempre con `if-match`. Cubre: REQ-APP-13. Depende de: T3.1.
 - [ ] **T3.3 Tareas interactivas.** Marcar y desmarcar desde la vista persiste `checked`. Cubre: REQ-APP-08. Depende de: T3.2.
 - [ ] **T3.4 Editor visual.** Componentes P0 y bloques HTML desconocidos conservados byte a byte. Abrir y guardar sin cambios no altera el archivo. Cubre: REQ-APP-09 y 10. Depende de: T3.1, T3.2.
@@ -151,10 +151,10 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [ ] **T3.6 Autocompletado de `[[`** en los dos modos. Cubre: REQ-APP-12. Depende de: T3.4, T3.5.
 - [ ] **T3.7 Conflictos.** Aviso y diff cuando la nota cambia fuera durante la edición. Cubre: REQ-APP-13. Depende de: T3.2, T2.2.
 - [ ] **T3.8 Renombrar, mover y borrar desde la app**, con diálogo de backlinks. Cubre: REQ-APP-14. Depende de: T3.2.
-- [ ] **T3.11 Crear notas desde la app.** Botón "Nueva nota" y atajo de teclado, con selección de tipo, carpeta, tags y título. También desde un nodo fantasma o un enlace pendiente, con el título ya rellenado. Cubre: REQ-APP-17. Depende de: T3.2.
-- [ ] **T3.12 Carpetas, tags y alias desde la app.** Crear, renombrar y borrar carpetas (reescribiendo los enlaces de las notas que contienen), y editar tags y alias desde el panel de la nota. Cubre: REQ-APP-18. Depende de: T3.8.
-- [ ] **T3.13 Paridad entre app y CLI.** Tests que ejecutan cada operación de CRUD desde la API de la app y desde la CLI, y comprueban que producen archivos idénticos. Cubre: REQ-APP-18, DEC-08. Depende de: T3.3 a T3.12.
-- [ ] **T3.10 Importar y exportar desde la app.** Arrastrar y soltar archivos o carpetas `.md` (o el menú "Importar") con una vista previa del `--dry-run` antes de confirmar, y "Exportar a Markdown" en una nota, en una carpeta y en el vault. Cubre: REQ-MIG-12. Depende de: T3.2, T2.17.
+- [~] **T3.11 Crear notas desde la app.** Botón "Nueva nota" y atajo de teclado, con selección de tipo, carpeta, tags y título. También desde un nodo fantasma o un enlace pendiente, con el título ya rellenado. Cubre: REQ-APP-17. Depende de: T3.2.
+- [~] **T3.12 Carpetas, tags y alias desde la app.** Crear, renombrar y borrar carpetas (reescribiendo los enlaces de las notas que contienen), y editar tags y alias desde el panel de la nota. Cubre: REQ-APP-18. Depende de: T3.8.
+- [~] **T3.13 Paridad entre app y CLI.** Tests que ejecutan cada operación de CRUD desde la API de la app y desde la CLI, y comprueban que producen archivos idénticos. Cubre: REQ-APP-18, DEC-08. Depende de: T3.3 a T3.12.
+- [~] **T3.10 Importar y exportar desde la app.** Arrastrar y soltar archivos o carpetas `.md` (o el menú "Importar") con una vista previa del `--dry-run` antes de confirmar, y "Exportar a Markdown" en una nota, en una carpeta y en el vault. Cubre: REQ-MIG-12. Depende de: T3.2, T2.17.
 - [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8, T3.10 a T3.13.
 
 ## Fase 4 — P1
