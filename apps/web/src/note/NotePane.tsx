@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import type { NoteListItem } from '../api/types.ts';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
+import { NoteOpsMenuButtons } from '../note-ops/NoteOpsMenu.tsx';
+import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
+import { noteOpTargetFromListItem } from '../note-ops/note-op-target.ts';
 import { useTabs } from '../tabs/useTabs.ts';
 import { isGavetaNavigateMessage } from './navigate-message.ts';
 import { useNoteLiveState } from '../live/useNoteLiveState.ts';
@@ -10,7 +14,12 @@ const NO_RENDER_ID_MESSAGE =
   'Esta nota aún no tiene un id en el índice; no se puede previsualizar hasta que se reindexe.';
 const NOTE_DELETED_MESSAGE = 'Esta nota fue eliminada del vault.';
 
-export function NotePane() {
+interface NotePaneProps {
+  readonly notes: readonly NoteListItem[];
+  readonly onNoteOp: (kind: NoteOpKind, target: NoteOpTarget) => void;
+}
+
+export function NotePane({ notes, onNoteOp }: NotePaneProps) {
   const { ref: encodedRef } = useParams();
   const tabState = useTabs();
   const { tabs, activeTabId } = tabState;
@@ -55,6 +64,24 @@ export function NotePane() {
   const noteId = activeTab?.noteId ?? null;
   const { reloadKey, deleted } = useNoteLiveState(noteId);
 
+  const opTarget = useMemo((): NoteOpTarget | null => {
+    if (activeTab === null) {
+      return null;
+    }
+    const fromList = notes.find(
+      (note) => note.path === activeTab.path || note.id === activeTab.noteId,
+    );
+    if (fromList !== undefined) {
+      return noteOpTargetFromListItem(fromList);
+    }
+    return {
+      ref: activeTab.ref,
+      path: activeTab.path,
+      title: activeTab.title,
+      noteId: activeTab.noteId,
+    };
+  }, [activeTab, notes]);
+
   if (activeTab === null) {
     return (
       <section className="note-pane note-pane--empty" aria-label="Área de nota">
@@ -66,8 +93,13 @@ export function NotePane() {
   return (
     <section className="note-pane" aria-label="Área de nota">
       <header className="note-pane__header">
-        <h1 className="note-pane__title">{activeTab.title}</h1>
-        <p className="note-pane__path">{activeTab.path}</p>
+        <div className="note-pane__header-main">
+          <h1 className="note-pane__title">{activeTab.title}</h1>
+          <p className="note-pane__path">{activeTab.path}</p>
+        </div>
+        {opTarget !== null ? (
+          <NoteOpsMenuButtons target={opTarget} onOpen={onNoteOp} className="note-pane__actions" />
+        ) : null}
       </header>
       {deleted ? (
         <p className="note-pane__placeholder">{NOTE_DELETED_MESSAGE}</p>

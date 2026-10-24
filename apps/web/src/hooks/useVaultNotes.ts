@@ -9,6 +9,7 @@ export function useVaultNotes(): {
   readonly loading: boolean;
   readonly error: string | null;
   readonly liveError: string | null;
+  readonly reload: () => void;
 } {
   const [notes, setNotes] = useState<readonly NoteListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,5 +50,5 @@ export function useVaultNotes(): {
     })();
   }, [refreshToken]);
 
-  return { notes, loading, error, liveError };
+  return { notes, loading, error, liveError, reload };
 }

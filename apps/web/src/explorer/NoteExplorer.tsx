@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
+import { ExplorerNoteContextMenu } from './ExplorerNoteContextMenu.tsx';
 import type { NoteListItem } from '../api/types.ts';
 import { buildFolderTree, collectTags, collectTypes, type FolderNode } from './build-tree.ts';
 import { noteRenderId, viewerRefForNote } from '../notes/viewer-ref.ts';
 import { useTabs } from '../tabs/useTabs.ts';
+import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
+import { noteOpTargetFromListItem } from '../note-ops/note-op-target.ts';
 
 const TYPE_LABELS: Record<string, string> = {
   doc: 'Documento',
@@ -14,12 +17,14 @@ interface NoteExplorerProps {
   readonly notes: readonly NoteListItem[];
   readonly loading: boolean;
   readonly error: string | null;
+  readonly onNoteOp: (kind: NoteOpKind, target: NoteOpTarget) => void;
 }
 
-export function NoteExplorer({ notes, loading, error }: NoteExplorerProps) {
+export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerProps) {
   const tabState = useTabs();
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<NoteListItem['type'] | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; target: NoteOpTarget } | null>(null);
 
   const filtered = useMemo(() => {
     return notes.filter((note) => {
@@ -87,11 +92,25 @@ export function NoteExplorer({ notes, loading, error }: NoteExplorerProps) {
       {loading ? <p className="explorer__status">Cargando notas…</p> : null}
       {error !== null ? <p className="explorer__status explorer__status--error">{error}</p> : null}
 
+      <ExplorerNoteContextMenu
+        open={menu !== null}
+        x={menu?.x ?? 0}
+        y={menu?.y ?? 0}
+        target={menu?.target ?? null}
+        onClose={() => {
+          setMenu(null);
+        }}
+        onSelect={onNoteOp}
+      />
+
       <nav className="explorer__tree" aria-label="Árbol de carpetas">
         <FolderBranch
           node={tree}
           depth={0}
           activeRef={activeRef}
+          onContextMenu={(event, note) => {
+            setMenu({ x: event.clientX, y: event.clientY, target: noteOpTargetFromListItem(note) });
+          }}
           onOpen={(note) => {
             tabState.openTab(viewerRefForNote(note), note.title, note.path, noteRenderId(note));
           }}
@@ -106,11 +125,13 @@ function FolderBranch({
   depth,
   activeRef,
   onOpen,
+  onContextMenu,
 }: {
   node: FolderNode;
   depth: number;
   activeRef: string | null;
   onOpen: (note: NoteListItem) => void;
+  onContextMenu: (event: MouseEvent, note: NoteListItem) => void;
 }) {
   return (
     <>
@@ -123,6 +144,11 @@ function FolderBranch({
           onClick={() => {
             onOpen(note);
           }}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            onContextMenu(event, note);
+          }}
+          data-testid={`explorer-note-${note.path}`}
         >
           <span className="explorer__note-title">{note.title}</span>
           {note.type !== null ? (
@@ -140,7 +166,13 @@ function FolderBranch({
           >
             {child.name}
           </div>
-          <FolderBranch node={child} depth={depth + 1} activeRef={activeRef} onOpen={onOpen} />
+          <FolderBranch
+            node={child}
+            depth={depth + 1}
+            activeRef={activeRef}
+            onOpen={onOpen}
+            onContextMenu={onContextMenu}
+          />
         </div>
       ))}
     </>

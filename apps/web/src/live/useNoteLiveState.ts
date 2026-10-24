@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { pushLiveE2eLog } from './live-e2e-log.ts';
 import { useVaultWebSocket } from './useVaultWebSocket.ts';
+import { subscribeLocalNoteRemoved } from './local-note-events.ts';
 import { subscribeVaultReconnect } from './vault-socket-hub.ts';
 
 export function useNoteLiveState(noteId: string | null): {
@@ -42,6 +43,17 @@ export function useNoteLiveState(noteId: string | null): {
       setReloadKey((value) => value + 1);
     });
   }, []);
+
+  useEffect(() => {
+    return subscribeLocalNoteRemoved((detail) => {
+      if (noteId === null) {
+        return;
+      }
+      if (detail.noteId === noteId || detail.path === noteId) {
+        setDeleted(true);
+      }
+    });
+  }, [noteId]);
 
   return { reloadKey, deleted };
 }
