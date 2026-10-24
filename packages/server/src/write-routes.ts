@@ -25,6 +25,7 @@ import {
   optionalStringField,
   optionalStringListField,
   readJsonObjectBody,
+  requiredNoteHtmlField,
   requiredStringField,
 } from './write-body.ts';
 import { assertNoteWriteOk, mapNoteWarnings } from './write-gate.ts';
@@ -82,17 +83,19 @@ export function registerWriteRoutes(
 
   app.post('/api/edit', async (request, reply) => {
     const body = readJsonObjectBody(request);
-    assertAllowedKeys(body, ['ref', 'mode', 'section', 'html', 'ifMatch']);
+    assertAllowedKeys(body, ['ref', 'mode', 'section', 'html', 'ifMatch', 'scope']);
     const ref = requiredStringField(body, 'ref');
     const ifMatch = readWriteIfMatch(request, body);
     await assertRefIfMatch(options.vaultRoot, ref, ifMatch);
     const mode = readEditMode(body);
+    const scope = readEditScope(body);
     const edited = await editNote({
       vaultRoot: options.vaultRoot,
       ref,
-      html: requiredStringField(body, 'html'),
+      html: requiredNoteHtmlField(body, 'html'),
       mode,
-      section: readEditSection(body, mode),
+      section: readEditSection(body, mode, scope),
+      scope,
       ifMatch,
     });
     assertNoteWriteOk(edited);
@@ -256,8 +259,28 @@ function readEditMode(body: Record<string, unknown>): EditMode {
   return mode;
 }
 
-function readEditSection(body: Record<string, unknown>, mode: EditMode): string | undefined {
+type EditScope = 'article' | 'document';
+
+function readEditScope(body: Record<string, unknown>): EditScope {
+  const scope = optionalStringField(body, 'scope') ?? 'article';
+  if (scope !== 'article' && scope !== 'document') {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return scope;
+}
+
+function readEditSection(
+  body: Record<string, unknown>,
+  mode: EditMode,
+  scope: EditScope,
+): string | undefined {
   const section = optionalStringField(body, 'section');
+  if (scope === 'document') {
+    if (section !== undefined || mode !== 'replace') {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    return undefined;
+  }
   if (section === undefined) {
     if (mode !== 'replace') {
       throw new GavetaError('E_ARG_INVALID');

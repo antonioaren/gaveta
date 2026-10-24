@@ -465,6 +465,28 @@ describe('editNote', () => {
     });
   });
 
+  it('document scope leaves the file byte-identical when html is unchanged', async () => {
+    await withTemp(async (parent) => {
+      const root = await makeVault(parent);
+      await writeFile(join(root, 'fija.html'), FIXED);
+      const edited = await editNote({
+        vaultRoot: root,
+        ref: 'Fija',
+        mode: 'replace',
+        scope: 'document',
+        html: FIXED,
+        ifMatch: noteContentHash(FIXED),
+      });
+      expect(edited.ok).toBe(true);
+      if (!edited.ok) {
+        return;
+      }
+      const next = await readVaultText(root, 'fija.html');
+      expect(next).toBe(FIXED);
+      expect(edited.hash).toBe(noteContentHash(FIXED));
+    });
+  });
+
   it('resolves a wikilink inside the edited section and indexes the ghost', async () => {
     await withTemp(async (parent) => {
       const root = await makeVault(parent);

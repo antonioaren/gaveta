@@ -70,7 +70,8 @@ const CREATE_KEYS = [
 ] as const;
 
 const READ_KEYS = ['vaultRoot', 'ref', 'as'] as const;
-const EDIT_KEYS = ['vaultRoot', 'ref', 'html', 'section', 'mode', 'ifMatch'] as const;
+const EDIT_KEYS = ['vaultRoot', 'ref', 'html', 'section', 'mode', 'ifMatch', 'scope'] as const;
+type EditScope = 'article' | 'document';
 const LINK_KEYS = ['vaultRoot', 'from', 'to', 'rel', 'text', 'section', 'ifMatch'] as const;
 
 const RELATED_SECTION_ID = 'relacionado';
@@ -375,6 +376,9 @@ export async function editNote(options: unknown): Promise<EditNoteResult> {
     const target = resolveRef(session.index, input.ref);
     const original = await readVaultText(session.root, target.path);
     assertMatch(noteContentHash(original), input.ifMatch);
+    if (input.scope === 'document') {
+      return editNoteDocument(session, target, original, input);
+    }
     const piece = sanitizeFragment(input.html, target.path, session.config.remoteAllowlist);
     if (!piece.ok) {
       return failure(session, piece);
@@ -412,6 +416,88 @@ export async function editNote(options: unknown): Promise<EditNoteResult> {
       warnings: [...session.warnings, ...piece.warnings, ...warningList(resolved.warnings)],
     };
   });
+}
+
+async function editNoteDocument(
+  session: Session,
+  target: { readonly path: string; readonly title: string },
+  original: string,
+  input: {
+    readonly html: string;
+    readonly section: string | null;
+    readonly ifMatch: string | undefined;
+  },
+): Promise<EditNoteResult> {
+  if (input.html === original) {
+    const validated = validateNote(original, validateOptions(session, target.path));
+    const validateGate = gate(asLikes(validated.diagnostics));
+    if (!validateGate.ok) {
+      return failure(session, validateGate);
+    }
+    const note = validated.note;
+    if (note?.id == null || note.type == null) {
+      throw new GavetaError('E_META_MISSING');
+    }
+    return {
+      ok: true,
+      id: note.id,
+      path: target.path,
+      hash: noteContentHash(original),
+      title: note.title ?? target.title,
+      type: note.type,
+      section: input.section,
+      links: savedLinks([], [], session.index),
+      warnings: [...session.warnings],
+    };
+  }
+  const normalized = normalizeNote(input.html, {
+    notePath: target.path,
+    remoteAllowlist: session.config.remoteAllowlist,
+  });
+  if (normalized.html === null) {
+    const failed = gate(asLikes(normalized.diagnostics));
+    if (!failed.ok) {
+      return failure(session, failed);
+    }
+    throw new GavetaError('E_HTML_INVALID');
+  }
+  const normalizeGate = gate(asLikes(normalized.diagnostics));
+  if (!normalizeGate.ok) {
+    return failure(session, normalizeGate);
+  }
+  const resolved = resolveFor(session, normalized.html, target.path);
+  const resolveGate = gate(resolved.errors);
+  if (!resolveGate.ok) {
+    return failure(session, resolveGate);
+  }
+  const validated = validateNote(resolved.html, validateOptions(session, target.path));
+  const validateGate = gate(asLikes(validated.diagnostics));
+  if (!validateGate.ok) {
+    return failure(session, validateGate);
+  }
+  const savedNote = validated.note;
+  if (savedNote?.id == null || savedNote.type == null) {
+    throw new GavetaError('E_META_MISSING');
+  }
+  if (resolved.html !== original) {
+    await writeVaultText(session.root, target.path, resolved.html);
+    await session.index.upsert(target.path);
+  }
+  return {
+    ok: true,
+    id: savedNote.id,
+    path: target.path,
+    hash: noteContentHash(resolved.html),
+    title: savedNote.title ?? target.title,
+    type: savedNote.type,
+    section: input.section,
+    links: savedLinks(resolved.links, resolved.warnings, session.index),
+    warnings: [
+      ...session.warnings,
+      ...warningList(normalized.diagnostics),
+      ...warningList(resolved.warnings),
+    ],
+  };
 }
 
 function promoteTarget(
@@ -1309,14 +1395,20 @@ function readEdit(options: unknown): {
   readonly section: string | null;
   readonly mode: EditMode;
   readonly ifMatch: string | undefined;
+  readonly scope: EditScope;
 } {
   const record = readRecord(options, EDIT_KEYS);
   const modeValue = requiredString(record.mode);
   if (modeValue !== 'replace' && modeValue !== 'append' && modeValue !== 'prepend') {
     throw new GavetaError('E_ARG_INVALID');
   }
+  const scope = readEditScope(record);
   const section = optionalString(record.section) ?? null;
-  if (section === null && modeValue !== 'replace') {
+  if (scope === 'document') {
+    if (section !== null || modeValue !== 'replace') {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+  } else if (section === null && modeValue !== 'replace') {
     throw new GavetaError('E_ARG_INVALID');
   }
   if (section !== null && (section.trim().length === 0 || section.includes('\0'))) {
@@ -1337,7 +1429,16 @@ function readEdit(options: unknown): {
     section,
     mode: modeValue,
     ifMatch,
+    scope,
   };
+}
+
+function readEditScope(record: Record<string, unknown>): EditScope {
+  const scope = optionalString(record.scope) ?? 'article';
+  if (scope !== 'article' && scope !== 'document') {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return scope;
 }
 
 function folderPath(folder: string | undefined): string {

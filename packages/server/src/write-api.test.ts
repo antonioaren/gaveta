@@ -143,6 +143,27 @@ it('creates a note when If-Match is the absent sentinel', async () => {
   });
 });
 
+it('edits a full document without changing bytes when html is unchanged', async () => {
+  await withVaultCopy(async (vaultRoot) => {
+    const token = 'edit-document';
+    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const address = await server.listen();
+    const hash = await noteHash(address.port, token, 'Nota X');
+    const html = await readVaultText(vaultRoot, 'nota-x.html');
+    const response = await postJson(
+      address.port,
+      '/api/edit',
+      token,
+      { ref: 'Nota X', mode: 'replace', scope: 'document', html },
+      hash,
+    );
+    expect(response.status).toBe(200);
+    const after = await readVaultText(vaultRoot, 'nota-x.html');
+    expect(after).toBe(html);
+    await server.close();
+  });
+});
+
 it('edits a note section with a matching hash', async () => {
   await withVaultCopy(async (vaultRoot) => {
     const token = 'edit-note';

@@ -147,7 +147,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [x] **T3.2 API de escritura.** Endpoints de escritura en el servidor que llaman a las mismas operaciones del núcleo que la CLI, siempre con `if-match`. Cubre: REQ-APP-13. Depende de: T3.1.
 - [ ] **T3.3 Tareas interactivas.** Marcar y desmarcar desde la vista persiste `checked`. Cubre: REQ-APP-08. Depende de: T3.2.
 - [ ] **T3.4 Editor visual.** Componentes P0 y bloques HTML desconocidos conservados byte a byte. Abrir y guardar sin cambios no altera el archivo. Cubre: REQ-APP-09 y 10. Depende de: T3.1, T3.2.
-- [ ] **T3.5 Modo código.** CodeMirror 6 con validación en vivo usando el validador del núcleo. Cubre: REQ-APP-11. Depende de: T3.2.
+- [x] **T3.5 Modo código.** CodeMirror 6 con validación en vivo usando el validador del núcleo. Cubre: REQ-APP-11. Depende de: T3.2.
 - [ ] **T3.6 Autocompletado de `[[`** en los dos modos. Cubre: REQ-APP-12. Depende de: T3.4, T3.5.
 - [ ] **T3.7 Conflictos.** Aviso y diff cuando la nota cambia fuera durante la edición. Cubre: REQ-APP-13. Depende de: T3.2, T2.2.
 - [x] **T3.8 Renombrar, mover y borrar desde la app**, con diálogo de backlinks. Cubre: REQ-APP-14. Depende de: T3.2.
