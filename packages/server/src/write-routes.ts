@@ -2,15 +2,19 @@ import {
   ABSENT_NOTE_HASH,
   addTaskToNote,
   checkTask,
+  createFolder,
   createNote,
   editNote,
+  editNoteMeta,
   GavetaError,
   isNoteType,
   isIso8601,
   isTaskPriority,
   linkNote,
+  moveFolder,
   moveNote,
   readNote,
+  removeFolder,
   removeNote,
   requireNoteContentHash,
   uncheckTask,
@@ -165,6 +169,71 @@ export function registerWriteRoutes(
 
   app.post('/api/todo/uncheck', async (request, reply) => {
     return handleTaskToggle(request, reply, options, uncheckTask);
+  });
+
+  app.post('/api/folder/mkdir', async (request, reply) => {
+    const body = readJsonObjectBody(request);
+    assertAllowedKeys(body, ['folder', 'ifMatch']);
+    const ifMatch = readWriteIfMatch(request, body);
+    requireNoteContentHash(ABSENT_NOTE_HASH, ifMatch);
+    const created = await createFolder({
+      vaultRoot: options.vaultRoot,
+      folder: requiredStringField(body, 'folder'),
+    });
+    return reply.send(apiSuccess({ folder: created.folder }));
+  });
+
+  app.post('/api/folder/mv', async (request, reply) => {
+    const body = readJsonObjectBody(request);
+    assertAllowedKeys(body, ['folder', 'destination', 'ifMatch']);
+    const ifMatch = readWriteIfMatch(request, body);
+    requireNoteContentHash(ABSENT_NOTE_HASH, ifMatch);
+    const folder = requiredStringField(body, 'folder');
+    const destination = requiredStringField(body, 'destination');
+    const { result, warnings } = await vaultSession.withIndex(async (index) => {
+      const moved = await moveFolder(index, folder, destination);
+      return moved;
+    });
+    return reply.send(apiSuccess(presentMovedFolder(result), warnings));
+  });
+
+  app.post('/api/folder/rm', async (request, reply) => {
+    const body = readJsonObjectBody(request);
+    assertAllowedKeys(body, ['folder', 'force', 'ifMatch']);
+    const ifMatch = readWriteIfMatch(request, body);
+    requireNoteContentHash(ABSENT_NOTE_HASH, ifMatch);
+    const folder = requiredStringField(body, 'folder');
+    const force = optionalBooleanField(body, 'force') ?? false;
+    const { result, warnings } = await vaultSession.withIndex(async (index) => {
+      const removed = await removeFolder(index, folder, { force });
+      return removed;
+    });
+    return reply.send(apiSuccess(presentRemovedFolder(result), warnings));
+  });
+
+  app.post('/api/meta', async (request, reply) => {
+    const body = readJsonObjectBody(request);
+    assertAllowedKeys(body, ['ref', 'tags', 'aliases', 'ifMatch']);
+    const ref = requiredStringField(body, 'ref');
+    const ifMatch = readWriteIfMatch(request, body);
+    await assertRefIfMatch(options.vaultRoot, ref, ifMatch);
+    const hasTags = Object.hasOwn(body, 'tags');
+    const hasAliases = Object.hasOwn(body, 'aliases');
+    if (!hasTags && !hasAliases) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    const edited = await editNoteMeta({
+      vaultRoot: options.vaultRoot,
+      ref,
+      ...(hasTags ? { tags: readStringListField(body, 'tags') } : {}),
+      ...(hasAliases ? { aliases: readStringListField(body, 'aliases') } : {}),
+      ifMatch,
+    });
+    assertNoteWriteOk(edited);
+    if (!edited.ok) {
+      throw new GavetaError('E_HTML_INVALID');
+    }
+    return reply.send(apiSuccess(presentEditedNote(edited), mapNoteWarnings(edited.warnings)));
   });
 }
 
@@ -327,6 +396,60 @@ function readOptionalNow(body: Record<string, unknown>): string | undefined {
     throw new GavetaError('E_ARG_INVALID');
   }
   return now;
+}
+
+function readStringListField(body: Record<string, unknown>, key: string): string[] {
+  const value = body[key];
+  if (!Array.isArray(value)) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  const items: string[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'string') {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    const trimmed = entry.trim();
+    if (trimmed.length === 0 || trimmed.includes('\0') || trimmed.includes(',')) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    items.push(trimmed);
+  }
+  if (new Set(items).size !== items.length) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return items;
+}
+
+function presentMovedFolder(moved: {
+  readonly from: string;
+  readonly to: string;
+  readonly moved: readonly {
+    readonly from: string;
+    readonly to: string;
+    readonly id: string | null;
+  }[];
+  readonly rewritten: readonly string[];
+}): Record<string, unknown> {
+  return {
+    from: moved.from,
+    to: moved.to,
+    moved: moved.moved.map((row) => ({ from: row.from, to: row.to, id: row.id })),
+    rewritten: [...moved.rewritten],
+  };
+}
+
+function presentRemovedFolder(removed: {
+  readonly folder: string;
+  readonly removed: readonly string[];
+  readonly forced: boolean;
+  readonly pending: readonly string[];
+}): Record<string, unknown> {
+  return {
+    folder: removed.folder,
+    removed: [...removed.removed],
+    forced: removed.forced,
+    pending: [...removed.pending],
+  };
 }
 
 function readOptionalPriority(body: Record<string, unknown>): string | undefined {

@@ -11,6 +11,8 @@ import { importCommand } from './commands/import.ts';
 import { createGuideCommand } from './commands/guide.ts';
 import { createSkillCommand } from './commands/skill.ts';
 import { initCommand } from './commands/init.ts';
+import { mkdirCommand, mvFolderCommand, rmFolderCommand } from './commands/folder.ts';
+import { metaCommand } from './commands/meta.ts';
 import { mvCommand, rmCommand } from './commands/move-remove.ts';
 import { editCommand, newCommand, readCommand } from './commands/notes.ts';
 import { reindexCommand } from './commands/reindex.ts';
@@ -33,6 +35,10 @@ const peerCommands: readonly CommandSpec[] = [
   editCommand,
   mvCommand,
   rmCommand,
+  mkdirCommand,
+  mvFolderCommand,
+  rmFolderCommand,
+  metaCommand,
   linksCommand,
   backlinksCommand,
   linkCommand,

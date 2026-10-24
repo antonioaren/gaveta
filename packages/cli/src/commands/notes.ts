@@ -352,7 +352,7 @@ function refused(context: CommandContext, warnings: readonly NoteWarning[]): Com
   return { data: null, human: '', warnings: toCommandWarnings(warnings) };
 }
 
-function toCommandWarnings(warnings: readonly NoteWarning[]): CommandWarning[] {
+export function toCommandWarnings(warnings: readonly NoteWarning[]): CommandWarning[] {
   return warnings.map((warning) => {
     if (Object.keys(warning.params).length === 0) {
       return { code: warning.code };

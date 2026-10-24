@@ -456,9 +456,11 @@ export type {
 } from './links/index.ts';
 
 export { GavetaOperationError } from './ops/error.ts';
+export { moveFolder, removeFolder } from './ops/folder.ts';
 export { moveNote } from './ops/move.ts';
 export { removeNote } from './ops/remove.ts';
 
+export type { MoveFolderResult, RemoveFolderResult } from './ops/folder.ts';
 export type { AffectedNote, MoveNoteResult, RemoveNoteResult } from './ops/types.ts';
 
 export {
@@ -468,7 +470,15 @@ export {
   requireNoteContentHash,
 } from './if-match.ts';
 
-export { createNote, editNote, linkNote, noteContentHash, readNote } from './notes.ts';
+export {
+  createFolder,
+  createNote,
+  editNote,
+  editNoteMeta,
+  linkNote,
+  noteContentHash,
+  readNote,
+} from './notes.ts';
 
 export { addTaskToNote, checkTask, listTasks, uncheckTask } from './todos.ts';
 

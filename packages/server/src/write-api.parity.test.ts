@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { readVaultText } from '@gaveta/core';
+import { ABSENT_NOTE_HASH, readVaultText } from '@gaveta/core';
 import { expect, it } from 'vitest';
 import { GAVETA_TOKEN_HEADER, createGavetaServer } from './index.ts';
 import { requestLocal } from './http-test.ts';
@@ -228,6 +228,61 @@ it('todo check via API matches CLI bytes', async () => {
       '--json',
     ]);
     expect(await readVaultText(vaultRoot, ref)).toBe(await readVaultText(cliVault, ref));
+    await server.close();
+  });
+});
+
+it('mkdir via API matches CLI folder', async () => {
+  await withVaultCopy(async (vaultRoot) => {
+    const cliVault = cloneVault(vaultRoot, 'cli-mkdir');
+    const token = 'parity-mkdir';
+    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const address = await server.listen();
+    const api = await postJson(
+      address.port,
+      '/api/folder/mkdir',
+      token,
+      { folder: 'paridad/carpeta' },
+      ABSENT_NOTE_HASH,
+    );
+    expect(api.status).toBe(200);
+    gaveta(cliVault, ['mkdir', 'paridad/carpeta', '--if-match', ABSENT_NOTE_HASH, '--json']);
+    const { access } = await import('node:fs/promises');
+    await expect(access(`${vaultRoot}/paridad/carpeta`)).resolves.toBeUndefined();
+    await expect(access(`${cliVault}/paridad/carpeta`)).resolves.toBeUndefined();
+    await server.close();
+  });
+});
+
+it('meta via API matches CLI bytes', async () => {
+  await withVaultCopy(async (vaultRoot) => {
+    const cliVault = cloneVault(vaultRoot, 'cli-meta');
+    const token = 'parity-meta';
+    const server = createGavetaServer({ vaultRoot, port: 0, token });
+    const address = await server.listen();
+    const hash = await noteHash(address.port, token, 'Nota X');
+    const api = await postJson(
+      address.port,
+      '/api/meta',
+      token,
+      { ref: 'Nota X', tags: ['api', 'meta'], aliases: ['Equis'] },
+      hash,
+    );
+    expect(api.status).toBe(200);
+    gaveta(cliVault, [
+      'meta',
+      'Nota X',
+      '--tags',
+      'api, meta',
+      '--aliases',
+      'Equis',
+      '--if-match',
+      cliHash(cliVault, 'Nota X'),
+      '--json',
+    ]);
+    expect(await readVaultText(vaultRoot, 'nota-x.html')).toBe(
+      await readVaultText(cliVault, 'nota-x.html'),
+    );
     await server.close();
   });
 });

@@ -1,5 +1,8 @@
 import { useMemo, useState, type MouseEvent } from 'react';
+import { FolderOpsDialog } from '../folder-ops/FolderOpsDialog.tsx';
+import type { FolderOpKind } from '../folder-ops/folder-op-kind.ts';
 import { ExplorerNoteContextMenu } from './ExplorerNoteContextMenu.tsx';
+import { ExplorerFolderContextMenu } from './ExplorerFolderContextMenu.tsx';
 import type { NoteListItem } from '../api/types.ts';
 import { buildFolderTree, collectTags, collectTypes, type FolderNode } from './build-tree.ts';
 import { noteRenderId, viewerRefForNote } from '../notes/viewer-ref.ts';
@@ -27,6 +30,10 @@ export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerPr
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<NoteListItem['type'] | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; target: NoteOpTarget } | null>(null);
+  const [folderMenu, setFolderMenu] = useState<{ x: number; y: number; folder: string } | null>(
+    null,
+  );
+  const [folderOp, setFolderOp] = useState<{ kind: FolderOpKind; folder: string } | null>(null);
 
   const filtered = useMemo(() => {
     return notes.filter((note) => {
@@ -50,15 +57,27 @@ export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerPr
       <header className="explorer__header">
         <div className="explorer__header-row">
           <h2 className="explorer__title">Explorador</h2>
-          <button
-            type="button"
-            className="explorer__new-note"
-            onClick={() => {
-              openNewNote();
-            }}
-          >
-            Nueva nota
-          </button>
+          <div className="explorer__header-actions">
+            <button
+              type="button"
+              className="explorer__new-note"
+              onClick={() => {
+                setFolderOp({ kind: 'create', folder: '' });
+              }}
+              data-testid="explorer-new-folder"
+            >
+              Nueva carpeta
+            </button>
+            <button
+              type="button"
+              className="explorer__new-note"
+              onClick={() => {
+                openNewNote();
+              }}
+            >
+              Nueva nota
+            </button>
+          </div>
         </div>
         <p className="explorer__hint">{notes.length} notas en el vault</p>
       </header>
@@ -105,6 +124,29 @@ export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerPr
       {loading ? <p className="explorer__status">Cargando notas…</p> : null}
       {error !== null ? <p className="explorer__status explorer__status--error">{error}</p> : null}
 
+      {folderOp !== null ? (
+        <FolderOpsDialog
+          kind={folderOp.kind}
+          folder={folderOp.folder}
+          onClose={() => {
+            setFolderOp(null);
+          }}
+        />
+      ) : null}
+
+      <ExplorerFolderContextMenu
+        open={folderMenu !== null}
+        x={folderMenu?.x ?? 0}
+        y={folderMenu?.y ?? 0}
+        folder={folderMenu?.folder ?? ''}
+        onClose={() => {
+          setFolderMenu(null);
+        }}
+        onSelect={(kind, folder) => {
+          setFolderOp({ kind, folder });
+        }}
+      />
+
       <ExplorerNoteContextMenu
         open={menu !== null}
         x={menu?.x ?? 0}
@@ -121,6 +163,9 @@ export function NoteExplorer({ notes, loading, error, onNoteOp }: NoteExplorerPr
           node={tree}
           depth={0}
           activeRef={activeRef}
+          onFolderContextMenu={(event, folderPath) => {
+            setFolderMenu({ x: event.clientX, y: event.clientY, folder: folderPath });
+          }}
           onContextMenu={(event, note) => {
             setMenu({ x: event.clientX, y: event.clientY, target: noteOpTargetFromListItem(note) });
           }}
@@ -139,12 +184,14 @@ function FolderBranch({
   activeRef,
   onOpen,
   onContextMenu,
+  onFolderContextMenu,
 }: {
   node: FolderNode;
   depth: number;
   activeRef: string | null;
   onOpen: (note: NoteListItem) => void;
   onContextMenu: (event: MouseEvent, note: NoteListItem) => void;
+  onFolderContextMenu: (event: MouseEvent, folderPath: string) => void;
 }) {
   return (
     <>
@@ -176,6 +223,11 @@ function FolderBranch({
           <div
             className="explorer__folder-label"
             style={{ paddingLeft: `${String(12 + depth * 14)}px` }}
+            onContextMenu={(event) => {
+              event.preventDefault();
+              onFolderContextMenu(event, child.path);
+            }}
+            data-testid={`explorer-folder-${child.path}`}
           >
             {child.name}
           </div>
@@ -185,6 +237,7 @@ function FolderBranch({
             activeRef={activeRef}
             onOpen={onOpen}
             onContextMenu={onContextMenu}
+            onFolderContextMenu={onFolderContextMenu}
           />
         </div>
       ))}
