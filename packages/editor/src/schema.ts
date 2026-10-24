@@ -74,6 +74,10 @@ export function buildGavetaExtensions(): Extensions {
       topNode: true,
       content: 'block+',
     }),
+    Node.create({
+      name: 'text',
+      group: 'inline',
+    }),
     HtmlBlockExtension,
   ];
 

@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { NoteListItem } from '../api/types.ts';
+import { fetchNoteHtml } from '../api/note-read.ts';
+import { VisualNoteEditor } from '../editor/VisualNoteEditor.tsx';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
 import { NoteOpsMenuButtons } from '../note-ops/NoteOpsMenu.tsx';
 import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
@@ -20,12 +22,21 @@ interface NotePaneProps {
   readonly onNoteOp: (kind: NoteOpKind, target: NoteOpTarget) => void;
 }
 
+interface EditDraft {
+  readonly html: string;
+  readonly hash: string;
+}
+
 export function NotePane({ notes, onNoteOp }: NotePaneProps) {
   const { ref: encodedRef } = useParams();
   const tabState = useTabs();
   const { tabs, activeTabId } = tabState;
   const iframeWindowRef = useRef<Window | null>(null);
   const [codeModeForRef, setCodeModeForRef] = useState<string | null>(null);
+  const [editTargetRef, setEditTargetRef] = useState<string | null>(null);
+  const [draft, setDraft] = useState<EditDraft | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
 
   const activeTab = useMemo(() => {
     if (encodedRef !== undefined) {
@@ -44,6 +55,11 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
     const current = tabs.find((tab) => tab.id === activeTabId);
     return current ?? null;
   }, [encodedRef, tabs, activeTabId]);
+
+  const activeDraft = activeTab !== null && editTargetRef === activeTab.ref ? draft : null;
+  const inVisualEdit = activeDraft !== null;
+  const inCodeMode = activeTab !== null && codeModeForRef === activeTab.ref;
+  const editingAny = inVisualEdit || inCodeMode;
 
   useEffect(() => {
     const onMessage = (event: MessageEvent): void => {
@@ -64,7 +80,42 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
   }, [tabState]);
 
   const noteId = activeTab?.noteId ?? null;
-  const { reloadKey, deleted } = useNoteLiveState(noteId);
+  const { reloadKey, deleted } = useNoteLiveState(noteId, editingAny);
+
+  const startEdit = useCallback(async (): Promise<void> => {
+    if (activeTab === null) {
+      return;
+    }
+    setCodeModeForRef(null);
+    setLoadingEdit(true);
+    setEditError(null);
+    try {
+      const note = await fetchNoteHtml(activeTab.ref);
+      setDraft({ html: note.html, hash: note.hash });
+      setEditTargetRef(activeTab.ref);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo abrir el editor';
+      setEditError(message);
+    } finally {
+      setLoadingEdit(false);
+    }
+  }, [activeTab]);
+
+  const cancelEdit = useCallback(() => {
+    setEditTargetRef(null);
+    setDraft(null);
+    setEditError(null);
+  }, []);
+
+  const enterCodeMode = useCallback(() => {
+    if (activeTab === null) {
+      return;
+    }
+    setEditTargetRef(null);
+    setDraft(null);
+    setEditError(null);
+    setCodeModeForRef(activeTab.ref);
+  }, [activeTab]);
 
   const opTarget = useMemo((): NoteOpTarget | null => {
     if (activeTab === null) {
@@ -84,8 +135,6 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
     };
   }, [activeTab, notes]);
 
-  const inCodeMode = activeTab !== null && codeModeForRef === activeTab.ref;
-
   if (activeTab === null) {
     return (
       <section className="note-pane note-pane--empty" aria-label="Área de nota">
@@ -93,6 +142,9 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
       </section>
     );
   }
+
+  const canEdit = !deleted && noteId !== null;
+  const showModeButtons = canEdit && !editingAny;
 
   return (
     <section className="note-pane" aria-label="Área de nota">
@@ -102,14 +154,25 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
           <p className="note-pane__path">{activeTab.path}</p>
         </div>
         <div className="note-pane__actions">
-          {noteId !== null && !deleted && !inCodeMode ? (
+          {showModeButtons ? (
+            <button
+              type="button"
+              className="note-pane__edit-button"
+              data-testid="note-edit-button"
+              disabled={loadingEdit}
+              onClick={() => {
+                void startEdit();
+              }}
+            >
+              {loadingEdit ? 'Abriendo…' : 'Editar'}
+            </button>
+          ) : null}
+          {showModeButtons ? (
             <button
               type="button"
               className="note-pane__mode-button"
               data-testid="enter-code-mode"
-              onClick={() => {
-                setCodeModeForRef(activeTab.ref);
-              }}
+              onClick={enterCodeMode}
             >
               Modo código
             </button>
@@ -117,6 +180,11 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
           {opTarget !== null ? <NoteOpsMenuButtons target={opTarget} onOpen={onNoteOp} /> : null}
         </div>
       </header>
+      {editError !== null ? (
+        <p className="note-pane__edit-error" role="alert">
+          {editError}
+        </p>
+      ) : null}
       {deleted ? (
         <p className="note-pane__placeholder">{NOTE_DELETED_MESSAGE}</p>
       ) : noteId === null ? (
@@ -131,6 +199,18 @@ export function NotePane({ notes, onNoteOp }: NotePaneProps) {
           }}
           onSaved={() => {
             /* live reload picks up disk changes */
+          }}
+        />
+      ) : activeDraft !== null ? (
+        <VisualNoteEditor
+          noteRef={activeTab.ref}
+          notePath={activeTab.path}
+          initialHtml={activeDraft.html}
+          ifMatch={activeDraft.hash}
+          onCancel={cancelEdit}
+          onSaved={() => {
+            setEditTargetRef(null);
+            setDraft(null);
           }}
         />
       ) : (

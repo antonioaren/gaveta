@@ -11,11 +11,11 @@ export function blockContentExpression(tag: string): string {
   if (tag === 'tr') {
     return '(th|td)+';
   }
-  if (tag === 'thead' || tag === 'tbody' || tag === 'tfoot') {
+  if (tag === 'thead' || tag === 'tbody') {
     return 'tr+';
   }
   if (tag === 'table') {
-    return '(thead|tbody|tfoot|tr)+';
+    return '(thead|tbody|tr)+';
   }
   if (tag === 'ul' || tag === 'ol') {
     return 'li+';

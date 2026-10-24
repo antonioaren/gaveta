@@ -13,7 +13,6 @@ export const MARK_TAGS: ReadonlySet<string> = new Set([
   'time',
   'span',
   'a',
-  'code',
 ]);
 
 /** Void or atomic inline nodes (not marks). */
