@@ -12,11 +12,25 @@ const BACKLINKS = vaultPath('backlinks');
 
 const children: ReturnType<typeof spawn>[] = [];
 let browser: Browser;
+let screenshotDir: string;
+
+function resolveScreenshotDir(): string {
+  const cloud = '/opt/cursor/artifacts';
+  try {
+    mkdirSync(cloud, { recursive: true });
+    return cloud;
+  } catch {
+    const fallback = join(tmpdir(), 'gaveta-e2e-web-migration');
+    mkdirSync(fallback, { recursive: true });
+    return fallback;
+  }
+}
 
 beforeAll(async () => {
   const { execFileSync } = await import('node:child_process');
   execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
   browser = await chromium.launch();
+  screenshotDir = resolveScreenshotDir();
 }, 180_000);
 
 afterAll(async () => {
@@ -88,7 +102,7 @@ it('REQ-MIG-12: import preview and export preview in the app', async () => {
     await page.getByTestId('import-file-input').setInputFiles(mdFile);
     await page.getByTestId('import-preview-dialog').waitFor({ state: 'visible' });
     await page.getByTestId('import-preview-summary').waitFor({ state: 'visible' });
-    await page.screenshot({ path: '/opt/cursor/artifacts/import-preview.png', fullPage: true });
+    await page.screenshot({ path: join(screenshotDir, 'import-preview.png'), fullPage: true });
     await page.getByTestId('import-preview-confirm').click();
     await page.getByTestId('import-preview-dialog').waitFor({ state: 'hidden' });
     await page.getByText('Entrada web').waitFor({ state: 'visible' });
@@ -110,7 +124,7 @@ it('REQ-MIG-12: export markdown zip from a note', async () => {
     await page.getByTestId('note-action-export').click();
     await page.getByTestId('export-preview-dialog').waitFor({ state: 'visible' });
     await page.getByTestId('export-preview-summary').waitFor({ state: 'visible' });
-    await page.screenshot({ path: '/opt/cursor/artifacts/export-preview.png', fullPage: true });
+    await page.screenshot({ path: join(screenshotDir, 'export-preview.png'), fullPage: true });
     const downloadPromise = page.waitForEvent('download');
     await page.getByTestId('export-preview-confirm').click();
     const download = await downloadPromise;
