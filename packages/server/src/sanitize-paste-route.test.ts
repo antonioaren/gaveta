@@ -1,5 +1,6 @@
+import { ABSENT_NOTE_HASH } from '@gaveta/core';
 import { expect, it } from 'vitest';
-import { API_WRITE_BODY_LIMIT_BYTES } from './constants.ts';
+import { API_WRITE_BODY_LIMIT_BYTES, GAVETA_SERVE_DEFAULT_PORT } from './constants.ts';
 import { GAVETA_TOKEN_HEADER, createGavetaServer } from './index.ts';
 import { requestLocal } from './http-test.ts';
 import { withVaultCopy } from './test-helpers.ts';
@@ -21,13 +22,7 @@ function postSanitize(
     ...(token === undefined ? {} : authHeaders(token, port)),
     ...extraHeaders,
   };
-  return requestLocal(
-    port,
-    '/api/sanitize-paste',
-    headers,
-    'POST',
-    JSON.stringify(body),
-  );
+  return requestLocal(port, '/api/sanitize-paste', headers, 'POST', JSON.stringify(body));
 }
 
 it('requires a session token for POST /api/sanitize-paste', async () => {
@@ -62,22 +57,38 @@ it('rejects a hostile Origin on POST /api/sanitize-paste', async () => {
   });
 });
 
-it('rejects request bodies larger than the write API limit', async () => {
+it('rejects request bodies larger than the shared write bodyLimit', async () => {
   await withVaultCopy(async (vaultRoot) => {
     const token = 'sanitize-body-limit';
-    const server = createGavetaServer({ vaultRoot, port: 0, token });
-    const address = await server.listen();
+    const port = GAVETA_SERVE_DEFAULT_PORT;
+    const server = createGavetaServer({ vaultRoot, port, token });
     const pad = 'x'.repeat(API_WRITE_BODY_LIMIT_BYTES);
-    const oversized = JSON.stringify({ html: pad, notePath: 'nota-x.html' });
-    expect(Buffer.byteLength(oversized)).toBeGreaterThan(API_WRITE_BODY_LIMIT_BYTES);
-    const response = await requestLocal(
-      address.port,
-      '/api/sanitize-paste',
-      authHeaders(token, address.port),
-      'POST',
-      oversized,
-    );
-    expect(response.status).toBe(413);
+    const sanitizePayload = JSON.stringify({ html: pad, notePath: 'nota-x.html' });
+    expect(Buffer.byteLength(sanitizePayload)).toBeGreaterThan(API_WRITE_BODY_LIMIT_BYTES);
+    const host = `127.0.0.1:${String(port)}`;
+    const headers = {
+      host,
+      [GAVETA_TOKEN_HEADER]: token,
+      'content-type': 'application/json',
+    };
+    const sanitize = await server.app.inject({
+      method: 'POST',
+      url: '/api/sanitize-paste',
+      headers,
+      payload: sanitizePayload,
+    });
+    const edit = await server.app.inject({
+      method: 'POST',
+      url: '/api/edit',
+      headers: { ...headers, 'if-match': ABSENT_NOTE_HASH },
+      payload: JSON.stringify({
+        ref: 'Nota X',
+        mode: 'replace',
+        html: pad,
+      }),
+    });
+    expect(sanitize.statusCode).toBeGreaterThanOrEqual(400);
+    expect(edit.statusCode).toBe(sanitize.statusCode);
     await server.close();
   });
 });
