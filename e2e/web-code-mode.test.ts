@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
@@ -133,13 +134,17 @@ it('REQ-APP-11: unsafe HTML shows inline diagnostics and blocks save', async () 
       validateBody.data.diagnostics.some((diagnostic) => diagnostic.code.startsWith('E_UNSAFE')),
     ).toBe(true);
     await page.locator('.cm-lintRange-error').first().waitFor({ timeout: 15_000 });
-    mkdirSync('/opt/cursor/artifacts', { recursive: true });
     await page.locator('.code-editor .cm-content').click();
     await page.keyboard.press('ArrowUp');
-    await page.screenshot({
-      path: '/opt/cursor/artifacts/code-mode-diagnostic.png',
-      fullPage: true,
-    });
+    const screenshotPath =
+      process.env.CODE_MODE_SCREENSHOT_PATH ?? '/opt/cursor/artifacts/code-mode-diagnostic.png';
+    try {
+      mkdirSync(dirname(screenshotPath), { recursive: true });
+      const shot = await page.screenshot({ fullPage: true });
+      writeFileSync(screenshotPath, shot);
+    } catch {
+      // Optional artifact path (not writable on all CI hosts).
+    }
     await page.getByRole('button', { name: 'Guardar' }).click();
     await page.getByText('El HTML no es válido').waitFor({ timeout: 10_000 });
     expect(Buffer.compare(bytesBefore, readFileSync(notePath))).toBe(0);
