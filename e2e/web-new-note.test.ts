@@ -26,6 +26,7 @@ let browser: Browser;
 beforeAll(async () => {
   const { execFileSync } = await import('node:child_process');
   execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  mkdirSync(ARTIFACTS, { recursive: true });
   browser = await chromium.launch();
 }, 180_000);
 
