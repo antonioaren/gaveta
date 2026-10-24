@@ -15,7 +15,10 @@ Requisito: **Node.js ≥ 22.18** (coincide con `.nvmrc` y `engines` del monorepo
 ```bash
 corepack enable
 pnpm install
+pnpm seed
 ```
+
+`pnpm seed` crea el vault de demostración en `.dev-vault/` (idempotente; puedes pasar otra ruta como argumento).
 
 Ejecuta la CLI desde el repo sin instalarla (el título va como argumento; el HTML del cuerpo, con `--from -`):
 
