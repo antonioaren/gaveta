@@ -5,13 +5,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
+import { attachCspGuard, installCspViolationListener } from './csp-guard.ts';
 import {
   GAVETA_BIN,
   initVault,
+  newWebPage,
   parseJson,
   runGaveta,
   type JsonEnvelope,
-  newWebPage,
 } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
@@ -72,6 +73,7 @@ async function openCodeModeForNewNote(vault: string): Promise<{
   notePath: string;
   bytesBefore: Buffer;
   noteId: string;
+  cspGuard: ReturnType<typeof attachCspGuard>;
 }> {
   const created = runGaveta(['new', 'Modo código', '--type', 'doc', '--from', '-', '--json'], {
     cwd: vault,
@@ -86,13 +88,20 @@ async function openCodeModeForNewNote(vault: string): Promise<{
   const started = await startServe(vault);
   const { url } = started.json.data;
   const page = await newWebPage(browser);
+  await installCspViolationListener(page);
+  const cspGuard = attachCspGuard(page);
   const noteUrl = new URL(url);
   noteUrl.pathname = `/nota/${envelope.data.id}`;
   await page.goto(noteUrl.toString(), { waitUntil: 'networkidle' });
   await page.getByTestId('enter-code-mode').click();
   await page.getByText('Cargando modo código').waitFor({ state: 'hidden', timeout: 30_000 });
   await page.locator('.code-editor .cm-content').waitFor({ timeout: 30_000 });
-  return { page, notePath, bytesBefore, noteId: envelope.data.id };
+  const editorDisplay = await page.locator('.code-editor .cm-editor').evaluate((element) => {
+    return getComputedStyle(element).display;
+  });
+  expect(editorDisplay).toBe('flex');
+  await cspGuard.assertClean();
+  return { page, notePath, bytesBefore, noteId: envelope.data.id, cspGuard };
 }
 
 it('REQ-APP-11: save without edits keeps the note byte-identical', async () => {
@@ -101,11 +110,12 @@ it('REQ-APP-11: save without edits keeps the note byte-identical', async () => {
   mkdirSync(vault, { recursive: true });
   initVault(vault);
   try {
-    const { page, notePath, bytesBefore } = await openCodeModeForNewNote(vault);
+    const { page, notePath, bytesBefore, cspGuard } = await openCodeModeForNewNote(vault);
     await page.getByRole('button', { name: 'Guardar' }).click();
     await page.waitForTimeout(800);
     const bytesAfter = readFileSync(notePath);
     expect(Buffer.compare(bytesBefore, bytesAfter)).toBe(0);
+    await cspGuard.assertClean();
     await page.close();
   } finally {
     rmSync(parent, { recursive: true, force: true });
@@ -118,7 +128,7 @@ it('REQ-APP-11: unsafe HTML shows inline diagnostics and blocks save', async () 
   mkdirSync(vault, { recursive: true });
   initVault(vault);
   try {
-    const { page, notePath, bytesBefore } = await openCodeModeForNewNote(vault);
+    const { page, notePath, bytesBefore, cspGuard } = await openCodeModeForNewNote(vault);
     const editor = page.locator('.code-editor .cm-content');
     const unsafeHtml = bytesBefore
       .toString('utf8')
@@ -155,6 +165,34 @@ it('REQ-APP-11: unsafe HTML shows inline diagnostics and blocks save', async () 
     await page.getByRole('button', { name: 'Guardar' }).click();
     await page.getByText('El HTML no es válido').waitFor({ timeout: 10_000 });
     expect(Buffer.compare(bytesBefore, readFileSync(notePath))).toBe(0);
+    await cspGuard.assertClean();
+    await page.close();
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 180_000);
+
+it('T3.14: code mode renders with gutters under the app CSP', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-csp-'));
+  const vault = join(parent, 'vault');
+  mkdirSync(vault, { recursive: true });
+  initVault(vault);
+  try {
+    const { page, cspGuard } = await openCodeModeForNewNote(vault);
+    const gutterWidth = await page.locator('.code-editor .cm-gutters').evaluate((element) => {
+      return getComputedStyle(element).width;
+    });
+    expect(Number.parseFloat(gutterWidth)).toBeGreaterThan(0);
+    const highlightedTokenCount = await page
+      .locator('.code-editor .cm-content .cm-line span')
+      .count();
+    expect(highlightedTokenCount).toBeGreaterThan(0);
+    const sampleTokenColor = await page
+      .locator('.code-editor .cm-content .cm-line span')
+      .first()
+      .evaluate((span) => getComputedStyle(span).color);
+    expect(sampleTokenColor.length).toBeGreaterThan(0);
+    await cspGuard.assertClean();
     await page.close();
   } finally {
     rmSync(parent, { recursive: true, force: true });
