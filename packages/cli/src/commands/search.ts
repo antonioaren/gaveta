@@ -12,7 +12,7 @@ import {
   type VaultIndex,
 } from '@gaveta/core';
 import { CliFailure } from '../failure.ts';
-import { m } from '../messages.ts';
+import { hm, m } from '../messages.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
 const EMPTY_QUERY = 'cli.auto.la_consulta_no_puede_estar_vacia';
@@ -246,7 +246,13 @@ function renderHuman(hits: readonly SearchHitView[]): string {
 }
 
 function renderHit(hit: SearchHitView): string {
-  const kind = hit.type ?? 'sin tipo';
+  const kind = hit.type ?? hm('cli.human.search.no_type');
   const tags = hit.tags.length === 0 ? '' : ` · ${hit.tags.join(', ')}`;
-  return `${hit.title}\n${hit.path} · ${kind}${tags}\n${hit.snippet}`;
+  return hm('cli.human.search.hit_line', {
+    title: hit.title,
+    path: hit.path,
+    kind,
+    tags,
+    snippet: hit.snippet,
+  });
 }

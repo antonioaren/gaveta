@@ -7,6 +7,7 @@ import {
   renderMigrationSummary,
   type ImportCliData,
 } from './migration-report.ts';
+import { hm } from '../messages.ts';
 import { renderImportFailureLines } from './migration-human.ts';
 
 function readExclude(value: string | undefined): readonly string[] {
@@ -41,24 +42,24 @@ function aggregateWarnings(data: ImportCliData): CommandWarning[] {
 
 function renderHuman(data: ImportCliData): string {
   const labels = {
-    created: 'creadas',
-    overwritten: 'sobrescritas',
-    renamed: 'renombradas',
-    skipped: 'omitidas',
-    failed: 'fallidas',
-    attachments: 'adjuntos',
+    created: hm('cli.human.import.summary.created'),
+    overwritten: hm('cli.human.import.summary.overwritten'),
+    renamed: hm('cli.human.import.summary.renamed'),
+    skipped: hm('cli.human.import.summary.skipped'),
+    failed: hm('cli.human.import.summary.failed'),
+    attachments: hm('cli.human.import.summary.attachments'),
   };
   const summary = renderMigrationSummary(data.summary, labels);
   const lines: string[] = [];
   if (data.dryRun) {
-    lines.push(`Vista previa de importación: ${summary}.`);
+    lines.push(hm('cli.human.import.preview', { summary }));
   } else if (!data.ok) {
-    lines.push(`Importación incompleta: ${summary}.`);
+    lines.push(hm('cli.human.import.incomplete', { summary }));
   } else {
-    lines.push(`Importación completada: ${summary}.`);
+    lines.push(hm('cli.human.import.completed', { summary }));
   }
   if (data.failures.length > 0) {
-    lines.push('Fallos:');
+    lines.push(hm('cli.human.import.failures_heading'));
     lines.push(...renderImportFailureLines(data.failures));
   }
   return `${lines.join('\n')}\n`;
@@ -86,7 +87,7 @@ export const importCommand: CommandSpec = {
     },
     {
       name: 'exclude',
-      flags: '--exclude <patrón>',
+      flags: '--exclude <patron>',
       description: 'cli.auto.patron_glob_adicional_de_exclusion_repetible',
       kind: 'stringList',
     },

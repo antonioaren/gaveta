@@ -1,4 +1,4 @@
-import { getActiveLocale, hasMessageKey, t } from '@gaveta/i18n';
+import { formatMessage, getActiveLocale, hasMessageKey, t, type MessageKey } from '@gaveta/i18n';
 
 /** Resolve a catalog key or pass through literal text. */
 export function m(text: string): string {
@@ -6,6 +6,14 @@ export function m(text: string): string {
     return t(text, getActiveLocale());
   }
   return text;
+}
+
+/** Localized CLI human output (stdout when not using --json). */
+export function hm(
+  key: MessageKey,
+  params: Readonly<Record<string, string | number>> = {},
+): string {
+  return formatMessage(key, getActiveLocale(), params);
 }
 
 export function localizeDetails(

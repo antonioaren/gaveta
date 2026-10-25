@@ -17,6 +17,19 @@ export async function newWebPage(browser: Browser) {
 export const REPO_ROOT = join(import.meta.dirname, '..');
 export const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
 
+/** Writable directory for Playwright screenshots (cloud artifacts or temp). */
+export function resolveScreenshotDir(fallbackName: string): string {
+  const cloud = '/opt/cursor/artifacts';
+  try {
+    mkdirSync(cloud, { recursive: true });
+    return cloud;
+  } catch {
+    const fallback = join(tmpdir(), fallbackName);
+    mkdirSync(fallback, { recursive: true });
+    return fallback;
+  }
+}
+
 export interface RunResult {
   readonly stdout: string;
   readonly stderr: string;

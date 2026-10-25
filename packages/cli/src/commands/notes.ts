@@ -15,6 +15,7 @@ import {
   type SavedLink,
 } from '@gaveta/core';
 import { CliFailure } from '../failure.ts';
+import { hm } from '../messages.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
 const BAD_TYPE = 'cli.auto.el_tipo_tiene_que_ser_doc_slides_todo_dashboard_';
@@ -39,7 +40,7 @@ export const newCommand: CommandSpec = {
   example: 'gaveta new "Usar SQLite" --type doc --in decisiones --from -',
   requiresVault: true,
   input: 'optional',
-  args: [{ name: 'título', description: 'cli.auto.titulo_de_la_nota', required: true }],
+  args: [{ name: 'titulo', description: 'cli.auto.titulo_de_la_nota', required: true }],
   options: [
     {
       name: 'type',
@@ -97,7 +98,11 @@ export const newCommand: CommandSpec = {
     }
     return {
       data: presentCreated(created),
-      human: `Creada ${created.path}\n${created.id}\n${created.hash}\n`,
+      human: hm('cli.human.note.created', {
+        path: created.path,
+        id: created.id,
+        hash: created.hash,
+      }),
       warnings: [...claude.warnings, ...toCommandWarnings(created.warnings)],
     };
   },
@@ -177,7 +182,7 @@ export const editCommand: CommandSpec = {
     }
     return {
       data: presentEdited(edited),
-      human: `Actualizada ${edited.path}\n${edited.hash}\n`,
+      human: hm('cli.human.note.updated', { path: edited.path, hash: edited.hash }),
       warnings: toCommandWarnings(edited.warnings),
     };
   },
@@ -332,10 +337,18 @@ function splitNames(value: string | undefined, label: string): readonly string[]
   }
   const names = value.split(',').map((part) => part.trim());
   if (names.some((name) => name.length === 0 || name.includes('\0'))) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: `La lista de ${label} no es válida.` });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: hm('cli.human.meta.list_invalid', { label }) },
+    );
   }
   if (new Set(names).size !== names.length) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: `La lista de ${label} tiene repetidos.` });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: hm('cli.human.meta.list_duplicates', { label }) },
+    );
   }
   return names;
 }
@@ -462,7 +475,7 @@ function renderOutline(outline: NoteOutline): string {
     lines.push(renderSection(section, 0));
   }
   if (outline.tasks.length > 0) {
-    lines.push('Tareas:');
+    lines.push(hm('cli.human.note.outline_tasks'));
     for (const task of outline.tasks) {
       const mark = task.checked ? 'x' : ' ';
       const id = task.id === null ? '' : ` (${task.id})`;
@@ -470,7 +483,7 @@ function renderOutline(outline: NoteOutline): string {
     }
   }
   if (outline.links.length > 0) {
-    lines.push('Enlaces:');
+    lines.push(hm('cli.human.note.outline_links'));
     for (const link of outline.links) {
       lines.push(`- ${link.text}`);
     }

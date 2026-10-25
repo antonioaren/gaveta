@@ -11,6 +11,7 @@ import {
   type RemoveFolderResult,
 } from '@gaveta/core';
 import { CliFailure } from '../failure.ts';
+import { hm } from '../messages.ts';
 import type { CommandContext, CommandResult, CommandSpec } from '../types.ts';
 
 const MISSING_FOLDER = 'cli.auto.falta_la_carpeta';
@@ -45,7 +46,7 @@ export const mkdirCommand: CommandSpec = {
     const created = await createFolder({ vaultRoot: root, folder });
     return {
       data: { folder: created.folder },
-      human: `Carpeta creada: ${created.folder}\n`,
+      human: hm('cli.human.folder.created', { folder: created.folder }),
     };
   },
 };
@@ -167,7 +168,11 @@ function presentMoveFolder(moved: MoveFolderResult): Record<string, unknown> {
 }
 
 function renderMoveFolder(moved: MoveFolderResult): string {
-  return `Carpeta ${moved.from} → ${moved.to} (${String(moved.moved.length)} notas)\n`;
+  return hm('cli.human.folder.moved', {
+    from: moved.from,
+    to: moved.to,
+    count: moved.moved.length,
+  });
 }
 
 function presentRemoveFolder(removed: RemoveFolderResult): Record<string, unknown> {
@@ -180,5 +185,8 @@ function presentRemoveFolder(removed: RemoveFolderResult): Record<string, unknow
 }
 
 function renderRemoveFolder(removed: RemoveFolderResult): string {
-  return `Carpeta ${removed.folder} eliminada (${String(removed.removed.length)} notas)\n`;
+  return hm('cli.human.folder.removed', {
+    folder: removed.folder,
+    count: removed.removed.length,
+  });
 }

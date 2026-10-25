@@ -17,6 +17,7 @@ interface RunResult {
 function childEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env };
   delete env.GAVETA_VAULT;
+  env.GAVETA_LANG ??= 'es';
   return env;
 }
 

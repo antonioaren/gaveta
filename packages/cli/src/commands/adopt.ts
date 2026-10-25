@@ -1,4 +1,5 @@
 import { GavetaError, adoptNote, isNoteType } from '@gaveta/core';
+import { hm } from '../messages.ts';
 import type { CommandResult, CommandSpec } from '../types.ts';
 
 export const adoptCommand: CommandSpec = {
@@ -60,7 +61,7 @@ export const adoptCommand: CommandSpec = {
         type: result.type,
         title: result.title,
       },
-      human: `Nota adoptada: ${result.path} (${result.id})\n`,
+      human: hm('cli.human.adopt.done', { path: result.path, id: result.id }),
       warnings: result.warnings,
     };
   },

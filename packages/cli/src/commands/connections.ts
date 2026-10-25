@@ -19,6 +19,7 @@ import {
   type VaultIndex,
 } from '@gaveta/core';
 import { CliFailure } from '../failure.ts';
+import { hm } from '../messages.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
 const MISSING_REF = 'cli.auto.falta_la_referencia';
@@ -169,7 +170,9 @@ export const linkCommand: CommandSpec = {
     if (!linked.ok) {
       return refused(context, linked.warnings);
     }
-    const verb = linked.added ? 'Enlazada' : 'Sin cambios';
+    const verb = linked.added
+      ? hm('cli.human.connections.link_linked')
+      : hm('cli.human.connections.link_unchanged');
     return {
       data: {
         id: linked.id,
@@ -181,7 +184,12 @@ export const linkCommand: CommandSpec = {
         added: linked.added,
         links: presentSavedLinks(linked.links),
       },
-      human: `${verb} ${linked.path} → ${to}\n${linked.hash}\n`,
+      human: hm('cli.human.connections.link_line', {
+        verb,
+        path: linked.path,
+        to,
+        hash: linked.hash,
+      }),
       warnings: toCommandWarnings(linked.warnings),
     };
   },
@@ -465,28 +473,42 @@ function presentGraph(
 
 function renderOutgoing(ref: string, links: readonly OutgoingLinkView[]): string {
   if (links.length === 0) {
-    return `Sin enlaces salientes en ${ref}.\n`;
+    return hm('cli.human.connections.outgoing_none', { ref });
   }
-  const lines = links.map((link) => {
-    const target = link.target.ghost
-      ? `${link.target.title} (fantasma)`
-      : (link.target.path ?? link.target.title);
-    const section = link.section === null ? '' : ` @${link.section}`;
-    const rel = link.rel === null ? '' : ` [${link.rel}]`;
-    return `- ${link.text} → ${target}${rel}${section}`;
-  });
-  return `${String(links.length)} enlace(s) desde ${ref}\n${lines.join('\n')}\n`;
+  const lines = links
+    .map((link) => {
+      const target = link.target.ghost
+        ? `${link.target.title}${hm('cli.human.connections.ghost_suffix')}`
+        : (link.target.path ?? link.target.title);
+      const section = link.section === null ? '' : ` @${link.section}`;
+      const rel = link.rel === null ? '' : ` [${link.rel}]`;
+      return hm('cli.human.connections.outgoing_line', {
+        text: link.text,
+        target,
+        rel,
+        section,
+      });
+    })
+    .join('\n');
+  return hm('cli.human.connections.outgoing_header', { count: links.length, ref, lines });
 }
 
 function renderBacklinks(ref: string, incoming: readonly BacklinkView[]): string {
   if (incoming.length === 0) {
-    return `Sin backlinks en ${ref}.\n`;
+    return hm('cli.human.connections.backlinks_none', { ref });
   }
-  const lines = incoming.map((link) => {
-    const rel = link.rel === null ? '' : ` [${link.rel}]`;
-    return `- ${link.sourceTitle} (${link.sourcePath})${rel}: ${link.context}`;
-  });
-  return `${String(incoming.length)} backlink(s) en ${ref}\n${lines.join('\n')}\n`;
+  const lines = incoming
+    .map((link) => {
+      const rel = link.rel === null ? '' : ` [${link.rel}]`;
+      return hm('cli.human.connections.backlinks_line', {
+        sourceTitle: link.sourceTitle,
+        sourcePath: link.sourcePath,
+        rel,
+        context: link.context,
+      });
+    })
+    .join('\n');
+  return hm('cli.human.connections.backlinks_header', { count: incoming.length, ref, lines });
 }
 
 function renderGraph(data: {
@@ -494,9 +516,17 @@ function renderGraph(data: {
   readonly nodes: readonly GraphNodeView[];
   readonly edges: readonly GraphEdgeView[];
 }): string {
-  const scope = data.ref === null ? 'global' : `local (${data.ref})`;
+  const scope =
+    data.ref === null
+      ? hm('cli.human.connections.graph_scope_global')
+      : hm('cli.human.connections.graph_scope_local', { ref: data.ref });
   const ghosts = data.nodes.filter((node) => node.ghost).length;
-  return `Grafo ${scope}: ${String(data.nodes.length)} nodo(s), ${String(data.edges.length)} arista(s), ${String(ghosts)} fantasma(s).\n`;
+  return hm('cli.human.connections.graph_summary', {
+    scope,
+    nodes: data.nodes.length,
+    edges: data.edges.length,
+    ghosts,
+  });
 }
 
 function presentSavedLinks(links: {

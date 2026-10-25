@@ -1,4 +1,5 @@
 import { initVault, resolveInitDirectory } from '@gaveta/core';
+import { hm } from '../messages.ts';
 import type { CommandResult, CommandSpec } from '../types.ts';
 
 export const initCommand: CommandSpec = {
@@ -37,14 +38,14 @@ export const initCommand: CommandSpec = {
     });
     const lines = [
       result.created.length > 0
-        ? `Vault creado en ${result.root}.`
-        : `El vault ya existe en ${result.root}.`,
+        ? hm('cli.human.init.vault_created', { root: result.root })
+        : hm('cli.human.init.vault_exists', { root: result.root }),
     ];
     for (const entry of result.agentInstructions) {
       lines.push(
         entry.changed
-          ? `Instrucciones actualizadas en ${entry.path}.`
-          : `Las instrucciones de ${entry.path} ya estaban al día.`,
+          ? hm('cli.human.init.agent_updated', { path: entry.path })
+          : hm('cli.human.init.agent_uptodate', { path: entry.path }),
       );
     }
     return { data: result, human: `${lines.join('\n')}\n` };
