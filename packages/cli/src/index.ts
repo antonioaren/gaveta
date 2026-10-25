@@ -23,3 +23,9 @@ export type {
 
 export { runCli } from './run.ts';
 export type { CliIo } from './run.ts';
+
+export { listMcpToolDefinitions, mcpToolName } from './mcp/tool-definitions.ts';
+export type { McpToolDefinition } from './mcp/tool-definitions.ts';
+export { buildMcpInputSchema } from './mcp/schema.ts';
+export { invokeMcpTool, buildCliArgvFromMcpArgs } from './mcp/invoke.ts';
+export { createMcpServer, runMcpStdioServer } from './mcp/server.ts';

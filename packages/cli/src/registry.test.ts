@@ -30,6 +30,7 @@ it('registers version, init, adopt, search, new, read, edit, mv, rm, connection,
     'import',
     'export',
     'serve',
+    'mcp',
     'skill',
     'guide',
   ]);

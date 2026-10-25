@@ -69,6 +69,18 @@ gaveta update --check
 
 Por defecto sigue el último tag `v*` (`--channel stable`); usa `--channel main` para seguir `origin/main`. Si la instalación no es un checkout de git, el comando muestra los pasos manuales. Tras actualizar, refresca los assets de `.gaveta/` del vault actual (o del indicado con `--vault`) sin tocar las notas. Ver [docs/releasing.md](docs/releasing.md) para publicar versiones.
 
+## MCP (Claude Code)
+
+`gaveta mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server on stdio. Each CLI command (except `mcp` and long-running `serve`) is one MCP tool. Tool results use the same versioned JSON envelope as `gaveta … --json` (`ok`, `data`, `warnings`, stable `E_*` / `W_*` codes). Pass `vault` in tool arguments or set `GAVETA_VAULT`; use `lang` (`en` / `es`) like `--lang`.
+
+Register with Claude Code when `gaveta` is on your `PATH`:
+
+```bash
+claude mcp add gaveta -- gaveta mcp
+```
+
+Logs and diagnostics go to stderr; stdout is reserved for the MCP protocol.
+
 ## Desarrollo
 
 Requisito: Node.js ≥ 22.18. pnpm 10 está fijado en `packageManager`.

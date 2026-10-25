@@ -16,6 +16,7 @@ import { metaCommand } from './commands/meta.ts';
 import { mvCommand, rmCommand } from './commands/move-remove.ts';
 import { editCommand, newCommand, readCommand } from './commands/notes.ts';
 import { reindexCommand } from './commands/reindex.ts';
+import { mcpCommand } from './commands/mcp.ts';
 import { serveCommand } from './commands/serve.ts';
 import { searchCommand } from './commands/search.ts';
 import { todoCommand } from './commands/todo.ts';
@@ -50,6 +51,7 @@ const peerCommands: readonly CommandSpec[] = [
   importCommand,
   exportCommand,
   serveCommand,
+  mcpCommand,
 ];
 
 const skillCommand = createSkillCommand(peerCommands);

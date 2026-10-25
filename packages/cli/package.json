@@ -19,10 +19,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@gaveta/i18n": "workspace:*",
     "@gaveta/core": "workspace:*",
+    "@gaveta/i18n": "workspace:*",
     "@gaveta/server": "workspace:*",
-    "commander": "14.0.3"
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "commander": "14.0.3",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@gaveta/fixtures": "workspace:*",
