@@ -250,7 +250,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
         <>
           {listItem !== null ? (
             <NoteMetaPanel
-              key={`${activeTab.ref}-${listItem.tags.join('|')}-${listItem.aliases.join('|')}`}
+              key={activeTab.ref}
               noteRef={activeTab.ref}
               initialTags={listItem.tags}
               initialAliases={listItem.aliases}

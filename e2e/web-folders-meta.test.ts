@@ -97,8 +97,15 @@ it('REQ-APP-18: creates a folder and edits tags from the note pane', async () =>
     await page.getByTestId('note-meta-panel').waitFor({ state: 'visible' });
     await page.getByTestId('note-meta-tags').fill('e2e, carpetas');
     await page.getByTestId('note-meta-aliases').fill('Equis demo');
+    const saveDone = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes('/api/meta') &&
+        response.ok(),
+    );
     await page.getByTestId('note-meta-save').click();
-    await page.getByText('Metadatos guardados.').waitFor({ state: 'visible' });
+    await saveDone;
+    await page.getByTestId('note-meta-saved').waitFor({ state: 'visible' });
 
     const html = readFileSync(join(vault, NOTE_X.path), 'utf8');
     expect(html).toContain('name="gaveta:tags" content="e2e, carpetas"');

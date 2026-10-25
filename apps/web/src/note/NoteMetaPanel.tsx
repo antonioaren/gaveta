@@ -101,7 +101,11 @@ export function NoteMetaPanel({ noteRef, initialTags, initialAliases }: NoteMeta
           {error}
         </p>
       ) : null}
-      {saved ? <p className="note-meta-panel__ok">Metadatos guardados.</p> : null}
+      {saved ? (
+        <p className="note-meta-panel__ok" data-testid="note-meta-saved">
+          Metadatos guardados.
+        </p>
+      ) : null}
       <button
         type="button"
         className="note-meta-panel__save"
