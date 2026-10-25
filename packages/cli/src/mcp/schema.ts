@@ -1,6 +1,7 @@
 import { z } from 'zod/v4';
 import type { CommandArgument, CommandOption, CommandSpec, CommandSubSpec } from '../types.ts';
 import { m } from '../messages.ts';
+import { mcpArgKey } from './arg-keys.ts';
 
 export const MCP_CONTENT_PROPERTY = 'content';
 export const MCP_FROM_PROPERTY = 'from';
@@ -88,11 +89,11 @@ export function buildMcpInputSchema(
   }
 
   for (const arg of commandArgs(spec, subcommand) ?? []) {
-    shape[arg.name] = positionalField(arg);
+    shape[mcpArgKey(arg.name)] = positionalField(arg);
   }
 
   if (subcommand === undefined && spec.contentArgument !== undefined) {
-    shape[spec.contentArgument.name] = positionalField({
+    shape[mcpArgKey(spec.contentArgument.name)] = positionalField({
       name: spec.contentArgument.name,
       description: spec.contentArgument.description,
       required: spec.contentArgument.required,

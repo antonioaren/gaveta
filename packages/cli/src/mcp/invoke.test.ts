@@ -14,7 +14,7 @@ it('builds argv with globals, options, and stdin content', () => {
     return;
   }
   const built = buildCliArgvFromMcpArgs(tool, {
-    título: 'Hola',
+    titulo: 'Hola',
     type: 'doc',
     vault: '/tmp/v',
     content: '<article><h1>Hola</h1></article>',
@@ -80,7 +80,7 @@ it('invokes new through the same JSON envelope as the CLI', async () => {
     const created = await invokeMcpTool(
       tool,
       {
-        título: 'MCP note',
+        titulo: 'MCP note',
         type: 'doc',
         vault,
         content: '<article><h1>MCP note</h1><section id="cuerpo"><p>Body</p></section></article>',

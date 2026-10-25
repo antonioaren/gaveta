@@ -9,7 +9,7 @@ it('builds Zod fields from CLI options and positionals', () => {
   expect(schema.allowCdn).toBeDefined();
   expect(schema.vault).toBeDefined();
   expect(schema.content).toBeDefined();
-  expect(schema['título']).toBeDefined();
+  expect(schema.titulo).toBeDefined();
 });
 
 it('maps import exclude to a string array field', () => {

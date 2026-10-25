@@ -86,7 +86,7 @@ it('runs create, read, search, import, and export round-trips over stdio', async
       const created = await client.callTool({
         name: 'new',
         arguments: {
-          título: 'Round trip',
+          titulo: 'Round trip',
           type: 'doc',
           vault,
           content:

@@ -3,6 +3,7 @@ import { CliFailure } from '../failure.ts';
 import { runCli, type CliIo } from '../run.ts';
 import type { CommandSpec, CommandSubSpec } from '../types.ts';
 import type { McpToolDefinition } from './tool-definitions.ts';
+import { mcpArgKey } from './arg-keys.ts';
 import { MCP_CONTENT_PROPERTY, MCP_FROM_PROPERTY, optionCliFlag } from './schema.ts';
 
 const MCP_GLOBAL_PROPERTIES = ['vault', 'lang'] as const;
@@ -70,7 +71,7 @@ export function buildCliArgvFromMcpArgs(
   }
 
   for (const arg of commandArgs(spec, subcommand)) {
-    const value = readString(args[arg.name], arg.name);
+    const value = readString(args[mcpArgKey(arg.name)], arg.name);
     if (value === undefined) {
       if (arg.required) {
         throw new CliFailure('E_ARG_INVALID', {}, { problem: 'cli.usage.missingArgument' });
@@ -85,7 +86,8 @@ export function buildCliArgvFromMcpArgs(
     const hasContentArg =
       subcommand === undefined &&
       spec.contentArgument !== undefined &&
-      readString(args[spec.contentArgument.name], spec.contentArgument.name) !== undefined;
+      readString(args[mcpArgKey(spec.contentArgument.name)], spec.contentArgument.name) !==
+        undefined;
     if (!hasContentArg) {
       throw new CliFailure(
         'E_ARG_INVALID',
