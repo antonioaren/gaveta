@@ -5,7 +5,6 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
-  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -14,7 +13,13 @@ import { adoptNote, importMarkdownFolder, initVault } from '@gaveta/core';
 import { FIXTURES_ROOT, markdownVaultPath, vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, removeTempTree, type JsonEnvelope } from './helpers.ts';
+import {
+  GAVETA_BIN,
+  parseJson,
+  removeTempTree,
+  stopServeChildren,
+  type JsonEnvelope,
+} from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const SCREENSHOT_DIR = join(REPO_ROOT, 'test-results', 'visual-editor');
@@ -159,6 +164,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       const paths = walkHtml(vault);
       await assertGroupRoundTrip(vault, started.json.data.url, paths);
     } finally {
+      await stopServeChildren(children);
       removeTempTree(parent);
     }
   }, 180_000);
@@ -171,6 +177,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       const started = await startServe(vault);
       await assertGroupRoundTrip(vault, started.json.data.url, walkHtml(vault));
     } finally {
+      await stopServeChildren(children);
       removeTempTree(parent);
     }
   }, 180_000);
@@ -183,6 +190,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       const started = await startServe(vault);
       await assertGroupRoundTrip(vault, started.json.data.url, walkHtml(vault));
     } finally {
+      await stopServeChildren(children);
       removeTempTree(parent);
     }
   }, 180_000);
@@ -197,6 +205,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       const started = await startServe(vault);
       await assertGroupRoundTrip(vault, started.json.data.url, walkHtml(vault));
     } finally {
+      await stopServeChildren(children);
       removeTempTree(parent);
     }
   }, 300_000);
@@ -225,6 +234,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       const started = await startServe(vault);
       await assertGroupRoundTrip(vault, started.json.data.url, walkHtml(vault));
     } finally {
+      await stopServeChildren(children);
       removeTempTree(parent);
     }
   }, 180_000);
@@ -257,6 +267,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       });
       await page.close();
     } finally {
+      await stopServeChildren(children);
       removeTempTree(parent);
     }
   }, 120_000);
@@ -283,6 +294,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       });
       await page.close();
     } finally {
+      await stopServeChildren(children);
       removeTempTree(parent);
     }
   }, 120_000);
