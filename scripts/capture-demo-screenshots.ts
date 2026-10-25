@@ -1,17 +1,14 @@
 import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { WEB_LOCALE_STORAGE_KEY } from '@gaveta/i18n';
 import { chromium } from 'playwright';
 import { DEMO_VAULT_ABS } from './bootstrap-demo-vault.ts';
-import {
-  parseCaptureLang,
-  playwrightLocale,
-  UI_BY_LANG,
-  type CaptureLang,
-} from './capture-demo-locale.ts';
+import { parseCaptureLang, playwrightLocale, type CaptureLang } from './capture-demo-locale.ts';
 import {
   countOverlappingGraphLabels,
   defrayGraphLabels,
+  ensureGraphFullyVisible,
   fitGlobalGraphView,
   scrollApplicationToTop,
   waitForGlobalGraphReady,
@@ -22,6 +19,8 @@ const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
 const ASSETS_DIR = join(REPO_ROOT, 'docs', 'assets');
 const ARTIFACTS_DIR = '/opt/cursor/artifacts';
 const VIEWPORT = { width: 1600, height: 900 };
+/** ~70% of the prior ~0.82 fill target — more margin around the cluster. */
+const GRAPH_FILL_RATIO = 0.58;
 
 const SCREENSHOTS = [
   'screenshot-graph.png',
@@ -40,11 +39,12 @@ function readNoteId(relativePath: string): string {
 
 async function startServe(
   vault: string,
+  lang: CaptureLang,
 ): Promise<{ url: string; child: ReturnType<typeof spawn> }> {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [GAVETA_BIN, 'serve', '--json', '--port', '0'], {
       cwd: vault,
-      env: { ...process.env, GAVETA_VAULT: vault },
+      env: { ...process.env, GAVETA_VAULT: vault, GAVETA_LANG: lang },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let stdout = '';
@@ -75,13 +75,13 @@ async function startServe(
 
 async function captureScreenshots(lang: CaptureLang): Promise<void> {
   void readNoteId('developer-handbook.html');
-  const ui = UI_BY_LANG[lang];
+  void readNoteId('visual-editor-showcase.html');
   const locale = playwrightLocale(lang);
 
   const { execFileSync } = await import('node:child_process');
   execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
 
-  const { url, child } = await startServe(DEMO_VAULT_ABS);
+  const { url, child } = await startServe(DEMO_VAULT_ABS, lang);
   mkdirSync(ASSETS_DIR, { recursive: true });
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
 
@@ -90,26 +90,34 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
     viewport: VIEWPORT,
     locale,
   });
-  await context.addInitScript((language: string) => {
-    Object.defineProperty(navigator, 'language', {
-      configurable: true,
-      get: () => language,
-    });
-    Object.defineProperty(navigator, 'languages', {
-      configurable: true,
-      get: () => [language],
-    });
-    const short = language.split('-')[0] ?? language;
-    const applyHtmlLang = (): void => {
+  await context.addInitScript(
+    ({ storageKey, language }: { storageKey: string; language: string }) => {
       try {
-        document.documentElement.lang = short;
+        localStorage.setItem(storageKey, language.startsWith('es') ? 'es' : 'en');
       } catch {
-        /* subframe or empty document during navigation */
+        /* private mode */
       }
-    };
-    applyHtmlLang();
-    document.addEventListener('DOMContentLoaded', applyHtmlLang, { once: true });
-  }, locale);
+      Object.defineProperty(navigator, 'language', {
+        configurable: true,
+        get: () => language,
+      });
+      Object.defineProperty(navigator, 'languages', {
+        configurable: true,
+        get: () => [language],
+      });
+      const short = language.split('-')[0] ?? language;
+      const applyHtmlLang = (): void => {
+        try {
+          document.documentElement.lang = short;
+        } catch {
+          /* subframe or empty document during navigation */
+        }
+      };
+      applyHtmlLang();
+      document.addEventListener('DOMContentLoaded', applyHtmlLang, { once: true });
+    },
+    { storageKey: WEB_LOCALE_STORAGE_KEY, language: locale },
+  );
 
   const page = await context.newPage();
   const pageErrors: string[] = [];
@@ -120,29 +128,31 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
   const origin = new URL(url).origin;
 
   await page.goto(url, { waitUntil: 'networkidle' });
-  await page.getByRole('navigation', { name: ui.explorerNav }).waitFor();
+  await page.getByTestId('language-select').waitFor();
+  await page.getByTestId('explorer-note-developer-handbook.html').waitFor({ timeout: 30_000 });
 
   await page.goto(`${origin}/grafo`, { waitUntil: 'networkidle' });
-  await waitForGlobalGraphReady(page, ui.globalGraphHeading);
-  await fitGlobalGraphView(page, 0.82);
+  await waitForGlobalGraphReady(page);
+  await fitGlobalGraphView(page, GRAPH_FILL_RATIO);
   await defrayGraphLabels(page);
   let overlapPairs = await countOverlappingGraphLabels(page);
   if (overlapPairs > 0) {
-    await fitGlobalGraphView(page, 0.88);
+    await fitGlobalGraphView(page, GRAPH_FILL_RATIO * 0.94);
     await defrayGraphLabels(page);
     overlapPairs = await countOverlappingGraphLabels(page);
   }
+  await ensureGraphFullyVisible(page);
   if (overlapPairs > 0) {
-    await fitGlobalGraphView(page, 0.92);
+    await fitGlobalGraphView(page, GRAPH_FILL_RATIO * 0.9);
     await defrayGraphLabels(page);
+    await ensureGraphFullyVisible(page);
   }
   await scrollApplicationToTop(page);
   await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-graph.png') });
 
-  await page.getByRole('button', { name: ui.notesButton }).click();
-  await page.getByRole('navigation', { name: ui.explorerNav }).waitFor();
+  await page.goto(url, { waitUntil: 'networkidle' });
   await page.getByTestId('explorer-note-developer-handbook.html').click();
-  await page.getByRole('heading', { name: 'Developer Handbook', level: 1 }).waitFor();
+  await page.getByTestId('note-render-frame').waitFor();
   const renderFrame = page.frameLocator('[data-testid="note-render-frame"]');
   await renderFrame.locator('h1').first().waitFor({ timeout: 30_000 });
   await page.locator('[data-testid="note-meta-panel"]').evaluate((el) => {
@@ -169,10 +179,16 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
   await scrollApplicationToTop(page);
   await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-note.png') });
 
-  await page.getByTestId('explorer-note-local-first-knowledge.html').click();
-  await page.getByRole('heading', { name: 'Local-First Knowledge', level: 1 }).waitFor();
+  await page.getByTestId('explorer-note-visual-editor-showcase.html').click();
+  await page.getByTestId('note-render-frame').waitFor();
   await page.getByTestId('note-edit-button').click();
   await page.getByTestId('visual-editor-surface').waitFor({ timeout: 30_000 });
+  const blockCount = await page.locator('[data-gaveta-html-block]').count();
+  if (blockCount > 0) {
+    throw new Error(
+      `visual editor shows ${String(blockCount)} HTML block placeholder(s); use native blocks only`,
+    );
+  }
   await scrollApplicationToTop(page);
   await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-editor.png') });
 

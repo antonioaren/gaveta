@@ -17,14 +17,14 @@ interface GraphMetrics {
   readonly canvas: ClientRect;
 }
 
-export async function waitForGlobalGraphReady(page: Page, globalGraphHeading: string): Promise<void> {
-  await page.getByRole('heading', { name: globalGraphHeading }).waitFor();
-  await page.locator('.graph-view__node').first().waitFor({ timeout: 30_000 });
-  await page.getByText('Preparando vista').waitFor({ state: 'hidden', timeout: 30_000 });
-  await page.getByText('Cargando grafo').waitFor({ state: 'hidden', timeout: 30_000 }).catch(() => {
-    /* already rendered */
-  });
-  await page.waitForTimeout(600);
+const GRAPH_CANVAS = '.graph-view__canvas';
+const GRAPH_NODE = '.graph-view__node';
+const GRAPH_BODY = '.graph-view__body';
+
+export async function waitForGlobalGraphReady(page: Page): Promise<void> {
+  await page.locator(GRAPH_BODY).waitFor({ timeout: 30_000 });
+  await page.locator(GRAPH_NODE).first().waitFor({ timeout: 30_000 });
+  await page.waitForTimeout(900);
 }
 
 async function readGraphMetrics(page: Page): Promise<GraphMetrics | null> {
@@ -69,6 +69,15 @@ async function readGraphMetrics(page: Page): Promise<GraphMetrics | null> {
   });
 }
 
+function graphOverflowsCanvas(metrics: GraphMetrics, padding: number): boolean {
+  return (
+    metrics.minX < metrics.canvas.left + padding ||
+    metrics.minY < metrics.canvas.top + padding ||
+    metrics.maxX > metrics.canvas.right - padding ||
+    metrics.maxY > metrics.canvas.bottom - padding
+  );
+}
+
 async function wheelZoomCanvas(
   page: Page,
   canvasCenterX: number,
@@ -76,7 +85,7 @@ async function wheelZoomCanvas(
   zoomIn: boolean,
   steps: number,
 ): Promise<void> {
-  const canvas = page.locator('.graph-view__canvas');
+  const canvas = page.locator(GRAPH_CANVAS);
   const box = await canvas.boundingBox();
   if (box !== null) {
     const localX = canvasCenterX - box.x;
@@ -106,7 +115,7 @@ async function panCanvas(
 
 /** Zoom and pan the global graph canvas so nodes fill ~fillRatio of the viewport. */
 export async function fitGlobalGraphView(page: Page, fillRatio = 0.8): Promise<void> {
-  const canvas = page.locator('.graph-view__canvas');
+  const canvas = page.locator(GRAPH_CANVAS);
   await canvas.waitFor();
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -149,7 +158,36 @@ export async function fitGlobalGraphView(page: Page, fillRatio = 0.8): Promise<v
   }
 }
 
-/** Place labels outside the node cluster for the screenshot (DOM-only, ephemeral). */
+/** Zoom out and re-center until nodes and labels sit inside the canvas with padding. */
+export async function ensureGraphFullyVisible(page: Page, padding = 18): Promise<void> {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const metrics = await readGraphMetrics(page);
+    if (metrics === null) {
+      return;
+    }
+    if (!graphOverflowsCanvas(metrics, padding)) {
+      return;
+    }
+    const canvasCx = metrics.canvas.left + metrics.canvas.width / 2;
+    const canvasCy = metrics.canvas.top + metrics.canvas.height / 2;
+    await wheelZoomCanvas(page, canvasCx, canvasCy, false, 2);
+    await page.waitForTimeout(180);
+    const after = await readGraphMetrics(page);
+    if (after === null) {
+      return;
+    }
+    const nextCx = (after.minX + after.maxX) / 2;
+    const nextCy = (after.minY + after.maxY) / 2;
+    const dx = canvasCx - nextCx;
+    const dy = canvasCy - nextCy;
+    if (Math.hypot(dx, dy) > 2) {
+      await panCanvas(page, canvasCx, canvasCy, canvasCx + dx, canvasCy + dy);
+      await page.waitForTimeout(150);
+    }
+  }
+}
+
+/** Place labels just outside their nodes for the screenshot (DOM-only, ephemeral). */
 export async function spreadGraphLabelsRadially(page: Page): Promise<void> {
   await page.evaluate(() => {
     const groups = [...document.querySelectorAll('.graph-view__node-group')];
@@ -177,7 +215,7 @@ export async function spreadGraphLabelsRadially(page: Page): Promise<void> {
       const cx = Number.parseFloat(circle.getAttribute('cx') ?? '0');
       const cy = Number.parseFloat(circle.getAttribute('cy') ?? '0');
       const angle = Math.atan2(cy - centerY, cx - centerX);
-      const offset = 22;
+      const offset = 18;
       const labelX = cx + Math.cos(angle) * offset;
       const labelY = cy + Math.sin(angle) * offset + 4;
       text.setAttribute('x', String(labelX));
@@ -187,7 +225,7 @@ export async function spreadGraphLabelsRadially(page: Page): Promise<void> {
   });
 }
 
-/** Nudge SVG labels apart for the screenshot (does not persist; React owns the DOM). */
+/** Light overlap fix: nudge labels vertically only when they collide. */
 export async function defrayGraphLabels(page: Page): Promise<void> {
   await spreadGraphLabelsRadially(page);
   await page.evaluate(() => {
@@ -197,42 +235,20 @@ export async function defrayGraphLabels(page: Page): Promise<void> {
     const overlaps = (a: DOMRect, b: DOMRect): boolean =>
       !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
 
-    for (let pass = 0; pass < 24; pass += 1) {
-      let moved = false;
-      for (let i = 0; i < labels.length; i += 1) {
-        for (let j = i + 1; j < labels.length; j += 1) {
-          const left = labels[i] as SVGTextElement;
-          const right = labels[j] as SVGTextElement;
-          const a = readRect(left);
-          const b = readRect(right);
-          if (!overlaps(a, b)) {
-            continue;
-          }
-          const dy = a.bottom - b.top + 2;
-          const y = Number.parseFloat(right.getAttribute('y') ?? '0');
-          right.setAttribute('y', String(y + dy));
-          moved = true;
-        }
-      }
-      if (!moved) {
-        break;
-      }
-    }
-
     for (let pass = 0; pass < 12; pass += 1) {
       let moved = false;
       for (let i = 0; i < labels.length; i += 1) {
         for (let j = i + 1; j < labels.length; j += 1) {
-          const left = labels[i] as SVGTextElement;
-          const right = labels[j] as SVGTextElement;
-          const a = readRect(left);
-          const b = readRect(right);
+          const upper = labels[i] as SVGTextElement;
+          const lower = labels[j] as SVGTextElement;
+          const a = readRect(upper);
+          const b = readRect(lower);
           if (!overlaps(a, b)) {
             continue;
           }
-          const shift = j % 2 === 0 ? -14 : 14;
-          const x = Number.parseFloat(right.getAttribute('x') ?? '0');
-          right.setAttribute('x', String(x + shift));
+          const dy = Math.min(10, a.bottom - b.top + 3);
+          const y = Number.parseFloat(lower.getAttribute('y') ?? '0');
+          lower.setAttribute('y', String(y + dy));
           moved = true;
         }
       }
@@ -241,7 +257,7 @@ export async function defrayGraphLabels(page: Page): Promise<void> {
       }
     }
   });
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(80);
 }
 
 export async function countOverlappingGraphLabels(page: Page): Promise<number> {
@@ -264,7 +280,14 @@ export async function countOverlappingGraphLabels(page: Page): Promise<number> {
 export async function scrollApplicationToTop(page: Page): Promise<void> {
   await page.evaluate(() => {
     window.scrollTo(0, 0);
-    const selectors = ['.explorer', '.connections', '.health', '.shell__main', '.note-pane', '.visual-editor__content'];
+    const selectors = [
+      '.explorer',
+      '.connections',
+      '.health',
+      '.shell__main',
+      '.note-pane',
+      '.visual-editor__content',
+    ];
     for (const selector of selectors) {
       for (const el of document.querySelectorAll(selector)) {
         el.scrollTop = 0;

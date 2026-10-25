@@ -127,6 +127,17 @@ console.log(report.ok);</code></pre>
     </article>`,
   },
   {
+    title: 'Visual Editor Showcase',
+    dest: 'visual-editor-showcase.html',
+    type: 'doc',
+    tags: 'demo, editor',
+    aliases: 'Editor demo',
+    article: `<article><h1>Visual Editor Showcase</h1><h2>Writing flow</h2><p>Draft in the visual editor, then save back to HTML on disk. Link ideas with [[Developer Handbook]] and inline <code>pnpm demo</code> commands.</p><ul><li>Headings and paragraphs stay first-class blocks</li><li>Wikilinks resolve to canonical note references</li><li>Task lists mirror the todo note type</li></ul><h2>Tasks</h2><ul class="tasks"><li data-g-task id="outline" data-g-priority="high"><input type="checkbox" checked /> Outline the note structure</li><li data-g-task id="polish" data-g-priority="medium"><input type="checkbox" /> Polish wording before screenshots</li></ul><h2>Code</h2><pre><code class="language-ts">import { doctorVault } from '@gaveta/core';
+
+const report = await doctorVault('examples/demo-vault');
+console.log(report.ok);</code></pre><p>Explore connections in [[Wikilinks and the Graph]] and [[Project Map]].</p></article>`,
+  },
+  {
     title: 'Wikilinks and the Graph',
     dest: 'wikilinks-and-graph.html',
     type: 'doc',
@@ -478,6 +489,22 @@ function createNote(vaultRoot: string, spec: NoteSpec): void {
   fixThemeStylesheetHref(vaultRoot, spec.dest);
 }
 
+/** Collapse whitespace between tags in body so the visual editor does not surface spacer htmlBlocks. */
+function compactBodyInterTagWhitespace(vaultRoot: string, relativePath: string): void {
+  const absolute = join(vaultRoot, relativePath);
+  const html = readFileSync(absolute, 'utf8');
+  const replaced = html.replace(
+    /(<body>)([\s\S]*?)(<\/body>)/i,
+    (_match, open: string, inner: string, close: string) => {
+      const compact = inner.replace(/>\s+</g, '><').trim();
+      return `${open}${compact}${close}`;
+    },
+  );
+  if (replaced !== html) {
+    writeFileSync(absolute, replaced, 'utf8');
+  }
+}
+
 function fixThemeStylesheetHref(vaultRoot: string, relativePath: string): void {
   const absolute = join(vaultRoot, relativePath);
   const html = readFileSync(absolute, 'utf8');
@@ -512,6 +539,8 @@ export async function bootstrapDemoVault(vaultRoot: string = DEMO_VAULT_ABS): Pr
     }
     replaceNoteBody(vaultRoot, spec);
   }
+
+  compactBodyInterTagWhitespace(vaultRoot, 'visual-editor-showcase.html');
 
   runGaveta(['reindex', '--json'], vaultRoot);
 

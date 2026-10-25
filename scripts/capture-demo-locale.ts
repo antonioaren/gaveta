@@ -1,25 +1,6 @@
 export type CaptureLang = 'en' | 'es';
 
-export interface CaptureUiStrings {
-  readonly explorerNav: string;
-  readonly globalGraphHeading: string;
-  readonly notesButton: string;
-}
-
-export const UI_BY_LANG: Record<CaptureLang, CaptureUiStrings> = {
-  en: {
-    explorerNav: 'Note explorer',
-    globalGraphHeading: 'Global graph',
-    notesButton: 'Notes',
-  },
-  es: {
-    explorerNav: 'Explorador de notas',
-    globalGraphHeading: 'Grafo global',
-    notesButton: 'Notas',
-  },
-};
-
-/** Parse `--lang en|es` (default `en`). Use `es` until the web UI i18n PR ships. */
+/** Parse `--lang en|es` (default `en`). */
 export function parseCaptureLang(argv: readonly string[]): CaptureLang {
   const flagIndex = argv.indexOf('--lang');
   if (flagIndex === -1) {
