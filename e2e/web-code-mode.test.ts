@@ -208,7 +208,7 @@ it('T3.15: Mod-s saves edits through the API without CSP violations', async () =
     const { page, notePath, bytesBefore, cspGuard } = await openCodeModeForNewNote(vault);
     const editor = page.locator('.code-editor .cm-content');
     await editor.click();
-    await page.keyboard.press('Control+A');
+    await page.keyboard.press(modChord('a'));
     const edited = bytesBefore
       .toString('utf8')
       .replace('<p>texto base</p>', '<p>texto editado</p>');
@@ -221,7 +221,7 @@ it('T3.15: Mod-s saves edits through the API without CSP violations', async () =
         response.ok(),
       { timeout: 15_000 },
     );
-    await page.keyboard.press(modChord('s'));
+    await editor.press(modChord('s'));
     await saveResponse;
     const bytesAfter = readFileSync(notePath);
     expect(bytesAfter.toString('utf8')).toContain('texto editado');
