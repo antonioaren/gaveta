@@ -37,13 +37,16 @@ export class VaultIndexSession {
       | { readonly kind: 'change' | 'add' | 'unlink'; readonly relativePath: string }
       | { readonly kind: 'moved'; readonly from: string; readonly to: string },
     recentUnlinks: Map<string, RecentUnlink>,
+    recentAdds: Map<string, RecentUnlink>,
     movePairWindowMs: number,
   ): Promise<VaultNoteEvent | null> {
     return this.runExclusive(async () => {
       const index = await this.open();
       await ensureIndexed(index);
+      const now = Date.now();
       if (change.kind === 'moved') {
         recentUnlinks.delete(change.from);
+        recentAdds.delete(change.to);
         const id =
           noteIdForPath(index, change.from) ??
           (await readNoteUlidFromVaultFile(this.vaultRoot, change.to));
@@ -59,7 +62,15 @@ export class VaultIndexSession {
       const path = change.relativePath;
       if (change.kind === 'unlink') {
         const id = noteIdForPath(index, path);
-        recentUnlinks.set(path, { id, at: Date.now() });
+        const to = pairMoveByNoteId(id, recentAdds, now, movePairWindowMs, path);
+        if (to !== null) {
+          recentAdds.delete(to);
+          recentUnlinks.delete(path);
+          await index.remove(path);
+          const movedId = id ?? noteIdForPath(index, to);
+          return { type: 'note:moved', path: to, id: movedId, from: path };
+        }
+        recentUnlinks.set(path, { id, at: now });
         await index.remove(path);
         return { type: 'note:removed', path, id };
       }
@@ -67,11 +78,13 @@ export class VaultIndexSession {
         const wasIndexed = noteIdForPath(index, path) !== null;
         await index.upsert(path);
         const id = noteIdForPath(index, path);
-        const from = pairMoveByNoteId(id, recentUnlinks, Date.now(), movePairWindowMs);
+        const from = pairMoveByNoteId(id, recentUnlinks, now, movePairWindowMs, path);
         if (from !== null) {
           recentUnlinks.delete(from);
+          recentAdds.delete(path);
           return { type: 'note:moved', path, id, from };
         }
+        recentAdds.set(path, { id, at: now });
         if (wasIndexed) {
           return { type: 'note:changed', path, id };
         }
