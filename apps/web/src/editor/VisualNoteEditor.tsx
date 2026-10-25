@@ -3,6 +3,9 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import { useMemo, useRef, useState } from 'react';
 import { fetchNoteHtml, saveNoteReplace } from '../api/note-write.ts';
 import { buildVisualEditorExtensions } from './build-extensions.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import { formatMessage } from '@gaveta/i18n';
+import { readWebLocale } from '../i18n/read-web-locale.ts';
 
 export interface VisualNoteEditorProps {
   readonly noteRef: string;
@@ -21,6 +24,7 @@ export function VisualNoteEditor({
   onCancel,
   onSaved,
 }: VisualNoteEditorProps) {
+  const { t } = useI18n();
   const shell = useMemo(() => noteHtmlToEditorDocument(initialHtml), [initialHtml]);
   const extensions = useMemo(() => buildVisualEditorExtensions(notePath), [notePath]);
   const baselineBodyInnerRef = useRef<string | null>(null);
@@ -57,8 +61,7 @@ export function VisualNoteEditor({
         setStatus('idle');
         setFeedback({
           tone: 'conflict',
-          message:
-            'La nota cambió fuera del editor; tu versión no se guardó. Recarga o revisa los cambios.',
+          message: t('web.api.error.E_CONFLICT_VISUAL'),
         });
         setIfMatchState(current.hash);
         return;
@@ -73,9 +76,7 @@ export function VisualNoteEditor({
       if (result.status === 409) {
         setFeedback({
           tone: 'conflict',
-          message:
-            result.message ||
-            'La nota cambió fuera del editor; tu versión no se guardó. Recarga o revisa los cambios.',
+          message: result.message || t('web.api.error.E_CONFLICT_VISUAL'),
         });
         if (result.hash !== undefined) {
           setIfMatchState(result.hash);
@@ -84,7 +85,7 @@ export function VisualNoteEditor({
       }
       setFeedback({
         tone: 'error',
-        message: result.message || 'No se pudo guardar la nota.',
+        message: result.message || formatMessage('web.api.error.fallbackSaveNote', readWebLocale()),
       });
       return;
     }
@@ -105,7 +106,7 @@ export function VisualNoteEditor({
             void save();
           }}
         >
-          {status === 'saving' ? 'Guardando…' : 'Guardar'}
+          {status === 'saving' ? t('web.common.saving') : t('web.common.save')}
         </button>
         <button
           type="button"
@@ -114,7 +115,7 @@ export function VisualNoteEditor({
           disabled={status === 'saving'}
           onClick={onCancel}
         >
-          Cancelar
+          {t('web.common.cancel')}
         </button>
       </div>
       {feedback !== null ? (

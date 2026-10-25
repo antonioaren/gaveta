@@ -1,4 +1,6 @@
+import { formatMessage } from '@gaveta/i18n';
 import { apiFetch, apiJson } from './client.ts';
+import { readWebLocale } from '../i18n/read-web-locale.ts';
 import type { ExportPreviewData, ImportPreviewData } from './migration-types.ts';
 import { bytesToBase64 } from '../migration/base64.ts';
 
@@ -81,7 +83,9 @@ export async function downloadExportZip(scope: ExportScope, filename: string): P
   });
   if (!response.ok) {
     const body = (await response.json()) as { error?: { code?: string; message?: string } };
-    throw new Error(body.error?.message ?? 'No se pudo exportar');
+    throw new Error(
+      body.error?.message ?? formatMessage('web.api.error.fallbackExport', readWebLocale()),
+    );
   }
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);

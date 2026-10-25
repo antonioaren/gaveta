@@ -1,6 +1,8 @@
 import { useId, useState } from 'react';
 import { ApiError } from '../api/client.ts';
 import { postMkdirFolder, postMoveFolder, postRemoveFolder } from '../api/folder-write.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 import type { FolderOpKind } from './folder-op-kind.ts';
 
 interface FolderOpsDialogProps {
@@ -10,6 +12,7 @@ interface FolderOpsDialogProps {
 }
 
 export function FolderOpsDialog({ kind, folder, onClose }: FolderOpsDialogProps) {
+  const { t } = useI18n();
   const titleId = useId();
   const [nameInput, setNameInput] = useState(
     kind === 'rename' ? (folder.split('/').pop() ?? '') : '',
@@ -23,10 +26,10 @@ export function FolderOpsDialog({ kind, folder, onClose }: FolderOpsDialogProps)
 
   const title =
     kind === 'create'
-      ? 'Nueva carpeta'
+      ? t('web.folderOps.title.create')
       : kind === 'rename'
-        ? 'Renombrar carpeta'
-        : 'Borrar carpeta';
+        ? t('web.folderOps.title.rename')
+        : t('web.folderOps.title.delete');
 
   async function submit(): Promise<void> {
     setSubmitting(true);
@@ -48,7 +51,9 @@ export function FolderOpsDialog({ kind, folder, onClose }: FolderOpsDialogProps)
       onClose();
     } catch (caught) {
       const message =
-        caught instanceof ApiError ? caught.message : 'No se pudo completar la operación';
+        caught instanceof ApiError
+          ? caught.message
+          : messageFromCaught(caught, 'web.api.error.fallbackNoteOp');
       setError(message);
     } finally {
       setSubmitting(false);
@@ -73,13 +78,13 @@ export function FolderOpsDialog({ kind, folder, onClose }: FolderOpsDialogProps)
         {kind === 'delete' ? (
           <p className="modal__hint">
             {dangerStep
-              ? 'Última confirmación: se borrarán todas las notas de esta carpeta.'
-              : `Se eliminarán las notas dentro de «${folder}».`}
+              ? t('web.folderOps.delete.confirmFinal')
+              : t('web.folderOps.delete.hint', { folder })}
           </p>
         ) : (
           <>
             <label className="field">
-              <span className="field__label">Carpeta padre</span>
+              <span className="field__label">{t('web.folderOps.field.parent')}</span>
               <input
                 className="field__control"
                 value={parentInput}
@@ -90,7 +95,7 @@ export function FolderOpsDialog({ kind, folder, onClose }: FolderOpsDialogProps)
               />
             </label>
             <label className="field">
-              <span className="field__label">Nombre</span>
+              <span className="field__label">{t('web.folderOps.field.name')}</span>
               <input
                 className="field__control"
                 value={nameInput}
@@ -109,7 +114,7 @@ export function FolderOpsDialog({ kind, folder, onClose }: FolderOpsDialogProps)
         ) : null}
         <div className="modal__actions">
           <button type="button" className="modal__button" onClick={onClose}>
-            Cancelar
+            {t('web.common.cancel')}
           </button>
           <button
             type="button"
@@ -125,12 +130,12 @@ export function FolderOpsDialog({ kind, folder, onClose }: FolderOpsDialogProps)
             }}
           >
             {submitting
-              ? 'Guardando…'
+              ? t('web.common.saving')
               : kind === 'delete'
                 ? dangerStep
-                  ? 'Borrar definitivamente'
-                  : 'Continuar'
-                : 'Guardar'}
+                  ? t('web.common.deletePermanently')
+                  : t('web.common.continue')
+                : t('web.common.save')}
           </button>
         </div>
       </div>

@@ -1,4 +1,6 @@
+import { formatMessage } from '@gaveta/i18n';
 import { apiFetch } from './client.ts';
+import { readWebLocale } from '../i18n/read-web-locale.ts';
 import type { ApiEnvelope } from './types.ts';
 
 export interface NoteReadHtml {
@@ -20,6 +22,7 @@ export type SaveNoteResult =
     };
 
 export async function fetchNoteHtml(ref: string): Promise<NoteReadHtml> {
+  const locale = readWebLocale();
   const response = await apiFetch(`/api/read?ref=${encodeURIComponent(ref)}&as=html`);
   const body = (await response.json()) as ApiEnvelope<NoteReadHtml> & {
     code?: string;
@@ -27,7 +30,7 @@ export async function fetchNoteHtml(ref: string): Promise<NoteReadHtml> {
   };
   if (!response.ok || !body.ok) {
     const code = body.code ?? 'E_INTERNAL';
-    const message = body.message ?? 'No se pudo leer la nota';
+    const message = body.message ?? formatMessage('web.api.error.fallbackReadNote', locale);
     throw new Error(`${code}: ${message}`);
   }
   return body.data;
@@ -38,6 +41,7 @@ export async function saveNoteReplace(
   ifMatch: string,
   bodyHtml: string,
 ): Promise<SaveNoteResult> {
+  const locale = readWebLocale();
   const response = await apiFetch('/api/edit', {
     method: 'POST',
     headers: {
@@ -56,13 +60,16 @@ export async function saveNoteReplace(
     const message =
       payload.error?.message ??
       payload.message ??
-      'La nota cambió en otro sitio; no se guardó tu versión.';
+      formatMessage('web.api.error.E_CONFLICT_EDIT_ALT', locale);
     const hash = payload.error?.details?.hash;
     return { ok: false, status: 409, code, message, ...(hash !== undefined ? { hash } : {}) };
   }
   if (!response.ok || !payload.ok) {
     const code = payload.error?.code ?? payload.code ?? 'E_INTERNAL';
-    const message = payload.error?.message ?? payload.message ?? 'No se pudo guardar la nota';
+    const message =
+      payload.error?.message ??
+      payload.message ??
+      formatMessage('web.api.error.fallbackSaveNote', locale);
     return { ok: false, status: response.status, code, message };
   }
   return { ok: true, hash: payload.data.hash };

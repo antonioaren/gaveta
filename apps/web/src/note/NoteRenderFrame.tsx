@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { pushLiveE2eLog } from '../live/live-e2e-log.ts';
 import { appendRenderReloadQuery } from './render-frame.ts';
 import { useRenderFrameUrl } from './useRenderFrameUrl.ts';
+import { useI18n } from '../i18n/useI18n.ts';
 
 interface NoteRenderFrameProps {
   readonly noteId: string;
@@ -18,6 +19,7 @@ export function NoteRenderFrame({
   onIframeWindow,
   onIframeLoad,
 }: NoteRenderFrameProps) {
+  const { t } = useI18n();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const renderSrc = useRenderFrameUrl(noteId);
 
@@ -47,13 +49,13 @@ export function NoteRenderFrame({
   }, [frameSrc, noteId, reloadGeneration]);
 
   return renderSrc === null ? (
-    <p className="note-pane__placeholder">Preparando vista…</p>
+    <p className="note-pane__placeholder">{t('web.note.preparingView')}</p>
   ) : (
     <iframe
       key={frameKey}
       ref={iframeRef}
       className="note-pane__frame"
-      title={`Vista de ${title}`}
+      title={t('web.note.renderFrameTitle', { title })}
       src={frameSrc ?? renderSrc}
       sandbox="allow-scripts"
       data-testid="note-render-frame"

@@ -5,7 +5,9 @@ import { collectFolderPaths } from './collect-folders.ts';
 import { createNoteViaApi } from './create-note-api.ts';
 import { formatApiError } from './format-api-error.ts';
 import type { NewNoteDraft } from './new-note-dialog-context-state.ts';
-import { CREATE_NOTE_TYPE_LABELS, CREATE_NOTE_TYPES, type CreateNoteType } from './note-types.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import { noteTypeMessageKey } from '../i18n/note-type-label.ts';
+import { CREATE_NOTE_TYPES, type CreateNoteType } from './note-types.ts';
 import { parseTagsInput } from './parse-tags.ts';
 import { previewNotePath } from './preview-note-path.ts';
 import { useNewNoteDialog } from './useNewNoteDialog.ts';
@@ -53,6 +55,7 @@ function NewNoteDialogForm({
   readonly draft: NewNoteDraft;
   readonly onClose: () => void;
 }) {
+  const { t } = useI18n();
   const tabState = useTabs();
   const titleId = useId();
   const titleFieldId = `${titleId}-title`;
@@ -74,7 +77,7 @@ function NewNoteDialogForm({
     event.preventDefault();
     const trimmed = title.trim();
     if (trimmed.length === 0) {
-      setFieldError('Escribe un título para la nota.');
+      setFieldError(t('web.newNote.validation.titleRequired'));
       return;
     }
     setFieldError(null);
@@ -95,7 +98,7 @@ function NewNoteDialogForm({
         tabState.openTab(created.id, created.title, created.path, created.id);
         onClose();
       } catch (caught) {
-        setSubmitError(formatApiError(caught));
+        setSubmitError(formatApiError(caught, t));
       } finally {
         setSubmitting(false);
       }
@@ -115,16 +118,13 @@ function NewNoteDialogForm({
       >
         <header className="modal__header">
           <h2 id={titleId} className="modal__title">
-            Nueva nota
+            {t('web.newNote.title')}
           </h2>
-          <p className="modal__hint">
-            Atajo: Ctrl+Alt+N (⌃⌥N en macOS). Evitamos Ctrl+N porque abre una ventana nueva del
-            navegador.
-          </p>
+          <p className="modal__hint">{t('web.newNote.hint')}</p>
         </header>
         <form className="modal__body" onSubmit={onSubmit} noValidate>
           <label className="field" htmlFor={titleFieldId}>
-            <span className="field__label">Título</span>
+            <span className="field__label">{t('web.newNote.field.title')}</span>
             <input
               id={titleFieldId}
               className="field__control"
@@ -138,10 +138,10 @@ function NewNoteDialogForm({
             />
           </label>
           <p className="new-note-dialog__path-preview" aria-live="polite">
-            Ruta prevista: <code>{pathPreview}</code>
+            {t('web.newNote.pathPreviewPrefix')} <code>{pathPreview}</code>
           </p>
           <label className="field" htmlFor={typeFieldId}>
-            <span className="field__label">Tipo</span>
+            <span className="field__label">{t('web.common.type')}</span>
             <select
               id={typeFieldId}
               className="field__control"
@@ -152,13 +152,13 @@ function NewNoteDialogForm({
             >
               {CREATE_NOTE_TYPES.map((option) => (
                 <option key={option} value={option}>
-                  {CREATE_NOTE_TYPE_LABELS[option]}
+                  {t(noteTypeMessageKey(option))}
                 </option>
               ))}
             </select>
           </label>
           <label className="field" htmlFor={folderFieldId}>
-            <span className="field__label">Carpeta</span>
+            <span className="field__label">{t('web.newNote.field.folder')}</span>
             <select
               id={folderFieldId}
               className="field__control"
@@ -169,18 +169,18 @@ function NewNoteDialogForm({
             >
               {folders.map((entry) => (
                 <option key={entry || 'root'} value={entry}>
-                  {entry.length === 0 ? 'Raíz del vault' : entry}
+                  {entry.length === 0 ? t('web.newNote.folderRoot') : entry}
                 </option>
               ))}
             </select>
           </label>
           <label className="field" htmlFor={tagsFieldId}>
-            <span className="field__label">Etiquetas</span>
+            <span className="field__label">{t('web.newNote.field.tags')}</span>
             <input
               id={tagsFieldId}
               className="field__control"
               type="text"
-              placeholder="Separadas por comas"
+              placeholder={t('web.newNote.field.tagsPlaceholder')}
               value={tagsRaw}
               onChange={(event) => {
                 setTagsRaw(event.target.value);
@@ -199,14 +199,14 @@ function NewNoteDialogForm({
           ) : null}
           <footer className="modal__footer">
             <button type="button" className="topbar__button" onClick={onClose}>
-              Cancelar
+              {t('web.common.cancel')}
             </button>
             <button
               type="submit"
               className="topbar__button topbar__button--primary"
               disabled={submitting}
             >
-              {submitting ? 'Creando…' : 'Crear nota'}
+              {submitting ? t('web.common.creating') : t('web.newNote.submit')}
             </button>
           </footer>
         </form>

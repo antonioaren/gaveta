@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setSessionToken, clearSessionToken } from '../auth/session-token.ts';
@@ -8,6 +8,7 @@ vi.mock('../note/NotePane.tsx', () => ({
   NotePane: () => <div aria-label="Área de nota" />,
 }));
 
+import { renderWithI18n } from '../i18n/render-with-i18n.tsx';
 import { ShellLayout } from './ShellLayout.tsx';
 
 beforeEach(() => {
@@ -62,10 +63,11 @@ it('REQ-APP-01: renders the three-column shell in Spanish', async () => {
     }),
   );
 
-  render(
+  renderWithI18n(
     <MemoryRouter>
       <ShellLayout />
     </MemoryRouter>,
+    { locale: 'es' },
   );
 
   expect(screen.getByRole('navigation', { name: 'Explorador de notas' })).toBeInTheDocument();

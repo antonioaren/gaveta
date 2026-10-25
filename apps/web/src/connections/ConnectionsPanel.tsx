@@ -5,8 +5,10 @@ import { useTabs } from '../tabs/useTabs.ts';
 import { LocalGraph } from './LocalGraph.tsx';
 import { plainTextFromContext } from './plain-text.ts';
 import { viewerRefForBacklink, viewerRefForOutgoing } from './link-ref.ts';
+import { useI18n } from '../i18n/useI18n.ts';
 
 export function ConnectionsPanel() {
+  const { t } = useI18n();
   const { ref } = useActiveViewerRef();
   const { links, backlinks, graph, loading, error } = useConnectionsData(ref);
   const tabState = useTabs();
@@ -22,17 +24,17 @@ export function ConnectionsPanel() {
   };
 
   return (
-    <aside className="connections" aria-label="Panel de conexiones">
+    <aside className="connections" aria-label={t('web.connections.aria')}>
       <header className="connections__header">
-        <h2 className="connections__title">Conexiones</h2>
-        <p className="connections__hint">Enlaces, backlinks y grafo local.</p>
+        <h2 className="connections__title">{t('web.connections.title')}</h2>
+        <p className="connections__hint">{t('web.connections.hint')}</p>
       </header>
       <div className="connections__body">
         {ref === null ? (
-          <p className="connections__empty">Abre una nota para ver sus conexiones.</p>
+          <p className="connections__empty">{t('web.connections.empty.openNote')}</p>
         ) : loading ? (
           <p className="connections__status" role="status">
-            Cargando conexiones…
+            {t('web.connections.loading')}
           </p>
         ) : error !== null ? (
           <p className="connections__status connections__status--error" role="alert">
@@ -42,10 +44,10 @@ export function ConnectionsPanel() {
           <>
             <section className="connections__section" aria-labelledby="connections-outgoing">
               <h3 id="connections-outgoing" className="connections__section-title">
-                Salientes
+                {t('web.connections.outgoing.title')}
               </h3>
               {links === null || links.links.length === 0 ? (
-                <p className="connections__empty">Sin enlaces salientes.</p>
+                <p className="connections__empty">{t('web.connections.outgoing.empty')}</p>
               ) : (
                 <ul className="connections__list">
                   {links.links.map((link, index) => {
@@ -87,14 +89,14 @@ export function ConnectionsPanel() {
 
             <section className="connections__section" aria-labelledby="connections-backlinks">
               <h3 id="connections-backlinks" className="connections__section-title">
-                Backlinks
+                {t('web.connections.backlinks.title')}
               </h3>
               {backlinks === null || backlinks.backlinks.length === 0 ? (
-                <p className="connections__empty">Sin backlinks.</p>
+                <p className="connections__empty">{t('web.connections.backlinks.empty')}</p>
               ) : (
                 <ul
                   className="connections__list connections__list--backlinks"
-                  aria-label="Lista de backlinks"
+                  aria-label={t('web.connections.backlinks.ariaList')}
                 >
                   {backlinks.backlinks.map((link, index) => {
                     const sourceRef = viewerRefForBacklink(link);
@@ -131,10 +133,10 @@ export function ConnectionsPanel() {
 
             <section className="connections__section" aria-labelledby="connections-graph">
               <h3 id="connections-graph" className="connections__section-title">
-                Grafo local
+                {t('web.connections.graph.title')}
               </h3>
               {graph === null ? (
-                <p className="connections__empty">Sin datos de grafo.</p>
+                <p className="connections__empty">{t('web.connections.graph.empty')}</p>
               ) : (
                 <LocalGraph
                   nodes={graph.nodes}

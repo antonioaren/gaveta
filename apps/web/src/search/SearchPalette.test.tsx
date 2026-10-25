@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { renderWithI18n } from '../i18n/render-with-i18n.tsx';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -19,12 +20,13 @@ afterEach(() => {
 });
 
 function renderPalette(onClose: () => void = () => undefined) {
-  return render(
+  return renderWithI18n(
     <MemoryRouter>
       <TabProvider>
         <SearchPalette open notes={[]} onClose={onClose} />
       </TabProvider>
     </MemoryRouter>,
+    { locale: 'es' },
   );
 }
 

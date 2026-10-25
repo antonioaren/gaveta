@@ -1,6 +1,8 @@
+import { useI18n } from '../i18n/useI18n.ts';
 import { useTabs } from './useTabs.ts';
 
 export function TabBar() {
+  const { t } = useI18n();
   const tabState = useTabs();
 
   if (tabState.tabs.length === 0) {
@@ -8,7 +10,7 @@ export function TabBar() {
   }
 
   return (
-    <div className="tab-bar" role="tablist" aria-label="Pestañas abiertas">
+    <div className="tab-bar" role="tablist" aria-label={t('web.tabs.aria')}>
       {tabState.tabs.map((tab) => {
         const selected = tab.id === tabState.activeTabId;
         return (
@@ -27,7 +29,7 @@ export function TabBar() {
             <button
               type="button"
               className="tab-bar__close"
-              aria-label={`Cerrar ${tab.title}`}
+              aria-label={t('web.tabs.close', { title: tab.title })}
               onClick={() => {
                 tabState.closeTab(tab.id);
               }}
