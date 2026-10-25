@@ -130,6 +130,27 @@ describe('unlinkedMentions', () => {
 });
 
 describe('rewriteUnlinkedMentions', () => {
+  it('links a mention at the end of a paragraph without corrupting the closing tag', () => {
+    const html = noteHtml({
+      title: 'Origen',
+      id: SOURCE_ID,
+      body: '<p>Ver Roadmap</p>',
+    });
+    const result = rewriteUnlinkedMentions({
+      html,
+      fromPath: 'origen.html',
+      target: {
+        id: TARGET_ID,
+        path: 'roadmap.html',
+        title: 'Roadmap',
+        aliases: [],
+      },
+    });
+    expect(result.linked).toBe(1);
+    expect(result.html).toContain('</p>');
+    expect(result.html).toMatch(/<a href="roadmap\.html" data-g-to=.*>Roadmap<\/a><\/p>/);
+  });
+
   it('wraps plain mentions in canonical anchors without touching existing links', () => {
     const html = noteHtml({
       title: 'Origen',

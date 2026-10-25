@@ -394,7 +394,7 @@ function walkText(
         const location = node.sourceCodeLocation;
         if (location !== undefined && location !== null) {
           const raw = source.slice(location.startOffset, location.endOffset);
-          onText(bomPrefix + location.startOffset, decodeWithMap(raw, location.endOffset));
+          onText(bomPrefix + location.startOffset, decodeWithMap(raw, raw.length));
         }
       }
       continue;
