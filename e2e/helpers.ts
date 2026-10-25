@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { type ChildProcess, spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -59,6 +59,40 @@ export interface GraphPayload {
     readonly to: string;
     readonly rel: string | null;
   }[];
+}
+
+/** Remove a temp vault tree; retries while macOS CI still has serve/SQLite handles open. */
+export function removeTempTree(target: string): void {
+  rmSync(target, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+}
+
+export async function stopServeChildren(children: ChildProcess[]): Promise<void> {
+  const batch = children.splice(0);
+  if (batch.length === 0) {
+    return;
+  }
+  await Promise.all(
+    batch.map(
+      (child) =>
+        new Promise<void>((resolve) => {
+          if (child.exitCode !== null) {
+            resolve();
+            return;
+          }
+          const finish = (): void => {
+            resolve();
+          };
+          child.once('exit', finish);
+          child.kill('SIGTERM');
+          setTimeout(() => {
+            if (child.exitCode === null) {
+              child.kill('SIGKILL');
+            }
+            finish();
+          }, 5_000);
+        }),
+    ),
+  );
 }
 
 export function childEnv(overrides: Record<string, string> = {}): NodeJS.ProcessEnv {
