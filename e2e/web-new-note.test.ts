@@ -10,6 +10,7 @@ import {
   initVault,
   newWebPage,
   parseJson,
+  resolveScreenshotDir,
   runGaveta,
   withTempVaultAsync,
   type JsonEnvelope,
@@ -24,22 +25,10 @@ const children: ReturnType<typeof spawn>[] = [];
 let browser: Browser;
 let screenshotDir: string;
 
-function resolveScreenshotDir(): string {
-  const cloud = '/opt/cursor/artifacts';
-  try {
-    mkdirSync(cloud, { recursive: true });
-    return cloud;
-  } catch {
-    const fallback = join(tmpdir(), 'gaveta-e2e-new-note');
-    mkdirSync(fallback, { recursive: true });
-    return fallback;
-  }
-}
-
 beforeAll(async () => {
   const { execFileSync } = await import('node:child_process');
   execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
-  screenshotDir = resolveScreenshotDir();
+  screenshotDir = resolveScreenshotDir('gaveta-e2e-new-note');
   browser = await chromium.launch();
 }, 180_000);
 

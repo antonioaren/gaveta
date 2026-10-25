@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { NOTE_X, vaultPath } from '@gaveta/fixtures';
@@ -10,6 +10,7 @@ import {
   newWebPage,
   parseJson,
   removeTempTree,
+  resolveScreenshotDir,
   stopServeChildren,
   type JsonEnvelope,
 } from './helpers.ts';
@@ -21,23 +22,11 @@ const children: ReturnType<typeof spawn>[] = [];
 let browser: Browser;
 let screenshotDir: string;
 
-function resolveScreenshotDir(): string {
-  const cloud = '/opt/cursor/artifacts';
-  try {
-    mkdirSync(cloud, { recursive: true });
-    return cloud;
-  } catch {
-    const fallback = join(tmpdir(), 'gaveta-e2e-folders-meta');
-    mkdirSync(fallback, { recursive: true });
-    return fallback;
-  }
-}
-
 beforeAll(async () => {
   const { execFileSync } = await import('node:child_process');
   execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
   browser = await chromium.launch();
-  screenshotDir = resolveScreenshotDir();
+  screenshotDir = resolveScreenshotDir('gaveta-e2e-folders-meta');
 }, 180_000);
 
 afterAll(async () => {

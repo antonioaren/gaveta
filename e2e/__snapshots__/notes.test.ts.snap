@@ -39,8 +39,8 @@ exports[`snapshots a conflict and does not overwrite the note 1`] = `
   "command": "edit",
   "error": {
     "code": "E_CONFLICT",
-    "message": "The note changed since it was last read.",
-    "hint": "Read the note again and retry with the current hash in --if-match."
+    "message": "La nota ha cambiado desde la última lectura.",
+    "hint": "Hay que volver a leer la nota y reintentar con el hash actual en --if-match."
   }
 }
 "

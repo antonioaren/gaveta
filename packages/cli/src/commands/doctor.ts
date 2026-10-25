@@ -6,6 +6,7 @@ import {
   type DoctorFix,
 } from '@gaveta/core';
 import type { CommandResult, CommandSpec } from '../types.ts';
+import { hm } from '../messages.ts';
 import { cliVersion } from './version.ts';
 
 interface FindingView {
@@ -89,10 +90,10 @@ function renderHuman(findings: readonly DoctorFinding[], fixed: readonly DoctorF
     lines.push(`${finding.path}: ${finding.code}: ${finding.message}${detail}`);
   }
   for (const change of fixed) {
-    lines.push(`Reparado ${change.path} (${change.codes.join(', ')})`);
+    lines.push(hm('cli.human.doctor.fixed', { path: change.path, codes: change.codes.join(', ') }));
   }
   if (findings.length === 0 && fixed.length === 0) {
-    return 'Sin hallazgos.\n';
+    return hm('cli.human.doctor.none');
   }
   if (findings.length === 0) {
     return `${lines.join('\n')}\n`;

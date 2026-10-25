@@ -1,6 +1,7 @@
 import websocket from '@fastify/websocket';
 import type { FastifyInstance } from 'fastify';
 import type { RawData, WebSocket } from 'ws';
+import { formatMessage, type Locale, type MessageKey } from '@gaveta/i18n';
 import { tokensMatch } from './auth.ts';
 import {
   GAVETA_WS_PATH,
@@ -9,6 +10,7 @@ import {
   WS_MAX_MESSAGE_BYTES,
   WS_MAX_PENDING_CONNECTIONS,
 } from './constants.ts';
+import { localeFromRequestHeaders } from './http-error.ts';
 import type { VaultEventBus, VaultNoteEvent } from './vault-events.ts';
 import { rawDataByteLength } from './ws-bytes.ts';
 import { wsMessageText } from './ws-message.ts';
@@ -34,10 +36,13 @@ export async function registerVaultWebSocket(
   let authenticatedConnections = 0;
   let pendingConnections = 0;
 
-  app.get(GAVETA_WS_PATH, { websocket: true }, (socket) => {
+  app.get(GAVETA_WS_PATH, { websocket: true }, (socket, request) => {
+    const locale = localeFromRequestHeaders(request.headers);
+
     if (pendingConnections >= WS_MAX_PENDING_CONNECTIONS) {
-      sendError(socket, 'E_ARG_INVALID', 'Demasiadas conexiones en vivo');
-      socket.close(1013, 'Demasiadas conexiones en vivo');
+      const message = wsText('server.ws.too_many_live_connections', locale);
+      sendError(socket, 'E_ARG_INVALID', message);
+      socket.close(1013, message);
       return;
     }
     pendingConnections += 1;
@@ -45,8 +50,9 @@ export async function registerVaultWebSocket(
     let unsubscribe: (() => void) | null = null;
     const authTimer = setTimeout(() => {
       if (!authed) {
-        sendError(socket, 'E_AUTH_REQUIRED', 'Autenticación requerida');
-        socket.close(4401, 'Autenticación requerida');
+        const message = wsText('server.ws.auth_required', locale);
+        sendError(socket, 'E_AUTH_REQUIRED', message);
+        socket.close(4401, message);
       }
     }, authTimeoutMs);
 
@@ -69,21 +75,24 @@ export async function registerVaultWebSocket(
 
     socket.on('message', (raw: RawData) => {
       if (rawDataByteLength(raw) > WS_MAX_MESSAGE_BYTES) {
-        sendError(socket, 'E_ARG_INVALID', 'Mensaje demasiado grande');
-        socket.close(1009, 'Mensaje demasiado grande');
+        const message = wsText('server.ws.message_too_large', locale);
+        sendError(socket, 'E_ARG_INVALID', message);
+        socket.close(1009, message);
         return;
       }
       const text = wsMessageText(raw);
       if (!authed) {
         const message = parseAuthMessage(text);
         if (message === null || !tokensMatch(message.token, token)) {
-          sendError(socket, 'E_AUTH_REQUIRED', 'Autenticación requerida');
-          socket.close(4401, 'Autenticación requerida');
+          const authMessage = wsText('server.ws.auth_required', locale);
+          sendError(socket, 'E_AUTH_REQUIRED', authMessage);
+          socket.close(4401, authMessage);
           return;
         }
         if (authenticatedConnections >= WS_MAX_CONNECTIONS) {
-          sendError(socket, 'E_ARG_INVALID', 'Demasiadas conexiones en vivo');
-          socket.close(1013, 'Demasiadas conexiones en vivo');
+          const tooMany = wsText('server.ws.too_many_live_connections', locale);
+          sendError(socket, 'E_ARG_INVALID', tooMany);
+          socket.close(1013, tooMany);
           return;
         }
         pendingConnections = Math.max(0, pendingConnections - 1);
@@ -96,9 +105,14 @@ export async function registerVaultWebSocket(
         });
         return;
       }
-      sendError(socket, 'E_ARG_INVALID', 'Solo se admite el mensaje de autenticación');
+      const onlyAuth = wsText('server.ws.only_auth_message', locale);
+      sendError(socket, 'E_ARG_INVALID', onlyAuth);
     });
   });
+}
+
+function wsText(key: MessageKey, locale: Locale): string {
+  return formatMessage(key, locale);
 }
 
 function sendVaultEvent(socket: WebSocket, event: VaultNoteEvent): void {

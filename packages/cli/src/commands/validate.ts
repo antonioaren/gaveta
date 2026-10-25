@@ -15,6 +15,7 @@ import {
 import { CliFailure } from '../failure.ts';
 import { presentDiagnostic, renderDiagnosticLine, type DiagnosticView } from './diagnostics.ts';
 import type { CommandResult, CommandSpec } from '../types.ts';
+import { hm } from '../messages.ts';
 
 const BOTH_TARGETS = 'cli.auto.indica_una_referencia_o_all_no_ambos';
 
@@ -135,12 +136,16 @@ function finish(files: readonly ValidateFileView[]): CommandResult {
 
 function renderHuman(files: readonly ValidateFileView[]): string {
   if (files.length === 0) {
-    return 'No hay notas que validar.\n';
+    return hm('cli.human.validate.none');
   }
   const lines: string[] = [];
   for (const file of files) {
     if (file.diagnostics.length === 0) {
-      lines.push(file.path === null ? 'Válido.' : `${file.path}: válido.`);
+      lines.push(
+        file.path === null
+          ? hm('cli.human.validate.vault_ok')
+          : hm('cli.human.validate.file_ok', { path: file.path }),
+      );
       continue;
     }
     for (const diagnostic of file.diagnostics) {
@@ -148,7 +153,7 @@ function renderHuman(files: readonly ValidateFileView[]): string {
     }
   }
   if (files.every((file) => file.ok)) {
-    lines.push('Todo válido.');
+    lines.push(hm('cli.human.validate.all_ok'));
   }
   return `${lines.join('\n')}\n`;
 }

@@ -1,5 +1,6 @@
 import { GavetaError, skillInstall, skillStatus, type SkillLocationReport } from '@gaveta/core';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
+import { hm } from '../messages.ts';
 import { cliVersion } from './version.ts';
 import { createGuideCommand, guideCommandsFromRegistry } from './guide.ts';
 import type { CommandSpec as RegistryCommand } from '../types.ts';
@@ -23,23 +24,28 @@ function statusWarnings(locations: readonly SkillLocationReport[]): CommandWarni
 }
 
 function renderStatusHuman(locations: readonly SkillLocationReport[]): string {
-  const lines = ['Estado de la skill de Gaveta:', ''];
+  const lines = [hm('cli.human.skill.status_heading'), ''];
   for (const location of locations) {
     const label = `${location.target} (${location.scope})`;
     switch (location.state) {
       case 'missing':
-        lines.push(`- ${label}: no instalada en ${location.directory}.`);
+        lines.push(hm('cli.human.skill.status_missing', { label, directory: location.directory }));
         break;
       case 'current':
-        lines.push(`- ${label}: al día en ${location.directory}.`);
+        lines.push(hm('cli.human.skill.status_current', { label, directory: location.directory }));
         break;
       case 'outdated':
         lines.push(
-          `- ${label}: desfasada (${location.installedVersion ?? 'sin versión'} < ${location.cliVersion}) en ${location.directory}.`,
+          hm('cli.human.skill.status_outdated', {
+            label,
+            installedVersion: location.installedVersion ?? hm('cli.human.skill.status_no_version'),
+            cliVersion: location.cliVersion,
+            directory: location.directory,
+          }),
         );
         break;
       case 'modified':
-        lines.push(`- ${label}: modificada manualmente en ${location.directory}.`);
+        lines.push(hm('cli.human.skill.status_modified', { label, directory: location.directory }));
         break;
       default:
         break;
@@ -55,25 +61,26 @@ function renderInstallHuman(result: {
 }): string {
   if (result.dryRun) {
     if (result.written.length === 0) {
-      return 'No se escribiría ningún archivo.\n';
+      return hm('cli.human.skill.install_none_dry');
     }
-    return `Se escribirían:\n${result.written.map((path) => `- ${path}`).join('\n')}\n`;
+    const lines = result.written.map((path) => `- ${path}`).join('\n');
+    return hm('cli.human.skill.install_would_write', { lines });
   }
   const lines: string[] = [];
   if (result.written.length > 0) {
-    lines.push('Skill instalada:');
+    lines.push(hm('cli.human.skill.install_heading'));
     for (const path of result.written) {
       lines.push(`- ${path}`);
     }
   }
   if (result.skipped.length > 0) {
-    lines.push('Sin cambios:');
+    lines.push(hm('cli.human.skill.no_changes_heading'));
     for (const path of result.skipped) {
       lines.push(`- ${path}`);
     }
   }
   if (lines.length === 0) {
-    return 'La skill ya estaba al día.\n';
+    return hm('cli.human.skill.install_uptodate');
   }
   return `${lines.join('\n')}\n`;
 }
@@ -102,7 +109,7 @@ export function createSkillCommand(registry: readonly RegistryCommand[]): Comman
           },
           {
             name: 'scope',
-            flags: '--scope <ámbito>',
+            flags: '--scope <ambito>',
             description: 'cli.auto.instala_en_el_proyecto_project_o_en_el_usuario_u',
             choices: ['project', 'user'],
           },
@@ -157,7 +164,7 @@ export function createSkillCommand(registry: readonly RegistryCommand[]): Comman
           },
           {
             name: 'scope',
-            flags: '--scope <ámbito>',
+            flags: '--scope <ambito>',
             description: 'cli.auto.comprueba_la_copia_del_proyecto_o_del_usuario',
             choices: ['project', 'user'],
           },
