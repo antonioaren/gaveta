@@ -11,6 +11,7 @@ import {
   type OutgoingLink,
   type ReadNoteResult,
   type SearchHit,
+  type UnlinkedMention,
 } from '@gaveta/core';
 
 export interface NoteListItem {
@@ -41,6 +42,16 @@ export interface BacklinkView {
   readonly rel: string | null;
   readonly text: string;
   readonly section: string | null;
+  readonly context: string;
+}
+
+export interface MentionView {
+  readonly sourcePath: string;
+  readonly sourceId: string | null;
+  readonly sourceTitle: string;
+  readonly text: string;
+  readonly phrase: string;
+  readonly matchedBy: 'title' | 'alias';
   readonly context: string;
 }
 
@@ -125,6 +136,18 @@ export function presentOutgoing(link: OutgoingLink): OutgoingLinkView {
     rel: link.rel,
     text: link.text,
     section: link.sectionId,
+  };
+}
+
+export function presentMention(mention: UnlinkedMention): MentionView {
+  return {
+    sourcePath: mention.sourcePath,
+    sourceId: mention.sourceId,
+    sourceTitle: mention.sourceTitle,
+    text: mention.text,
+    phrase: mention.phrase,
+    matchedBy: mention.matchedBy,
+    context: mention.context,
   };
 }
 

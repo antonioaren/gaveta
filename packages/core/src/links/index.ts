@@ -5,6 +5,7 @@ export { GavetaRefError, resolveRef, resolveTitle } from './ref.ts';
 export { assessRel } from './rel.ts';
 export { resolveNoteLinks } from './rewrite.ts';
 export { promotePendingAnchors, promotePendingLinks } from './promote.ts';
+export { linkUnlinkedMentions, rewriteUnlinkedMentions, unlinkedMentions } from './mentions.ts';
 
 export type {
   LinkDiagnostic,
@@ -25,3 +26,5 @@ export type {
   PromotedAnchor,
   PromotedNote,
 } from './promote.ts';
+
+export type { MentionTarget, UnlinkedMention } from './mentions.ts';

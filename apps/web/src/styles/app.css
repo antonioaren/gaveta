@@ -879,6 +879,34 @@ select {
   gap: var(--space-4);
 }
 
+.connections__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.connections__link-action {
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--gaveta-border);
+  background: var(--gaveta-surface);
+  color: var(--gaveta-text);
+  cursor: pointer;
+}
+
+.connections__link-action:hover:not(:disabled) {
+  background: var(--gaveta-surface-hover);
+}
+
+.connections__link-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .connections__section-title {
   margin: 0 0 var(--space-2);
   font-size: var(--font-size-sm);

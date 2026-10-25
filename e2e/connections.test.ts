@@ -32,6 +32,11 @@ it('exposes links, backlinks, link, and graph on the binary', () => {
     expect(graph.status).toBe(0);
     const graphBody = JSON.parse(graph.stdout) as { data: { nodes: unknown[] } };
     expect(graphBody.data.nodes.length).toBeGreaterThan(0);
+
+    const mentions = run(['mentions', 'Nota X', '--json'], vault);
+    expect(mentions.status).toBe(0);
+    const mentionsBody = JSON.parse(mentions.stdout) as { command: string };
+    expect(mentionsBody.command).toBe('mentions');
   } finally {
     rmSync(parent, { recursive: true, force: true });
   }
