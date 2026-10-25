@@ -37,6 +37,7 @@ async function readGraphMetrics(page: Page): Promise<GraphMetrics | null> {
     const targets = [
       ...document.querySelectorAll('.graph-view__node'),
       ...document.querySelectorAll('.graph-view__label'),
+      ...document.querySelectorAll('.graph-view__edge line'),
     ];
     if (targets.length === 0) {
       return null;
@@ -158,9 +159,31 @@ export async function fitGlobalGraphView(page: Page, fillRatio = 0.8): Promise<v
   }
 }
 
-/** Zoom out and re-center until nodes and labels sit inside the canvas with padding. */
-export async function ensureGraphFullyVisible(page: Page, padding = 18): Promise<void> {
-  for (let attempt = 0; attempt < 10; attempt += 1) {
+/** Pan so the node/label/edge bounding box is centered in the canvas. */
+export async function centerGraphInCanvas(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const metrics = await readGraphMetrics(page);
+    if (metrics === null) {
+      return;
+    }
+    const canvasCx = metrics.canvas.left + metrics.canvas.width / 2;
+    const canvasCy = metrics.canvas.top + metrics.canvas.height / 2;
+    const graphCx = (metrics.minX + metrics.maxX) / 2;
+    const graphCy = (metrics.minY + metrics.maxY) / 2;
+    const dx = canvasCx - graphCx;
+    const dy = canvasCy - graphCy;
+    if (Math.hypot(dx, dy) < 3) {
+      return;
+    }
+    await panCanvas(page, canvasCx, canvasCy, canvasCx + dx, canvasCy + dy);
+    await page.waitForTimeout(160);
+  }
+}
+
+/** Zoom out and re-center until nodes, labels, and edges sit inside the canvas with padding. */
+export async function ensureGraphFullyVisible(page: Page, padding = 22): Promise<void> {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    await centerGraphInCanvas(page);
     const metrics = await readGraphMetrics(page);
     if (metrics === null) {
       return;
@@ -172,18 +195,26 @@ export async function ensureGraphFullyVisible(page: Page, padding = 18): Promise
     const canvasCy = metrics.canvas.top + metrics.canvas.height / 2;
     await wheelZoomCanvas(page, canvasCx, canvasCy, false, 2);
     await page.waitForTimeout(180);
-    const after = await readGraphMetrics(page);
-    if (after === null) {
-      return;
-    }
-    const nextCx = (after.minX + after.maxX) / 2;
-    const nextCy = (after.minY + after.maxY) / 2;
-    const dx = canvasCx - nextCx;
-    const dy = canvasCy - nextCy;
-    if (Math.hypot(dx, dy) > 2) {
-      await panCanvas(page, canvasCx, canvasCy, canvasCx + dx, canvasCy + dy);
-      await page.waitForTimeout(150);
-    }
+  }
+}
+
+/** Fit, spread labels, center, and keep the cluster inside the canvas for screenshots. */
+export async function prepareGlobalGraphScreenshot(page: Page, fillRatio: number): Promise<void> {
+  await fitGlobalGraphView(page, fillRatio);
+  await defrayGraphLabels(page);
+  await centerGraphInCanvas(page);
+  let overlapPairs = await countOverlappingGraphLabels(page);
+  if (overlapPairs > 0) {
+    await defrayGraphLabels(page);
+    await centerGraphInCanvas(page);
+    overlapPairs = await countOverlappingGraphLabels(page);
+  }
+  await ensureGraphFullyVisible(page);
+  await centerGraphInCanvas(page);
+  if (overlapPairs > 0) {
+    await defrayGraphLabels(page);
+    await ensureGraphFullyVisible(page);
+    await centerGraphInCanvas(page);
   }
 }
 

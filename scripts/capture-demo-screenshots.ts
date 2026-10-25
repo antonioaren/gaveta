@@ -6,10 +6,7 @@ import { chromium } from 'playwright';
 import { DEMO_VAULT_ABS } from './bootstrap-demo-vault.ts';
 import { parseCaptureLang, playwrightLocale, type CaptureLang } from './capture-demo-locale.ts';
 import {
-  countOverlappingGraphLabels,
-  defrayGraphLabels,
-  ensureGraphFullyVisible,
-  fitGlobalGraphView,
+  prepareGlobalGraphScreenshot,
   scrollApplicationToTop,
   waitForGlobalGraphReady,
 } from './capture-demo-graph.ts';
@@ -19,8 +16,8 @@ const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
 const ASSETS_DIR = join(REPO_ROOT, 'docs', 'assets');
 const ARTIFACTS_DIR = '/opt/cursor/artifacts';
 const VIEWPORT = { width: 1600, height: 900 };
-/** ~70% of the prior ~0.82 fill target — more margin around the cluster. */
-const GRAPH_FILL_RATIO = 0.58;
+/** Target share of the graph canvas filled by the cluster (between prior 0.82 and 0.58). */
+const GRAPH_FILL_RATIO = 0.75;
 
 const SCREENSHOTS = [
   'screenshot-graph.png',
@@ -73,7 +70,11 @@ async function startServe(
   });
 }
 
-async function captureScreenshots(lang: CaptureLang): Promise<void> {
+function parseGraphOnly(argv: readonly string[]): boolean {
+  return argv.includes('--graph-only');
+}
+
+async function captureScreenshots(lang: CaptureLang, graphOnly: boolean): Promise<void> {
   void readNoteId('developer-handbook.html');
   void readNoteId('visual-editor-showcase.html');
   const locale = playwrightLocale(lang);
@@ -133,22 +134,24 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
 
   await page.goto(`${origin}/grafo`, { waitUntil: 'networkidle' });
   await waitForGlobalGraphReady(page);
-  await fitGlobalGraphView(page, GRAPH_FILL_RATIO);
-  await defrayGraphLabels(page);
-  let overlapPairs = await countOverlappingGraphLabels(page);
-  if (overlapPairs > 0) {
-    await fitGlobalGraphView(page, GRAPH_FILL_RATIO * 0.94);
-    await defrayGraphLabels(page);
-    overlapPairs = await countOverlappingGraphLabels(page);
-  }
-  await ensureGraphFullyVisible(page);
-  if (overlapPairs > 0) {
-    await fitGlobalGraphView(page, GRAPH_FILL_RATIO * 0.9);
-    await defrayGraphLabels(page);
-    await ensureGraphFullyVisible(page);
-  }
+  await prepareGlobalGraphScreenshot(page, GRAPH_FILL_RATIO);
   await scrollApplicationToTop(page);
   await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-graph.png') });
+
+  if (graphOnly) {
+    writeFileSync(
+      join(ARTIFACTS_DIR, 'screenshot-graph.png'),
+      readFileSync(join(ASSETS_DIR, 'screenshot-graph.png')),
+    );
+    await context.close();
+    await browser.close();
+    child.kill('SIGTERM');
+    if (pageErrors.length > 0) {
+      throw new Error(`page errors during capture:\n${pageErrors.join('\n')}`);
+    }
+    console.info(`Graph screenshot (${lang}) written to ${ASSETS_DIR} and ${ARTIFACTS_DIR}`);
+    return;
+  }
 
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.getByTestId('explorer-note-developer-handbook.html').click();
@@ -213,5 +216,6 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
 const isMain = process.argv[1]?.includes('capture-demo-screenshots') ?? false;
 if (isMain) {
   const lang = parseCaptureLang(process.argv);
-  await captureScreenshots(lang);
+  const graphOnly = parseGraphOnly(process.argv);
+  await captureScreenshots(lang, graphOnly);
 }
