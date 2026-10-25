@@ -36,11 +36,11 @@ jobs:
             echo "Sin CLAUDE_CODE_OAUTH_TOKEN; se omite la revisión."
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7
         if: steps.gate.outputs.enabled == 'true'
         with:
           fetch-depth: 1
-      - uses: anthropics/claude-code-action@925afb53776cf1a2b738c6bdbed37b4d4000ef13 # v1
+      - uses: anthropics/claude-code-action@v1
         if: steps.gate.outputs.enabled == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
