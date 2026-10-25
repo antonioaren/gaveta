@@ -83,7 +83,7 @@ export function createSkillCommand(registry: readonly RegistryCommand[]): Comman
   const commands = guideCommandsFromRegistry([...registry, guideSpec]);
   return {
     name: 'skill',
-    summary: 'Instala o comprueba la skill de Gaveta para cada agente.',
+    summary: 'cli.auto.instala_o_comprueba_la_skill_de_gaveta_para_cada',
     example: 'gaveta skill install --target cursor --dry-run --json',
     requiresVault: false,
     skipsVaultDiscovery: true,
@@ -91,31 +91,31 @@ export function createSkillCommand(registry: readonly RegistryCommand[]): Comman
     subcommands: [
       {
         name: 'install',
-        summary: 'Copia la skill generada al directorio que lee cada agente.',
+        summary: 'cli.auto.copia_la_skill_generada_al_directorio_que_lee_ca',
         example: 'gaveta skill install --target cursor --scope project --json',
         options: [
           {
             name: 'target',
             flags: '--target <agente>',
-            description: 'Agente destino: claude, cursor, codex, copilot o all.',
+            description: 'cli.auto.agente_destino_claude_cursor_codex_copilot_o_all',
             choices: ['claude', 'cursor', 'codex', 'copilot', 'all'],
           },
           {
             name: 'scope',
             flags: '--scope <ámbito>',
-            description: 'Instala en el proyecto (project) o en el usuario (user).',
+            description: 'cli.auto.instala_en_el_proyecto_project_o_en_el_usuario_u',
             choices: ['project', 'user'],
           },
           {
             name: 'dryRun',
             flags: '--dry-run',
-            description: 'Lista las rutas que se escribirían sin modificar archivos.',
+            description: 'cli.auto.lista_las_rutas_que_se_escribirian_sin_modificar',
             kind: 'boolean',
           },
           {
             name: 'force',
             flags: '--force',
-            description: 'Sobrescribe una skill modificada manualmente.',
+            description: 'cli.auto.sobrescribe_una_skill_modificada_manualmente',
             kind: 'boolean',
           },
         ],
@@ -146,19 +146,19 @@ export function createSkillCommand(registry: readonly RegistryCommand[]): Comman
       },
       {
         name: 'status',
-        summary: 'Comprueba si la skill instalada coincide con esta CLI.',
+        summary: 'cli.auto.comprueba_si_la_skill_instalada_coincide_con_est',
         example: 'gaveta skill status --target all --json',
         options: [
           {
             name: 'target',
             flags: '--target <agente>',
-            description: 'Agente a comprobar (por defecto, all).',
+            description: 'cli.auto.agente_a_comprobar_por_defecto_all',
             choices: ['claude', 'cursor', 'codex', 'copilot', 'all'],
           },
           {
             name: 'scope',
             flags: '--scope <ámbito>',
-            description: 'Comprueba la copia del proyecto o del usuario.',
+            description: 'cli.auto.comprueba_la_copia_del_proyecto_o_del_usuario',
             choices: ['project', 'user'],
           },
         ],

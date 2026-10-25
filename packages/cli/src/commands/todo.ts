@@ -15,22 +15,22 @@ import {
 import { CliFailure } from '../failure.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
-const MISSING_REF = 'Falta la referencia.';
-const MISSING_TEXT = 'Falta el texto de la tarea.';
-const MISSING_TASK = 'Falta el id de la tarea.';
-const BAD_TYPE = 'El tipo tiene que ser doc, slides o todo.';
-const BAD_TAG = 'La etiqueta no puede estar vacía ni tener espacios alrededor.';
-const BAD_HASH = 'El hash de --if-match tiene que ser sha256: y 64 hexadecimales.';
-const BAD_FILTER = 'Indica solo una de --open o --done.';
-const BAD_DUE = 'La fecha --due tiene que ser ISO 8601.';
-const BAD_PRIORITY = 'La prioridad tiene que ser low, medium o high.';
+const MISSING_REF = 'cli.auto.falta_la_referencia';
+const MISSING_TEXT = 'cli.auto.falta_el_texto_de_la_tarea';
+const MISSING_TASK = 'cli.auto.falta_el_id_de_la_tarea';
+const BAD_TYPE = 'cli.auto.el_tipo_tiene_que_ser_doc_slides_o_todo';
+const BAD_TAG = 'cli.auto.la_etiqueta_no_puede_estar_vacia_ni_tener_espaci';
+const BAD_HASH = 'cli.auto.el_hash_de_if_match_tiene_que_ser_sha256_y_64_he';
+const BAD_FILTER = 'cli.auto.indica_solo_una_de_open_o_done';
+const BAD_DUE = 'cli.auto.la_fecha_due_tiene_que_ser_iso_8601';
+const BAD_PRIORITY = 'cli.auto.la_prioridad_tiene_que_ser_low_medium_o_high';
 const CONTENT_HASH = /^sha256:[0-9a-f]{64}$/;
 
 const sharedWriteOptions = [
   {
     name: 'ifMatch',
     flags: '--if-match <hash>',
-    description: 'Rechaza la escritura si el hash no coincide.',
+    description: 'cli.auto.rechaza_la_escritura_si_el_hash_no_coincide',
   },
 ];
 
@@ -38,45 +38,49 @@ const listOptions = [
   {
     name: 'open',
     flags: '--open',
-    description: 'Solo tareas pendientes.',
+    description: 'cli.auto.solo_tareas_pendientes',
     kind: 'boolean' as const,
   },
   {
     name: 'done',
     flags: '--done',
-    description: 'Solo tareas completadas.',
+    description: 'cli.auto.solo_tareas_completadas',
     kind: 'boolean' as const,
   },
   {
     name: 'type',
     flags: '--type <tipo>',
-    description: 'Filtra por tipo de nota: doc, slides o todo.',
+    description: 'cli.auto.filtra_por_tipo_de_nota_doc_slides_o_todo',
   },
-  { name: 'tag', flags: '--tag <etiqueta>', description: 'Filtra por etiqueta.' },
+  { name: 'tag', flags: '--tag <etiqueta>', description: 'cli.auto.filtra_por_etiqueta' },
 ];
 
 export const todoCommand: CommandSpec = {
   name: 'todo',
-  summary: 'Añade, marca o lista tareas en las notas.',
+  summary: 'cli.auto.anade_marca_o_lista_tareas_en_las_notas',
   example: 'gaveta todo add "Tareas" "Comprar leche" --json',
   requiresVault: true,
   input: 'none',
   subcommands: [
     {
       name: 'add',
-      summary: 'Añade una tarea a una nota.',
+      summary: 'cli.auto.anade_una_tarea_a_una_nota',
       example: 'gaveta todo add "Tareas" "Comprar leche" --due 2026-10-23 --priority high',
       args: [
-        { name: 'ref', description: 'Id, ruta o título de la nota.', required: true },
-        { name: 'texto', description: 'Texto de la tarea.', required: true },
+        { name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true },
+        { name: 'texto', description: 'cli.auto.texto_de_la_tarea', required: true },
       ],
       options: [
-        { name: 'section', flags: '--section <id>', description: 'Sección donde añadir la tarea.' },
-        { name: 'due', flags: '--due <fecha>', description: 'Fecha límite ISO 8601.' },
+        {
+          name: 'section',
+          flags: '--section <id>',
+          description: 'cli.auto.seccion_donde_anadir_la_tarea',
+        },
+        { name: 'due', flags: '--due <fecha>', description: 'cli.auto.fecha_limite_iso_8601' },
         {
           name: 'priority',
           flags: '--priority <prioridad>',
-          description: 'Prioridad: low, medium o high.',
+          description: 'cli.auto.prioridad_low_medium_o_high',
         },
         ...sharedWriteOptions,
       ],
@@ -110,11 +114,11 @@ export const todoCommand: CommandSpec = {
     },
     {
       name: 'check',
-      summary: 'Marca una tarea como hecha.',
+      summary: 'cli.auto.marca_una_tarea_como_hecha',
       example: 'gaveta todo check "Tareas" revisar',
       args: [
-        { name: 'ref', description: 'Id, ruta o título de la nota.', required: true },
-        { name: 'task-id', description: 'Id de la tarea.', required: true },
+        { name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true },
+        { name: 'task-id', description: 'cli.auto.id_de_la_tarea', required: true },
       ],
       options: sharedWriteOptions,
       async run(context): Promise<CommandResult> {
@@ -123,11 +127,11 @@ export const todoCommand: CommandSpec = {
     },
     {
       name: 'uncheck',
-      summary: 'Marca una tarea como pendiente.',
+      summary: 'cli.auto.marca_una_tarea_como_pendiente',
       example: 'gaveta todo uncheck "Tareas" revisar',
       args: [
-        { name: 'ref', description: 'Id, ruta o título de la nota.', required: true },
-        { name: 'task-id', description: 'Id de la tarea.', required: true },
+        { name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true },
+        { name: 'task-id', description: 'cli.auto.id_de_la_tarea', required: true },
       ],
       options: sharedWriteOptions,
       async run(context): Promise<CommandResult> {
@@ -136,9 +140,9 @@ export const todoCommand: CommandSpec = {
     },
     {
       name: 'list',
-      summary: 'Lista tareas del vault o de una nota.',
+      summary: 'cli.auto.lista_tareas_del_vault_o_de_una_nota',
       example: 'gaveta todo list --open --json',
-      args: [{ name: 'ref', description: 'Id, ruta o título de la nota.', required: false }],
+      args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: false }],
       options: listOptions,
       async run(context): Promise<CommandResult> {
         const open = context.options.open === 'true';
@@ -271,7 +275,11 @@ function readSection(value: string | undefined): string | null {
     return null;
   }
   if (value.trim().length === 0) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El id de sección no es válido.' });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: 'cli.auto.el_id_de_seccion_no_es_valido' },
+    );
   }
   return value;
 }

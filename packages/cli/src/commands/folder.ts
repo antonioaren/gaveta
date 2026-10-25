@@ -13,22 +13,28 @@ import {
 import { CliFailure } from '../failure.ts';
 import type { CommandContext, CommandResult, CommandSpec } from '../types.ts';
 
-const MISSING_FOLDER = 'Falta la carpeta.';
-const MISSING_DEST = 'Falta el destino.';
-const BAD_HASH = 'El hash de --if-match tiene que ser sha256: y 64 hexadecimales.';
+const MISSING_FOLDER = 'cli.auto.falta_la_carpeta';
+const MISSING_DEST = 'cli.auto.falta_el_destino';
+const BAD_HASH = 'cli.auto.el_hash_de_if_match_tiene_que_ser_sha256_y_64_he';
 
 export const mkdirCommand: CommandSpec = {
   name: 'mkdir',
-  summary: 'Crea una carpeta vacía dentro del vault.',
+  summary: 'cli.auto.crea_una_carpeta_vacia_dentro_del_vault',
   example: `gaveta mkdir decisiones --if-match ${ABSENT_NOTE_HASH} --json`,
   requiresVault: true,
   input: 'none',
-  args: [{ name: 'carpeta', description: 'Ruta de la carpeta dentro del vault.', required: true }],
+  args: [
+    {
+      name: 'carpeta',
+      description: 'cli.auto.ruta_de_la_carpeta_dentro_del_vault',
+      required: true,
+    },
+  ],
   options: [
     {
       name: 'ifMatch',
       flags: '--if-match <hash>',
-      description: 'Debe ser el hash ausente para crear carpetas.',
+      description: 'cli.auto.debe_ser_el_hash_ausente_para_crear_carpetas',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -46,19 +52,19 @@ export const mkdirCommand: CommandSpec = {
 
 export const mvFolderCommand: CommandSpec = {
   name: 'mv-folder',
-  summary: 'Renombra o mueve una carpeta y reescribe los enlaces de las notas que contiene.',
+  summary: 'cli.auto.renombra_o_mueve_una_carpeta_y_reescribe_los_enl',
   example: 'gaveta mv-folder enlaces archivo/enlaces --json',
   requiresVault: true,
   input: 'none',
   args: [
-    { name: 'origen', description: 'Carpeta de origen.', required: true },
-    { name: 'destino', description: 'Carpeta de destino.', required: true },
+    { name: 'origen', description: 'cli.auto.carpeta_de_origen', required: true },
+    { name: 'destino', description: 'cli.auto.carpeta_de_destino', required: true },
   ],
   options: [
     {
       name: 'ifMatch',
       flags: '--if-match <hash>',
-      description: 'Debe ser el hash ausente para mover carpetas.',
+      description: 'cli.auto.debe_ser_el_hash_ausente_para_mover_carpetas',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -79,23 +85,22 @@ export const mvFolderCommand: CommandSpec = {
 
 export const rmFolderCommand: CommandSpec = {
   name: 'rm-folder',
-  summary:
-    'Borra una carpeta y todas sus notas. Con --force convierte enlaces entrantes en pendientes.',
+  summary: 'cli.auto.borra_una_carpeta_y_todas_sus_notas_con_force_co',
   example: 'gaveta rm-folder temporal --force --json',
   requiresVault: true,
   input: 'none',
-  args: [{ name: 'carpeta', description: 'Carpeta a borrar.', required: true }],
+  args: [{ name: 'carpeta', description: 'cli.auto.carpeta_a_borrar', required: true }],
   options: [
     {
       name: 'force',
       flags: '--force',
-      description: 'Convierte los enlaces entrantes en pendientes.',
+      description: 'cli.auto.convierte_los_enlaces_entrantes_en_pendientes',
       kind: 'boolean',
     },
     {
       name: 'ifMatch',
       flags: '--if-match <hash>',
-      description: 'Debe ser el hash ausente para borrar carpetas.',
+      description: 'cli.auto.debe_ser_el_hash_ausente_para_borrar_carpetas',
     },
   ],
   async run(context): Promise<CommandResult> {

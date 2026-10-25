@@ -51,14 +51,14 @@ function renderHuman(data: ExportCliData): string {
 
 export const exportCommand: CommandSpec = {
   name: 'export',
-  summary: 'Exporta notas del vault a Markdown.',
+  summary: 'cli.auto.exporta_notas_del_vault_a_markdown',
   example: 'gaveta export --all --to md --out ./export-md --links wiki --dry-run --json',
   requiresVault: true,
   input: 'none',
   args: [
     {
       name: 'ref',
-      description: 'Referencia de nota o carpeta dentro del vault (omitir con --all).',
+      description: 'cli.auto.referencia_de_nota_o_carpeta_dentro_del_vault_om',
       required: false,
     },
   ],
@@ -66,36 +66,36 @@ export const exportCommand: CommandSpec = {
     {
       name: 'all',
       flags: '--all',
-      description: 'Exporta todas las notas del vault.',
+      description: 'cli.auto.exporta_todas_las_notas_del_vault',
       kind: 'boolean',
     },
     {
       name: 'to',
       flags: '--to <formato>',
-      description: 'Formato de salida (solo md).',
+      description: 'cli.auto.formato_de_salida_solo_md',
       choices: ['md'],
     },
     {
       name: 'out',
       flags: '--out <dir>',
-      description: 'Directorio de salida (debe quedar fuera del vault).',
+      description: 'cli.auto.directorio_de_salida_debe_quedar_fuera_del_vault',
     },
     {
       name: 'links',
       flags: '--links <modo>',
-      description: 'Enlaces canónicos como wikilinks (wiki) o rutas relativas .md (relative).',
+      description: 'cli.auto.enlaces_canonicos_como_wikilinks_wiki_o_rutas_re',
       choices: ['wiki', 'relative'],
     },
     {
       name: 'dryRun',
       flags: '--dry-run',
-      description: 'Lista los archivos que se escribirían sin modificar el disco.',
+      description: 'cli.auto.lista_los_archivos_que_se_escribirian_sin_modifi',
       kind: 'boolean',
     },
     {
       name: 'force',
       flags: '--force',
-      description: 'Sobrescribe archivos que ya existan en el destino.',
+      description: 'cli.auto.sobrescribe_archivos_que_ya_existan_en_el_destin',
       kind: 'boolean',
     },
   ],

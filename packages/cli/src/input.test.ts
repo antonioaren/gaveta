@@ -102,7 +102,7 @@ it('rejects argument and --from together', async () => {
   ).rejects.toMatchObject({
     name: 'CliFailure',
     code: 'E_ARG_INVALID',
-    details: { problem: 'El contenido se indica por argumento o por --from, no por los dos.' },
+    details: { problem: 'cli.auto.el_contenido_se_indica_por_argumento_o_por_from_' },
   });
 });
 
@@ -148,7 +148,7 @@ it('rejects a missing file, a directory, a null byte, and a flag-like path', asy
       }),
     ).rejects.toMatchObject({
       code: 'E_ARG_INVALID',
-      details: { problem: 'La ruta de --from no puede empezar por -.' },
+      details: { problem: 'cli.auto.la_ruta_de_from_no_puede_empezar_por' },
     });
   });
 });
@@ -175,7 +175,7 @@ it('returns null when input is optional and absent, and fails when it is require
   ).rejects.toMatchObject({
     code: 'E_ARG_INVALID',
     details: {
-      problem: 'Falta el contenido: pásalo como argumento, con --from <archivo> o con --from -.',
+      problem: 'cli.auto.falta_el_contenido_pasalo_como_argumento_con_fro',
     },
   });
 });

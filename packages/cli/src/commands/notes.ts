@@ -17,17 +17,17 @@ import {
 import { CliFailure } from '../failure.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
-const BAD_TYPE = 'El tipo tiene que ser doc, slides, todo, dashboard, design o artifact.';
-const MISSING_TYPE = 'Falta --type.';
-const MISSING_TITLE = 'Falta el título.';
-const MISSING_REF = 'Falta la referencia.';
-const BAD_AS = 'El formato tiene que ser html, text u outline.';
-const BAD_HASH = 'El hash de --if-match tiene que ser sha256: y 64 hexadecimales.';
-const MODE_MISSING = 'Indica --replace, --append o --prepend.';
-const MODE_ONE = 'Indica solo una de --replace, --append o --prepend.';
-const SECTION_REQUIRED = '--append y --prepend necesitan --section.';
-const BAD_SECTION = 'El id de sección no es válido.';
-const BLANK_EDIT = 'El contenido de la edición no puede estar vacío.';
+const BAD_TYPE = 'cli.auto.el_tipo_tiene_que_ser_doc_slides_todo_dashboard_';
+const MISSING_TYPE = 'cli.auto.falta_type';
+const MISSING_TITLE = 'cli.auto.falta_el_titulo';
+const MISSING_REF = 'cli.auto.falta_la_referencia';
+const BAD_AS = 'cli.auto.el_formato_tiene_que_ser_html_text_u_outline';
+const BAD_HASH = 'cli.auto.el_hash_de_if_match_tiene_que_ser_sha256_y_64_he';
+const MODE_MISSING = 'cli.auto.indica_replace_append_o_prepend';
+const MODE_ONE = 'cli.auto.indica_solo_una_de_replace_append_o_prepend';
+const SECTION_REQUIRED = 'cli.auto.append_y_prepend_necesitan_section';
+const BAD_SECTION = 'cli.auto.el_id_de_seccion_no_es_valido';
+const BLANK_EDIT = 'cli.auto.el_contenido_de_la_edicion_no_puede_estar_vacio';
 const CONTENT_HASH = /^sha256:[0-9a-f]{64}$/;
 
 type EditMode = 'replace' | 'append' | 'prepend';
@@ -35,36 +35,44 @@ type ReadAs = 'html' | 'text' | 'outline';
 
 export const newCommand: CommandSpec = {
   name: 'new',
-  summary: 'Crea una nota, completa los metadatos y resuelve los enlaces [[…]].',
+  summary: 'cli.auto.crea_una_nota_completa_los_metadatos_y_resuelve_',
   example: 'gaveta new "Usar SQLite" --type doc --in decisiones --from -',
   requiresVault: true,
   input: 'optional',
-  args: [{ name: 'título', description: 'Título de la nota.', required: true }],
+  args: [{ name: 'título', description: 'cli.auto.titulo_de_la_nota', required: true }],
   options: [
     {
       name: 'type',
       flags: '--type <tipo>',
-      description: 'Tipo: doc, slides, todo, dashboard, design o artifact.',
+      description: 'cli.auto.tipo_doc_slides_todo_dashboard_design_o_artifact',
     },
     {
       name: 'source',
       flags: '--source <origen>',
-      description: 'Con --from -, convierte HTML de Claude antes de crear la nota.',
+      description: 'cli.auto.con_from_convierte_html_de_claude_antes_de_crear',
       choices: ['claude'],
     },
     {
       name: 'allowCdn',
       flags: '--allow-cdn',
-      description: 'Permite CDN en notas artifact importadas desde Claude.',
+      description: 'cli.auto.permite_cdn_en_notas_artifact_importadas_desde_c',
       kind: 'boolean',
     },
-    { name: 'in', flags: '--in <carpeta>', description: 'Carpeta dentro del vault.' },
-    { name: 'tags', flags: '--tags <etiquetas>', description: 'Etiquetas separadas por comas.' },
-    { name: 'aliases', flags: '--aliases <alias>', description: 'Alias separados por comas.' },
+    { name: 'in', flags: '--in <carpeta>', description: 'cli.auto.carpeta_dentro_del_vault' },
+    {
+      name: 'tags',
+      flags: '--tags <etiquetas>',
+      description: 'cli.auto.etiquetas_separadas_por_comas',
+    },
+    {
+      name: 'aliases',
+      flags: '--aliases <alias>',
+      description: 'cli.auto.alias_separados_por_comas',
+    },
     {
       name: 'ifMatch',
       flags: '--if-match <hash>',
-      description: 'Rechaza la escritura si el hash no coincide.',
+      description: 'cli.auto.rechaza_la_escritura_si_el_hash_no_coincide',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -97,16 +105,16 @@ export const newCommand: CommandSpec = {
 
 export const readCommand: CommandSpec = {
   name: 'read',
-  summary: 'Lee una nota como html, text u outline y devuelve su hash.',
+  summary: 'cli.auto.lee_una_nota_como_html_text_u_outline_y_devuelve',
   example: 'gaveta read "Usar SQLite" --as outline',
   requiresVault: true,
   input: 'none',
-  args: [{ name: 'ref', description: 'Id, ruta o título de la nota.', required: true }],
+  args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true }],
   options: [
     {
       name: 'as',
       flags: '--as <formato>',
-      description: 'Formato: html, text u outline. Por defecto html.',
+      description: 'cli.auto.formato_html_text_u_outline_por_defecto_html',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -121,35 +129,35 @@ export const readCommand: CommandSpec = {
 
 export const editCommand: CommandSpec = {
   name: 'edit',
-  summary: 'Sustituye, añade o antepone contenido en una sección o en el artículo.',
+  summary: 'cli.auto.sustituye_anade_o_antepone_contenido_en_una_secc',
   example: 'gaveta edit "Usar SQLite" --section resumen --replace --from -',
   requiresVault: true,
   input: 'required',
-  args: [{ name: 'ref', description: 'Id, ruta o título de la nota.', required: true }],
+  args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true }],
   options: [
-    { name: 'section', flags: '--section <id>', description: 'Id de la sección a editar.' },
+    { name: 'section', flags: '--section <id>', description: 'cli.auto.id_de_la_seccion_a_editar' },
     {
       name: 'replace',
       flags: '--replace',
-      description: 'Sustituye la sección o, sin --section, el artículo.',
+      description: 'cli.auto.sustituye_la_seccion_o_sin_section_el_articulo',
       kind: 'boolean',
     },
     {
       name: 'append',
       flags: '--append',
-      description: 'Añade el contenido al final de la sección.',
+      description: 'cli.auto.anade_el_contenido_al_final_de_la_seccion',
       kind: 'boolean',
     },
     {
       name: 'prepend',
       flags: '--prepend',
-      description: 'Añade el contenido al principio de la sección.',
+      description: 'cli.auto.anade_el_contenido_al_principio_de_la_seccion',
       kind: 'boolean',
     },
     {
       name: 'ifMatch',
       flags: '--if-match <hash>',
-      description: 'Rechaza la escritura si el hash no coincide.',
+      description: 'cli.auto.rechaza_la_escritura_si_el_hash_no_coincide',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -238,7 +246,7 @@ function materializeClaudeInput(
     throw new CliFailure(
       'E_ARG_INVALID',
       {},
-      { problem: 'Indica el HTML con --from - o --from <archivo>.' },
+      { problem: 'cli.auto.indica_el_html_con_from_o_from_archivo' },
     );
   }
   const explicitType = typeOption === undefined ? undefined : readOptionalType(typeOption);

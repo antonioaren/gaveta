@@ -17,7 +17,7 @@ const CLI_ENTRY = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'bin
 
 export const versionCommand: CommandSpec = {
   name: 'version',
-  summary: 'Muestra la versión de gaveta.',
+  summary: 'cli.auto.muestra_la_version_de_gaveta',
   example: 'gaveta version --json',
   requiresVault: false,
   input: 'optional',

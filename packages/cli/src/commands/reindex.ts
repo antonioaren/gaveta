@@ -11,7 +11,7 @@ interface ReindexView {
 
 export const reindexCommand: CommandSpec = {
   name: 'reindex',
-  summary: 'Actualiza el índice SQLite desde los archivos del vault.',
+  summary: 'cli.auto.actualiza_el_indice_sqlite_desde_los_archivos_de',
   example: 'gaveta reindex --json',
   requiresVault: true,
   input: 'none',
@@ -19,7 +19,7 @@ export const reindexCommand: CommandSpec = {
     {
       name: 'full',
       flags: '--full',
-      description: 'Reconstruye el índice desde cero.',
+      description: 'cli.auto.reconstruye_el_indice_desde_cero',
       kind: 'boolean',
     },
   ],
