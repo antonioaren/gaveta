@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Architecture Notes</title>
+    <meta name="gaveta:id" content="01M5SMX5CNYJSM84WJGFC6V23N" />
+    <meta name="gaveta:type" content="doc" />
+    <meta name="gaveta:tags" content="demo, engineering" />
+    <meta name="gaveta:created" content="2026-10-25T13:44:52.373Z" />
+    <meta name="gaveta:updated" content="2026-10-25T13:44:52.373Z" />
+    <link rel="stylesheet" href=".gaveta/theme.css" />
+  </head>
+  <body>
+    <article>
+      <h1>Architecture Notes</h1>
+      <section id="layers">
+        <h2>Layers</h2>
+        <ul>
+          <li><code>@gaveta/core</code> — contract, parser, index, operations</li>
+          <li>CLI and local server share the same core</li>
+          <li>React app reads through the API</li>
+        </ul>
+        <p>
+          Deeper reading:
+          <a href="sqlite-index-internals.html" data-g-to="01M5SMX5SCCZPAAZJ5N2BXQ6J8"
+            >SQLite Index Internals</a
+          >,
+          <a href="projects/platform/deployment-runbook.html" data-g-to="01M5SMX9AHPSA78GWAKYR4FBD3"
+            >Deployment Runbook</a
+          >.
+        </p>
+      </section>
+    </article>
+  </body>
+</html>
