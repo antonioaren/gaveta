@@ -26,6 +26,18 @@ const SHELL_STYLES = `
 .cm-lintRange-error {
   background: color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
+:host {
+  --gaveta-cm-comment: var(--color-muted);
+  --gaveta-cm-keyword: var(--color-accent);
+  --gaveta-cm-string: var(--color-danger);
+  --gaveta-cm-atom: var(--color-accent-todo);
+  --gaveta-cm-tag: var(--color-accent-doc);
+  --gaveta-cm-attribute: var(--color-accent-slides);
+  --gaveta-cm-class: var(--color-accent-artifact);
+  --gaveta-cm-property: var(--color-accent);
+  --gaveta-cm-bracket: var(--color-text);
+  --gaveta-cm-meta: var(--color-muted);
+}
 `;
 
 const shellStyledRoots = new WeakSet<ShadowRoot>();

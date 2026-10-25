@@ -149,7 +149,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [x] **T3.4 Editor visual.** Componentes P0 y bloques HTML desconocidos conservados byte a byte. Abrir y guardar sin cambios no altera el archivo. Cubre: REQ-APP-09 y 10. Depende de: T3.1, T3.2.
 - [x] **T3.5 Modo código.** CodeMirror 6 con validación en vivo usando el validador del núcleo. Cubre: REQ-APP-11. Depende de: T3.2.
 - [x] **T3.14 Estilos del modo código bajo CSP.** Montar CodeMirror en un shadow root abierto (`EditorView({ root: shadowRoot })`) para que `style-src 'self'` no bloquee los estilos de la librería. Cubre: REQ-SEC-01, REQ-APP-11. Depende de: T3.5.
-- [ ] **T3.15 Capa base tipo VS Code.** Keymap de VS Code, búsqueda y reemplazo, plegado, multicursor, tema desde variables CSS, Ctrl+S y carga diferida del modo código. Cubre: REQ-APP-11. Depende de: T3.14.
+- [x] **T3.15 Capa base tipo VS Code.** Keymap de VS Code, búsqueda y reemplazo, plegado, multicursor, tema desde variables CSS, Ctrl+S y carga diferida del modo código. Cubre: REQ-APP-11. Depende de: T3.14.
 - [ ] **T3.16 UX de problemas.** Avisos `W_*`, hover con código y mensaje, F8 / Shift+F8 y barra de estado con recuentos. Cubre: REQ-APP-11. Depende de: T3.14.
 - [ ] **T3.17 Inteligencia HTML y Emmet.** Autocompletado acotado al contrato y Emmet (núcleo MIT). Cubre: REQ-APP-11. Depende de: T3.15.
 - [ ] **T3.18 Paleta y «Formatear documento».** Comandos del editor en la paleta (T2.8) y formateo vía el normalizador del núcleo. Cubre: REQ-APP-04, REQ-APP-11. Depende de: T3.15.

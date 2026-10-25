@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useState, type ReactElement } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState, type ReactElement } from 'react';
 import { ApiError } from '../api/client.ts';
 import { conflictEditMessage, invalidHtmlMessage, saveNoteDocument } from '../api/note-edit.ts';
 import { fetchNoteHtml } from '../api/note-read.ts';
-import { CodeNoteEditor } from '../editor/code/CodeNoteEditor.tsx';
 import { validateNoteHtml } from '../editor/code/validate-diagnostics.ts';
 import { useI18n } from '../i18n/useI18n.ts';
+
+const LazyCodeNoteEditor = lazy(async () => {
+  const module = await import('../editor/code/CodeNoteEditor.tsx');
+  return { default: module.CodeNoteEditor };
+});
 
 export interface NoteCodeModeProps {
   readonly noteRef: string;
@@ -134,7 +138,20 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
           {saveError}
         </p>
       ) : null}
-      <CodeNoteEditor initialValue={html} notePath={path} onChange={handleChange} />
+      <Suspense
+        fallback={
+          <p className="note-pane__placeholder" role="status">
+            {t('web.note.code.loading')}
+          </p>
+        }
+      >
+        <LazyCodeNoteEditor
+          initialValue={html}
+          notePath={path}
+          onChange={handleChange}
+          onSaveRequest={handleSave}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -15,6 +15,9 @@ describe('CodeNoteEditor mount', () => {
         onChange={() => {
           /* noop */
         }}
+        onSaveRequest={() => {
+          /* noop */
+        }}
       />,
     );
     const host = container.querySelector('[data-testid="code-note-editor"]');
