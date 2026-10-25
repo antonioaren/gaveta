@@ -234,5 +234,21 @@
   "W_WEB_VIEWER_MISSING": {
     "message": "The web viewer is not built; only the read API is running.",
     "hint": "At the repository root run `pnpm build:web` and start gaveta serve again."
+  },
+  "W_EMBED_CYCLE": {
+    "message": "Transclusion stopped: note {targetId} is already on the embed chain.",
+    "hint": "Remove the circular gaveta-embed reference."
+  },
+  "W_EMBED_DEPTH": {
+    "message": "Transclusion depth limit reached.",
+    "hint": "Split content across fewer nested gaveta-embed blocks."
+  },
+  "W_EMBED_TARGET_MISSING": {
+    "message": "Transclusion target {targetId} was not found.",
+    "hint": "Fix data-g-to or restore the target note."
+  },
+  "W_EMBED_SECTION_MISSING": {
+    "message": "Section {sectionId} was not found in the embedded note.",
+    "hint": "Fix data-g-section or add the section to the target note."
   }
 }

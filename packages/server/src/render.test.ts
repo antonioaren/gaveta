@@ -50,6 +50,35 @@ function renderPath(noteId: string, ticket: string): string {
   return `/render/${noteId}?t=${encodeURIComponent(ticket)}`;
 }
 
+it('transcludes gaveta-embed sections in render output (REQ-LINK-13)', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-render-embed-'));
+  const vaultRoot = join(parent, 'vault');
+  cpSync(vaultPath('backlinks'), vaultRoot, { recursive: true });
+  const hostId = '01M5HGV8800000000000000030';
+  const embedHtml = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Host embed</title><meta name="gaveta:id" content="${hostId}"><meta name="gaveta:type" content="doc"><meta name="gaveta:created" content="2026-10-22T10:00:00Z"><link rel="stylesheet" href=".gaveta/theme.css"></head><body><article><h1>Host embed</h1><section id="intro"><gaveta-embed data-g-to="01M5HGV8800000000000000002" data-g-section="resumen"></gaveta-embed></section></article></body></html>`;
+  writeFileSync(join(vaultRoot, 'host-embed.html'), embedHtml, 'utf8');
+  const index = await openVaultIndex(vaultRoot);
+  await index.rebuild();
+  index.close();
+  const server = createGavetaServer({
+    vaultRoot,
+    port: 0,
+    token: SESSION_TOKEN,
+    renderTicketSecret: RENDER_SECRET,
+  });
+  const address = await server.listen();
+  try {
+    const ticket = await fetchRenderTicket(address.port, SESSION_TOKEN, hostId);
+    const response = await requestLocal(address.port, renderPath(hostId, ticket));
+    expect(response.status).toBe(200);
+    expect(response.body).not.toMatch(/<gaveta-embed\b/u);
+    expect(response.body).toContain('Destino de las formas de enlace');
+  } finally {
+    await server.close();
+    rmSync(parent, { recursive: true, force: true });
+  }
+});
+
 it('serves render HTML with a strict CSP header when the render ticket is valid', async () => {
   await withMaliciousVault(async (vaultRoot) => {
     const server = createGavetaServer({

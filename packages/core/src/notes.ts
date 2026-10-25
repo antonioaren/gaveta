@@ -20,6 +20,7 @@ import {
   type ErrorCode,
   type WarningCode,
 } from './errors.ts';
+import { replaceEmbedsWithLinks } from './links/embeds.ts';
 import { escapeAttr, escapeText, inspectVaultPath, relativeNoteHref } from './links/path.ts';
 import { GavetaRefError, notesForId, resolveRef } from './links/ref.ts';
 import { resolveNoteLinks } from './links/rewrite.ts';
@@ -309,7 +310,11 @@ export async function readNote(options: unknown): Promise<ReadNoteResult> {
       hash: noteContentHash(html),
     };
     if (input.as === 'html') {
-      return { ...base, as: 'html', html };
+      return {
+        ...base,
+        as: 'html',
+        html: replaceEmbedsWithLinks(html, resolved.path, session.index),
+      };
     }
     if (input.as === 'text') {
       return { ...base, as: 'text', text: parsed.note.plainText };

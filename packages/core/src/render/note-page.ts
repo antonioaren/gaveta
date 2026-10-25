@@ -17,6 +17,8 @@ import { buildRenderTypeLayout } from './type-views.ts';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
 import { serializeOuter } from 'parse5';
+import { expandEmbedsInRenderBody } from '../links/embeds.ts';
+import { readVaultText } from '../vault/paths.ts';
 import type { IndexedNote, VaultIndex } from '../sqlite/store.ts';
 
 type ParseDocument = DefaultTreeAdapterMap['document'];
@@ -40,6 +42,11 @@ export interface BuildNoteRenderPageInput {
   readonly port: number;
   readonly renderTicket: string;
   readonly remoteAllowlist: readonly string[];
+}
+
+export interface BuildNoteRenderPageWithEmbedsInput extends BuildNoteRenderPageInput {
+  readonly vaultRoot: string;
+  readonly index: VaultIndex;
 }
 
 export function appendRenderTicketQuery(path: string, ticket: string): string {
@@ -91,6 +98,33 @@ export function buildNoteRenderCsp(port: number): string {
   ].join('; ');
 }
 
+export async function buildNoteRenderPageWithEmbeds(
+  input: BuildNoteRenderPageWithEmbedsInput,
+): Promise<string> {
+  const normalized = normalizeNote(input.sourceHtml, {
+    notePath: input.notePath,
+    remoteAllowlist: input.remoteAllowlist,
+  });
+  if (!normalized.ok || normalized.html === null) {
+    throw new GavetaError('E_HTML_INVALID');
+  }
+  const bodyInner = extractBodyInner(normalized.html);
+  const ticket = input.renderTicket;
+  const expanded = await expandEmbedsInRenderBody(bodyInner, {
+    hostNoteId: input.noteId,
+    hostNotePath: input.notePath,
+    index: input.index,
+    vaultRoot: input.vaultRoot,
+    remoteAllowlist: input.remoteAllowlist,
+    chain: [input.noteId],
+    depth: 0,
+    rewriteAssets: (html, noteId, notePath) => rewriteAssetUrls(html, noteId, notePath, ticket),
+    loadNoteHtml: (path) => readVaultText(input.vaultRoot, path),
+  });
+  const rewritten = rewriteAssetUrls(expanded, input.noteId, input.notePath, ticket);
+  return assembleNoteRenderPage(input, normalized.html, rewritten);
+}
+
 export function buildNoteRenderPage(input: BuildNoteRenderPageInput): string {
   const normalized = normalizeNote(input.sourceHtml, {
     notePath: input.notePath,
@@ -102,10 +136,19 @@ export function buildNoteRenderPage(input: BuildNoteRenderPageInput): string {
   const bodyInner = extractBodyInner(normalized.html);
   const ticket = input.renderTicket;
   const rewritten = rewriteAssetUrls(bodyInner, input.noteId, input.notePath, ticket);
-  const noteType = readRenderNoteType(normalized.html);
-  const layout = buildRenderTypeLayout(noteType, rewritten);
+  return assembleNoteRenderPage(input, normalized.html, rewritten);
+}
+
+function assembleNoteRenderPage(
+  input: BuildNoteRenderPageInput,
+  normalizedHtml: string,
+  rewrittenBody: string,
+): string {
+  const noteType = readRenderNoteType(normalizedHtml);
+  const layout = buildRenderTypeLayout(noteType, rewrittenBody);
   const csp = buildNoteRenderCsp(input.port);
   const title = escapeText(input.title);
+  const ticket = input.renderTicket;
   const staticUrl = (basename: string): string =>
     appendRenderTicketQuery(`${RENDER_STATIC_PREFIX}/${basename}`, ticket);
   const headParts = [
@@ -118,7 +161,7 @@ export function buildNoteRenderPage(input: BuildNoteRenderPageInput): string {
     `<title>${title}</title>`,
     `<link rel="stylesheet" href="${escapeAttr(staticUrl('theme.css'))}">`,
   ];
-  if (htmlContainsMermaid(normalized.html)) {
+  if (htmlContainsMermaid(normalizedHtml)) {
     headParts.push(
       `<script defer src="${escapeAttr(staticUrl(MERMAID_MIN_BASENAME))}" ${MERMAID_SCRIPT_ATTR}="${MERMAID_LIB_ROLE}"></script>`,
       `<script defer src="${escapeAttr(staticUrl(MERMAID_BOOT_BASENAME))}" ${MERMAID_SCRIPT_ATTR}="${MERMAID_BOOT_ROLE}"></script>`,

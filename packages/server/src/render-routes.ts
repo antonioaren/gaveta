@@ -2,7 +2,7 @@ import {
   GavetaError,
   assertNoteAttachmentPathAllowed,
   buildNoteRenderCsp,
-  buildNoteRenderPage,
+  buildNoteRenderPageWithEmbeds,
   collectNoteAttachmentPaths,
   normalizeNote,
   readRenderNoteId,
@@ -91,7 +91,7 @@ export function registerRenderRoutes(
         throw new GavetaError('E_META_MISSING');
       }
       const sourceHtml = await readVaultText(options.vaultRoot, note.path);
-      return buildNoteRenderPage({
+      return buildNoteRenderPageWithEmbeds({
         noteId: note.id,
         notePath: note.path,
         title: note.title,
@@ -99,6 +99,8 @@ export function registerRenderRoutes(
         port: port(),
         renderTicket: ticket,
         remoteAllowlist: config.remoteAllowlist,
+        vaultRoot: options.vaultRoot,
+        index,
       });
     });
     const csp = buildNoteRenderCsp(port());
