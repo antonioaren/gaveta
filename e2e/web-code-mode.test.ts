@@ -9,6 +9,7 @@ import { attachCspGuard, installCspViolationListener } from './csp-guard.ts';
 import {
   GAVETA_BIN,
   initVault,
+  modChord,
   newWebPage,
   parseJson,
   runGaveta,
@@ -165,6 +166,66 @@ it('REQ-APP-11: unsafe HTML shows inline diagnostics and blocks save', async () 
     await page.getByRole('button', { name: 'Guardar' }).click();
     await page.getByText('El HTML no es válido').waitFor({ timeout: 10_000 });
     expect(Buffer.compare(bytesBefore, readFileSync(notePath))).toBe(0);
+    await cspGuard.assertClean();
+    await page.close();
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 180_000);
+
+it('T3.15: VS Code layer exposes fold gutter and localized search', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-vscode-'));
+  const vault = join(parent, 'vault');
+  mkdirSync(vault, { recursive: true });
+  initVault(vault);
+  try {
+    const { page, cspGuard } = await openCodeModeForNewNote(vault);
+    const foldGutterWidth = await page
+      .locator('.code-editor .cm-foldGutter')
+      .evaluate((element) => {
+        return getComputedStyle(element).width;
+      });
+    expect(Number.parseFloat(foldGutterWidth)).toBeGreaterThan(0);
+    const editor = page.locator('.code-editor .cm-content');
+    await editor.click();
+    await page.keyboard.press(modChord('f'));
+    await page.locator('.code-editor .cm-panel.cm-search').waitFor({ timeout: 10_000 });
+    const searchPanelText = await page.locator('.code-editor .cm-panel.cm-search').innerText();
+    expect(searchPanelText).toContain('siguiente');
+    await cspGuard.assertClean();
+    await page.close();
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 180_000);
+
+it('T3.15: Mod-s saves edits through the API without CSP violations', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-mod-s-'));
+  const vault = join(parent, 'vault');
+  mkdirSync(vault, { recursive: true });
+  initVault(vault);
+  try {
+    const { page, notePath, bytesBefore, cspGuard } = await openCodeModeForNewNote(vault);
+    const editor = page.locator('.code-editor .cm-content');
+    await editor.click();
+    await page.keyboard.press(modChord('a'));
+    const edited = bytesBefore
+      .toString('utf8')
+      .replace('<p>texto base</p>', '<p>texto editado</p>');
+    await page.keyboard.insertText(edited);
+    await editor.click();
+    const saveResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/edit') &&
+        response.request().method() === 'POST' &&
+        response.ok(),
+      { timeout: 15_000 },
+    );
+    await editor.press(modChord('s'));
+    await saveResponse;
+    const bytesAfter = readFileSync(notePath);
+    expect(bytesAfter.toString('utf8')).toContain('texto editado');
+    expect(Buffer.compare(bytesBefore, bytesAfter)).not.toBe(0);
     await cspGuard.assertClean();
     await page.close();
   } finally {

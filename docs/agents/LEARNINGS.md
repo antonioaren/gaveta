@@ -4,6 +4,9 @@ Short log of pitfalls found while implementing tasks. Read this before starting 
 
 Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 
+- 2026-10-25 · T3.15 · Code-mode save e2e waited on `/api/notes` PUT; the app posts to `/api/edit`. CodeMirror search panel copy is mostly button labels (`siguiente`, …), not always the `Find` phrase string. · Match `/api/edit` POST and assert localized search controls, not the Find heading alone.
+- 2026-10-25 · T3.15 · macOS e2e used `Control+f/s/a`; CodeMirror `Mod-*` is Cmd on macOS, and `Control+A` does not select all. · Use `modChord()` and `editor.press(modChord('s'))` after `modChord('a')`.
+
 - 2026-10-22 · T0.3 · The VM snapshot can lag `origin/main` (T0.2 was already merged). · `git fetch origin main` before treating a merged task as missing.
 - 2026-10-22 · T1.1 · h4–h6 are allowed "con aviso" but the catalog has no `W_*` for them. · Set `headingWarning` on the element and do not invent a code.
 - 2026-10-22 · T1.1 · `packages/core` sets `types: []`, and the root tsconfig omits `noUncheckedIndexedAccess`. · Keep core tests free of `node:fs`; a `!== undefined` guard that core needs fails `no-unnecessary-condition` under `tests/`.
