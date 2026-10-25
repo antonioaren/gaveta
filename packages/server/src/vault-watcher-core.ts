@@ -78,11 +78,11 @@ export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): 
           options.bus.emitNote(pipeline === undefined ? event : { ...event, pipeline });
         }
       }
-    } catch {
+    } catch (error) {
       if (epoch !== flushEpoch) {
         return;
       }
-      throw new Error('E_VAULT_WATCHER_FLUSH_FAILED');
+      throw new Error('E_VAULT_WATCHER_FLUSH_FAILED', { cause: error });
     }
   };
 

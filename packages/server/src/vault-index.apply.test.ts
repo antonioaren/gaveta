@@ -1,4 +1,4 @@
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, it } from 'vitest';
 import { VaultIndexSession } from './vault-index.ts';
@@ -105,6 +105,41 @@ it('pairs a delayed unlink with an earlier add when the move window allows it', 
       recentUnlinks,
       recentAdds,
       pairWindowMs,
+    );
+    expect(moved?.type).toBe('note:moved');
+    if (moved?.type === 'note:moved') {
+      expect(moved.from).toBe(fromPath);
+      expect(moved.path).toBe(toPath);
+    }
+
+    session.close();
+  });
+});
+
+it('emits note:moved on change when the index still has the old path for the same id', async () => {
+  await withVaultCopy(async (vaultRoot) => {
+    const session = new VaultIndexSession(vaultRoot);
+    const recentUnlinks = new Map<string, import('./vault-move.ts').RecentUnlink>();
+    const recentAdds = new Map<string, import('./vault-move.ts').RecentUnlink>();
+    const fromPath = 'folder-a/destino-enlace.html';
+    const toPath = 'folder-b/destino-enlace.html';
+
+    await mkdir(path.join(vaultRoot, 'folder-a'), { recursive: true });
+    await mkdir(path.join(vaultRoot, 'folder-b'), { recursive: true });
+    await copyFile(path.join(vaultRoot, 'destino-enlace.html'), path.join(vaultRoot, fromPath));
+    await session.applyFileChange(
+      { kind: 'add', relativePath: fromPath },
+      recentUnlinks,
+      recentAdds,
+      3_000,
+    );
+    await copyFile(path.join(vaultRoot, 'destino-enlace.html'), path.join(vaultRoot, toPath));
+    await unlink(path.join(vaultRoot, fromPath));
+    const moved = await session.applyFileChange(
+      { kind: 'change', relativePath: toPath },
+      recentUnlinks,
+      recentAdds,
+      3_000,
     );
     expect(moved?.type).toBe('note:moved');
     if (moved?.type === 'note:moved') {

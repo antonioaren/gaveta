@@ -1,3 +1,5 @@
+import { access } from 'node:fs/promises';
+import nodePath from 'node:path';
 import { openVaultIndex, type VaultIndex } from '@gaveta/core';
 import { warningFromCode, type ApiWarning } from './envelope.ts';
 import type { VaultNoteEvent } from './vault-events.ts';
@@ -59,39 +61,78 @@ export class VaultIndexSession {
           from: change.from,
         };
       }
-      const path = change.relativePath;
+      const relativePath = change.relativePath;
       if (change.kind === 'unlink') {
-        const id = noteIdForPath(index, path);
-        const to = pairMoveByNoteId(id, recentAdds, now, movePairWindowMs, path);
+        const id = noteIdForPath(index, relativePath);
+        const to =
+          pairMoveByNoteId(id, recentAdds, now, movePairWindowMs, relativePath) ??
+          (await recentAddPathWithNoteFile(this.vaultRoot, id, relativePath, recentAdds));
         if (to !== null) {
           recentAdds.delete(to);
-          recentUnlinks.delete(path);
-          await index.remove(path);
+          recentUnlinks.delete(relativePath);
+          await index.remove(relativePath);
           const movedId = id ?? noteIdForPath(index, to);
-          return { type: 'note:moved', path: to, id: movedId, from: path };
+          return { type: 'note:moved', path: to, id: movedId, from: relativePath };
         }
-        recentUnlinks.set(path, { id, at: now });
-        await index.remove(path);
-        return { type: 'note:removed', path, id };
+        recentUnlinks.set(relativePath, { id, at: now });
+        await index.remove(relativePath);
+        return { type: 'note:removed', path: relativePath, id };
       }
       if (change.kind === 'add') {
-        const wasIndexed = noteIdForPath(index, path) !== null;
-        await index.upsert(path);
-        const id = noteIdForPath(index, path);
-        const from = pairMoveByNoteId(id, recentUnlinks, now, movePairWindowMs, path);
+        const wasIndexed = noteIdForPath(index, relativePath) !== null;
+        await index.upsert(relativePath);
+        const id = noteIdForPath(index, relativePath);
+        const from =
+          pairMoveByNoteId(id, recentUnlinks, now, movePairWindowMs, relativePath) ??
+          (await indexedPathWithNoteIdMissingFile(index, this.vaultRoot, id, relativePath));
         if (from !== null) {
           recentUnlinks.delete(from);
-          recentAdds.delete(path);
-          return { type: 'note:moved', path, id, from };
+          recentAdds.delete(relativePath);
+          if (noteIdForPath(index, from) !== null) {
+            await index.remove(from);
+          }
+          return { type: 'note:moved', path: relativePath, id, from };
         }
-        recentAdds.set(path, { id, at: now });
+        recentAdds.set(relativePath, { id, at: now });
         if (wasIndexed) {
-          return { type: 'note:changed', path, id };
+          return { type: 'note:changed', path: relativePath, id };
         }
-        return { type: 'note:added', path, id };
+        return { type: 'note:added', path: relativePath, id };
       }
-      await index.upsert(path);
-      return { type: 'note:changed', path, id: noteIdForPath(index, path) };
+      if (!(await vaultNoteFileExists(this.vaultRoot, relativePath))) {
+        const id = noteIdForPath(index, relativePath);
+        const to =
+          pairMoveByNoteId(id, recentAdds, now, movePairWindowMs, relativePath) ??
+          (await recentAddPathWithNoteFile(this.vaultRoot, id, relativePath, recentAdds));
+        if (to !== null) {
+          recentAdds.delete(to);
+          recentUnlinks.delete(relativePath);
+          await index.remove(relativePath);
+          const movedId = id ?? noteIdForPath(index, to);
+          return { type: 'note:moved', path: to, id: movedId, from: relativePath };
+        }
+        if (id !== null) {
+          recentUnlinks.set(relativePath, { id, at: now });
+          await index.remove(relativePath);
+          return { type: 'note:removed', path: relativePath, id };
+        }
+        return null;
+      }
+      await index.upsert(relativePath);
+      const id = noteIdForPath(index, relativePath);
+      const from = await indexedPathWithNoteIdMissingFile(
+        index,
+        this.vaultRoot,
+        id,
+        relativePath,
+      );
+      if (from !== null) {
+        recentUnlinks.delete(from);
+        recentAdds.delete(relativePath);
+        await index.remove(from);
+        return { type: 'note:moved', path: relativePath, id, from };
+      }
+      return { type: 'note:changed', path: relativePath, id };
     });
   }
 
@@ -129,6 +170,52 @@ function noteIdForPath(index: VaultIndex, notePath: string): string | null {
     }
   }
   return null;
+}
+
+/** Indexed path with the same id whose note file is already gone (rename source). */
+async function indexedPathWithNoteIdMissingFile(
+  index: VaultIndex,
+  vaultRoot: string,
+  noteId: string | null,
+  exceptPath: string,
+): Promise<string | null> {
+  if (noteId === null) {
+    return null;
+  }
+  for (const note of index.notes()) {
+    if (note.id === noteId && note.path !== exceptPath) {
+      if (!(await vaultNoteFileExists(vaultRoot, note.path))) {
+        return note.path;
+      }
+    }
+  }
+  return null;
+}
+
+async function recentAddPathWithNoteFile(
+  vaultRoot: string,
+  noteId: string | null,
+  exceptPath: string,
+  recentAdds: ReadonlyMap<string, RecentUnlink>,
+): Promise<string | null> {
+  if (noteId === null) {
+    return null;
+  }
+  for (const [addPath, meta] of recentAdds) {
+    if (addPath !== exceptPath && meta.id === noteId && (await vaultNoteFileExists(vaultRoot, addPath))) {
+      return addPath;
+    }
+  }
+  return null;
+}
+
+async function vaultNoteFileExists(vaultRoot: string, relativePath: string): Promise<boolean> {
+  try {
+    await access(nodePath.join(vaultRoot, relativePath));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function ensureIndexed(index: VaultIndex): Promise<ApiWarning[]> {

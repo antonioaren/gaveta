@@ -3,12 +3,12 @@ export interface RecentUnlink {
   readonly at: number;
 }
 
-/** Find a recent path (unlink or add) that shares the same note id within the move window. */
+/** Find a buffered watcher path that shares the same note id (FSEvents can split rename pairs by seconds). */
 export function pairMoveByNoteId(
   noteId: string | null,
   recentPaths: ReadonlyMap<string, RecentUnlink>,
-  nowMs: number,
-  windowMs: number,
+  _nowMs: number,
+  _windowMs: number,
   excludePath?: string,
 ): string | null {
   if (noteId === null) {
@@ -16,9 +16,6 @@ export function pairMoveByNoteId(
   }
   for (const [partnerPath, meta] of recentPaths) {
     if (partnerPath === excludePath) {
-      continue;
-    }
-    if (nowMs - meta.at > windowMs) {
       continue;
     }
     if (meta.id === noteId) {
