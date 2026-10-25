@@ -94,9 +94,7 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
     });
     const short = language.split('-')[0] ?? language;
     const applyHtmlLang = (): void => {
-      if (document.documentElement !== null) {
-        document.documentElement.lang = short;
-      }
+      document.documentElement.lang = short;
     };
     applyHtmlLang();
     document.addEventListener('DOMContentLoaded', applyHtmlLang, { once: true });
@@ -153,8 +151,7 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
   );
 }
 
-const isMain =
-  process.argv[1] !== undefined && process.argv[1].includes('capture-demo-screenshots');
+const isMain = process.argv[1]?.includes('capture-demo-screenshots') ?? false;
 if (isMain) {
   const lang = parseCaptureLang(process.argv);
   await captureScreenshots(lang);

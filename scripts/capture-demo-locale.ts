@@ -26,10 +26,10 @@ export function parseCaptureLang(argv: readonly string[]): CaptureLang {
     return 'en';
   }
   const raw = argv[flagIndex + 1];
-  if (raw === undefined || raw.startsWith('-')) {
+  if (typeof raw !== 'string' || raw.startsWith('-')) {
     throw new Error('--lang requires a value (en or es)');
   }
-  const base = raw.split('-')[0]?.toLowerCase();
+  const base = raw.split('-')[0].toLowerCase();
   if (base === 'en' || base === 'es') {
     return base;
   }
