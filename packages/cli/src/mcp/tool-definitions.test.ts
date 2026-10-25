@@ -25,6 +25,7 @@ it('includes REQ-CLI-14 and REQ-MIG-13 commands', () => {
     'search',
     'links',
     'backlinks',
+    'mentions',
     'link',
     'graph',
     'validate',

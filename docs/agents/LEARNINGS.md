@@ -4,6 +4,7 @@ Short log of pitfalls found while implementing tasks. Read this before starting 
 
 Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 
+- 2026-10-25 · T4.2 · Unlinked-mention scans must add each parse5 text node’s `startOffset` to match indices; using only the in-node offset sorts mentions wrong and breaks edits. · Pass `bomPrefix + location.startOffset` into mention hit `rawStart`/`rawEnd`.
 - 2026-10-25 · T3.15 · Code-mode save e2e waited on `/api/notes` PUT; the app posts to `/api/edit`. CodeMirror search panel copy is mostly button labels (`siguiente`, …), not always the `Find` phrase string. · Match `/api/edit` POST and assert localized search controls, not the Find heading alone.
 - 2026-10-25 · T3.15 · macOS e2e used `Control+f/s/a`; CodeMirror `Mod-*` is Cmd on macOS, and `Control+A` does not select all. · Use `modChord()` and `editor.press(modChord('s'))` after `modChord('a')`.
 

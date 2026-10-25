@@ -62,6 +62,18 @@ it('renders backlink context as plain text without HTML', async () => {
             }),
         } as Response);
       }
+      if (path.includes('/api/mentions')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              ok: true,
+              schemaVersion: 1,
+              data: { ref: DESTINO_ID, mentions: [] },
+            }),
+        } as Response);
+      }
       if (path.includes('/api/graph')) {
         return Promise.resolve({
           ok: true,

@@ -414,6 +414,13 @@ export {
   outgoingLinks,
 } from './graph.ts';
 
+export {
+  linkUnlinkedMentions,
+  rewriteUnlinkedMentions,
+  unlinkedMentions,
+} from './links/mentions.ts';
+export type { MentionTarget, UnlinkedMention } from './links/mentions.ts';
+
 export type {
   Backlink,
   Graph,

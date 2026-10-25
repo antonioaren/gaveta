@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { linkAllMentions } from '../api/mentions-link.ts';
 import { useActiveViewerRef } from '../hooks/useActiveViewerRef.ts';
 import { useConnectionsData } from '../hooks/useConnectionsData.ts';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
@@ -10,8 +12,10 @@ import { useI18n } from '../i18n/useI18n.ts';
 export function ConnectionsPanel() {
   const { t } = useI18n();
   const { ref } = useActiveViewerRef();
-  const { links, backlinks, graph, loading, error } = useConnectionsData(ref);
+  const { links, backlinks, mentions, graph, loading, error, reload } = useConnectionsData(ref);
   const tabState = useTabs();
+  const [linking, setLinking] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   const navigateTo = (
     targetRef: string,
@@ -120,6 +124,78 @@ export function ConnectionsPanel() {
                           }}
                         >
                           <span className="connections__link-title">{link.sourceTitle}</span>
+                        </button>
+                        {context.length > 0 ? (
+                          <p className="connections__context">{context}</p>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+
+            <section className="connections__section" aria-labelledby="connections-mentions">
+              <div className="connections__section-header">
+                <h3 id="connections-mentions" className="connections__section-title">
+                  {t('web.connections.mentions.title')}
+                </h3>
+                {mentions !== null && mentions.mentions.length > 0 ? (
+                  <button
+                    type="button"
+                    className="connections__link-action"
+                    disabled={linking}
+                    onClick={() => {
+                      void (async () => {
+                        setLinking(true);
+                        setLinkError(null);
+                        try {
+                          await linkAllMentions(ref, mentions.mentions);
+                          reload();
+                        } catch {
+                          setLinkError(t('web.connections.mentions.linkError'));
+                        } finally {
+                          setLinking(false);
+                        }
+                      })();
+                    }}
+                  >
+                    {linking
+                      ? t('web.connections.mentions.linking')
+                      : t('web.connections.mentions.link')}
+                  </button>
+                ) : null}
+              </div>
+              {linkError !== null ? (
+                <p className="connections__status connections__status--error" role="alert">
+                  {linkError}
+                </p>
+              ) : null}
+              {mentions === null || mentions.mentions.length === 0 ? (
+                <p className="connections__empty">{t('web.connections.mentions.empty')}</p>
+              ) : (
+                <ul
+                  className="connections__list connections__list--mentions"
+                  aria-label={t('web.connections.mentions.ariaList')}
+                >
+                  {mentions.mentions.map((mention, index) => {
+                    const sourceRef = mention.sourcePath;
+                    const key = `${mention.sourcePath}-${mention.text}-${String(index)}`;
+                    const context = plainTextFromContext(mention.context);
+                    return (
+                      <li key={key} className="connections__mention">
+                        <button
+                          type="button"
+                          className="connections__link"
+                          onClick={() => {
+                            const noteId =
+                              mention.sourceId !== null && isNoteUlid(mention.sourceId)
+                                ? mention.sourceId
+                                : null;
+                            navigateTo(sourceRef, mention.sourceTitle, mention.sourcePath, noteId);
+                          }}
+                        >
+                          <span className="connections__link-title">{mention.sourceTitle}</span>
                         </button>
                         {context.length > 0 ? (
                           <p className="connections__context">{context}</p>

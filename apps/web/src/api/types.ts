@@ -65,6 +65,21 @@ export interface BacklinksResponse {
   readonly backlinks: readonly BacklinkView[];
 }
 
+export interface MentionView {
+  readonly sourcePath: string;
+  readonly sourceId: string | null;
+  readonly sourceTitle: string;
+  readonly text: string;
+  readonly phrase: string;
+  readonly matchedBy: 'title' | 'alias';
+  readonly context: string;
+}
+
+export interface MentionsResponse {
+  readonly ref: string;
+  readonly mentions: readonly MentionView[];
+}
+
 export interface GraphResponse {
   readonly ref: string | null;
   readonly depth: number | null;
