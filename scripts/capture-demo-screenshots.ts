@@ -3,6 +3,12 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { DEMO_VAULT_ABS } from './bootstrap-demo-vault.ts';
+import {
+  parseCaptureLang,
+  playwrightLocale,
+  UI_BY_LANG,
+  type CaptureLang,
+} from './capture-demo-locale.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
@@ -60,59 +66,96 @@ async function startServe(
   });
 }
 
-void readNoteId('developer-handbook.html');
+async function captureScreenshots(lang: CaptureLang): Promise<void> {
+  void readNoteId('developer-handbook.html');
+  const ui = UI_BY_LANG[lang];
+  const locale = playwrightLocale(lang);
 
-const { execFileSync } = await import('node:child_process');
-execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  const { execFileSync } = await import('node:child_process');
+  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
 
-const { url, child } = await startServe(DEMO_VAULT_ABS);
-mkdirSync(ASSETS_DIR, { recursive: true });
-mkdirSync(ARTIFACTS_DIR, { recursive: true });
+  const { url, child } = await startServe(DEMO_VAULT_ABS);
+  mkdirSync(ASSETS_DIR, { recursive: true });
+  mkdirSync(ARTIFACTS_DIR, { recursive: true });
 
-const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: VIEWPORT });
-const pageErrors: string[] = [];
-page.on('pageerror', (error) => {
-  pageErrors.push(error.message);
-});
+  const browser = await chromium.launch();
+  const context = await browser.newContext({
+    viewport: VIEWPORT,
+    locale,
+  });
+  await context.addInitScript((language: string) => {
+    Object.defineProperty(navigator, 'language', {
+      configurable: true,
+      get: () => language,
+    });
+    Object.defineProperty(navigator, 'languages', {
+      configurable: true,
+      get: () => [language],
+    });
+    const short = language.split('-')[0] ?? language;
+    const applyHtmlLang = (): void => {
+      if (document.documentElement !== null) {
+        document.documentElement.lang = short;
+      }
+    };
+    applyHtmlLang();
+    document.addEventListener('DOMContentLoaded', applyHtmlLang, { once: true });
+  }, locale);
 
-const origin = new URL(url).origin;
+  const page = await context.newPage();
+  const pageErrors: string[] = [];
+  page.on('pageerror', (error) => {
+    pageErrors.push(error.message);
+  });
 
-await page.goto(url, { waitUntil: 'networkidle' });
-await page.getByRole('navigation', { name: 'Explorador de notas' }).waitFor();
+  const origin = new URL(url).origin;
 
-await page.goto(`${origin}/grafo`, { waitUntil: 'networkidle' });
-await page.getByRole('heading', { name: 'Grafo global' }).waitFor();
-await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-graph.png') });
+  await page.goto(url, { waitUntil: 'networkidle' });
+  await page.getByRole('navigation', { name: ui.explorerNav }).waitFor();
 
-await page.getByRole('button', { name: 'Notas' }).click();
-await page.getByRole('navigation', { name: 'Explorador de notas' }).waitFor();
-await page.getByTestId('explorer-note-developer-handbook.html').click();
-await page.getByRole('heading', { name: 'Developer Handbook', level: 1 }).waitFor();
-const renderFrame = page.frameLocator('[data-testid="note-render-frame"]');
-await renderFrame.locator('h1').first().waitFor({ timeout: 30_000 });
-await page.locator('[data-testid="note-meta-panel"]').evaluate((el) => {
-  el.style.display = 'none';
-});
-await page.locator('[data-testid="note-render-frame"]').scrollIntoViewIfNeeded();
-await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-note.png') });
+  await page.goto(`${origin}/grafo`, { waitUntil: 'networkidle' });
+  await page.getByRole('heading', { name: ui.globalGraphHeading }).waitFor();
+  await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-graph.png') });
 
-await page.getByTestId('explorer-note-local-first-knowledge.html').click();
-await page.getByRole('heading', { name: 'Local-First Knowledge', level: 1 }).waitFor();
-await page.getByTestId('note-edit-button').click();
-await page.getByTestId('visual-editor-surface').waitFor({ timeout: 30_000 });
-await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-editor.png') });
+  await page.getByRole('button', { name: ui.notesButton }).click();
+  await page.getByRole('navigation', { name: ui.explorerNav }).waitFor();
+  await page.getByTestId('explorer-note-developer-handbook.html').click();
+  await page.getByRole('heading', { name: 'Developer Handbook', level: 1 }).waitFor();
+  const renderFrame = page.frameLocator('[data-testid="note-render-frame"]');
+  await renderFrame.locator('h1').first().waitFor({ timeout: 30_000 });
+  await page.locator('[data-testid="note-meta-panel"]').evaluate((el) => {
+    el.style.display = 'none';
+  });
+  await page.locator('[data-testid="note-render-frame"]').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-note.png') });
 
-for (const name of SCREENSHOTS) {
-  const bytes = readFileSync(join(ASSETS_DIR, name));
-  writeFileSync(join(ARTIFACTS_DIR, name), bytes);
+  await page.getByTestId('explorer-note-local-first-knowledge.html').click();
+  await page.getByRole('heading', { name: 'Local-First Knowledge', level: 1 }).waitFor();
+  await page.getByTestId('note-edit-button').click();
+  await page.getByTestId('visual-editor-surface').waitFor({ timeout: 30_000 });
+  await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-editor.png') });
+
+  for (const name of SCREENSHOTS) {
+    const bytes = readFileSync(join(ASSETS_DIR, name));
+    writeFileSync(join(ARTIFACTS_DIR, name), bytes);
+  }
+
+  await context.close();
+  await browser.close();
+  child.kill('SIGTERM');
+
+  if (pageErrors.length > 0) {
+    throw new Error(`page errors during capture:\n${pageErrors.join('\n')}`);
+  }
+
+  console.info(
+    `Screenshots (${lang}, locale ${locale}) written to ${ASSETS_DIR} and ${ARTIFACTS_DIR}`,
+  );
 }
 
-await browser.close();
-child.kill('SIGTERM');
-
-if (pageErrors.length > 0) {
-  throw new Error(`page errors during capture:\n${pageErrors.join('\n')}`);
+const isMain =
+  process.argv[1] !== undefined && process.argv[1].includes('capture-demo-screenshots');
+if (isMain) {
+  const lang = parseCaptureLang(process.argv);
+  await captureScreenshots(lang);
 }
-
-console.info(`Screenshots written to ${ASSETS_DIR} and ${ARTIFACTS_DIR}`);
