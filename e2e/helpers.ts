@@ -2,7 +2,17 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { Browser } from 'playwright';
 import { vaultPath, type VaultName } from '@gaveta/fixtures';
+
+/** Pin the web shell to Spanish for e2e assertions written against `es` copy. */
+export async function newWebPage(browser: Browser) {
+  const page = await browser.newPage();
+  await page.addInitScript(() => {
+    localStorage.setItem('gaveta.locale', 'es');
+  });
+  return page;
+}
 
 export const REPO_ROOT = join(import.meta.dirname, '..');
 export const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
@@ -41,6 +51,7 @@ export interface GraphPayload {
 export function childEnv(overrides: Record<string, string> = {}): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env };
   delete env.GAVETA_VAULT;
+  env.GAVETA_LANG ??= 'es';
   for (const [key, value] of Object.entries(overrides)) {
     env[key] = value;
   }

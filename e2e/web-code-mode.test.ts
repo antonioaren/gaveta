@@ -5,7 +5,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, initVault, parseJson, runGaveta, type JsonEnvelope } from './helpers.ts';
+import {
+  GAVETA_BIN,
+  initVault,
+  parseJson,
+  runGaveta,
+  type JsonEnvelope,
+  newWebPage,
+} from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const children: ReturnType<typeof spawn>[] = [];
@@ -78,7 +85,7 @@ async function openCodeModeForNewNote(vault: string): Promise<{
 
   const started = await startServe(vault);
   const { url } = started.json.data;
-  const page = await browser.newPage();
+  const page = await newWebPage(browser);
   const noteUrl = new URL(url);
   noteUrl.pathname = `/nota/${envelope.data.id}`;
   await page.goto(noteUrl.toString(), { waitUntil: 'networkidle' });

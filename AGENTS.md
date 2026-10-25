@@ -7,6 +7,7 @@ Gaveta is a local knowledge base. Each note is an HTML file in a vault, links be
 ```
 gaveta/
 ├── packages/core/     # shared contract, parser, vault, index, operations
+├── packages/i18n/     # typed en/es message catalogs and locale resolution
 ├── packages/cli/      # gaveta / gv binary
 ├── packages/server/   # local API (phase 2)
 ├── apps/web/          # React + Vite viewer and editor
@@ -49,7 +50,7 @@ These are amendments to `docs/REQUIREMENTS.md`. Do not reopen them in a task.
 - **Node >= 22.18.** The SQLite index uses built-in `node:sqlite` with FTS5, not `better-sqlite3`. Older Node 22 builds (for example 22.14 on macOS) may lack FTS5; the CLI fails fast with `E_RUNTIME_UNSUPPORTED`.
 - **Slugs and filenames.** Lowercase, strip accents (NFD, then remove diacritics), map every non-alphanumeric to a hyphen, collapse and trim hyphens. A collision gets `-2`, `-3`, … on the base slug. Section ids use the same rule. File collisions are resolved in the destination directory; section-id collisions, inside the note.
 - **CI platforms.** Linux and macOS now. Windows is T4.8, at the end of the project. REQ-NFR-05 still requires the product to work on Windows.
-- **Language.** Code, comments, and commit messages are English. User-facing CLI messages (including JSON `message` and `hint`) are Spanish. Error codes stay the stable identifiers from the CLI contract.
+- **Language.** Code, comments, and commit messages are English. User-facing product copy (CLI JSON `message`/`hint`, server API errors, web UI) goes through `@gaveta/i18n` with matching `en` and `es` keys. Error codes (`E_*`, `W_*`) stay stable and are never translated. Default locale is `en`; the web app also honors a saved preference and `navigator.language`. The CLI uses `--lang`, then `GAVETA_LANG`, then `LANG`/`LC_ALL`.
 - **DEC-02 and DEC-07 are approved.** TipTap plus CodeMirror 6, and unified/remark/rehype. Do not file a task whose only purpose is to approve them.
 
 ## Mandatory workflow

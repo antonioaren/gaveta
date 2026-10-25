@@ -14,7 +14,7 @@ import { adoptNote, importMarkdownFolder, initVault } from '@gaveta/core';
 import { FIXTURES_ROOT, markdownVaultPath, vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const SCREENSHOT_DIR = join(REPO_ROOT, 'test-results', 'visual-editor');
@@ -131,7 +131,7 @@ async function assertGroupRoundTrip(
   shellUrl: string,
   htmlPaths: readonly string[],
 ): Promise<void> {
-  const page = await browser.newPage();
+  const page = await newWebPage(browser);
   try {
     for (const path of htmlPaths) {
       const absolute = join(vault, path);
@@ -239,7 +239,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
     expect(noteId).not.toBeNull();
     try {
       const started = await startServe(vault);
-      const page = await browser.newPage();
+      const page = await newWebPage(browser);
       await openNote(page, started.json.data.url, noteId ?? '');
       await page.getByTestId('note-edit-button').click();
       await page.getByTestId('visual-editor-surface').waitFor();
@@ -273,7 +273,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
     expect(noteId).not.toBeNull();
     try {
       const started = await startServe(vault);
-      const page = await browser.newPage();
+      const page = await newWebPage(browser);
       await openNote(page, started.json.data.url, noteId ?? '');
       await page.getByTestId('note-edit-button').click();
       await page.getByTestId('visual-editor-surface').waitFor();

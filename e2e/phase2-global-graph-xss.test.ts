@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const MALICIOUS = vaultPath('malicious');
@@ -75,7 +75,7 @@ describe('T2.10 global graph XSS labels', () => {
     try {
       const started = await startServe(vault);
       const { url } = started.json.data;
-      const page = await browser.newPage();
+      const page = await newWebPage(browser);
       page.on('dialog', (dialog) => {
         void dialog.dismiss();
         throw new Error(`unexpected dialog: ${dialog.message()}`);

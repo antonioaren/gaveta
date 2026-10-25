@@ -8,6 +8,7 @@ import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import {
   GAVETA_BIN,
   initVault,
+  newWebPage,
   parseJson,
   runGaveta,
   withTempVaultAsync,
@@ -118,7 +119,7 @@ it('REQ-APP-17: creates a note from the explorer and promotes pending links', as
 
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await page.goto(url, { waitUntil: 'networkidle' });
 
     await page.getByRole('button', { name: 'Nueva nota' }).click();
@@ -198,7 +199,7 @@ it('REQ-APP-17: ghost graph opens the dialog with the title prefilled', async ()
   try {
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await page.goto(url, { waitUntil: 'networkidle' });
     await page.goto(new URL('/grafo', url).toString(), { waitUntil: 'networkidle' });
     await page.getByRole('heading', { name: 'Grafo global' }).waitFor({ state: 'visible' });
