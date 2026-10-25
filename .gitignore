@@ -8,3 +8,7 @@ coverage/
 *.local
 .atl/
 test-results/
+examples/demo-vault/.gaveta/index.sqlite*
+examples/demo-vault/.gaveta/mermaid.min.js
+examples/demo-vault/.gaveta/mermaid-boot.js
+examples/demo-vault/.gaveta/MERMAID-LICENSE.txt

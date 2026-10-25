@@ -16,6 +16,7 @@ export default tseslint.config(
       'packages/server/assets/render-bridge.js',
       'packages/server/assets/render-slides.js',
       'packages/server/assets/render-todo.js',
+      'examples/demo-vault/.gaveta/**',
       'packages/i18n/scripts/**',
     ],
   },

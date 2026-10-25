@@ -3,6 +3,7 @@ dist
 coverage
 pnpm-lock.yaml
 docs
+examples/demo-vault/visual-editor-showcase.html
 .atl/
 test-results/
 packages/core/src/theme/mermaid.min.js
