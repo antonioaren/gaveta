@@ -258,10 +258,11 @@ async function vaultPathWithSameNoteIdAndBasename(
       matches.push(file.relativePath);
     }
   }
-  if (matches.length === 1) {
-    return matches[0];
+  if (matches.length !== 1) {
+    return null;
   }
-  return null;
+  const match = matches[0];
+  return match ?? null;
 }
 
 async function vaultNoteFileExists(vaultRoot: string, relativePath: string): Promise<boolean> {
