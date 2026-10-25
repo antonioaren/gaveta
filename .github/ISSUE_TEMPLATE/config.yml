@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/antonioaren/gaveta/blob/main/CONTRIBUTING.md
+    about: Setup, tests, and pull request conventions
+  - name: Security
+    url: https://github.com/antonioaren/gaveta/blob/main/docs/REQUIREMENTS.md
+    about: Security requirements (REQ-SEC); report sensitive issues privately to the maintainer if needed

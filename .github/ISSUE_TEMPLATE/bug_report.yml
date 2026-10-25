@@ -1,0 +1,78 @@
+name: Bug report
+description: Something is broken or behaves incorrectly
+title: '[Bug]: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please include steps we can follow on a git checkout (Gaveta is not installable from a package registry yet).
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you see instead?
+      placeholder: Clear and concise description.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Commands, vault setup, or UI clicks. Include `gaveta … --json` output when relevant.
+      placeholder: |
+        1. pnpm install
+        2. pnpm exec gaveta init …
+        3. …
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Gaveta version / git commit
+      description: Output of `pnpm exec gaveta version` or the commit SHA you built from.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      description: From `node -v` (must be ≥ 22.18 for current main).
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did it fail?
+      options:
+        - CLI (`gaveta` / `gv`)
+        - Web app (`pnpm dev` or `gaveta serve`)
+        - Both
+        - CI / tests only
+        - Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: stderr, JSON envelope, or browser console. Redact vault paths if needed.
+      render: shell

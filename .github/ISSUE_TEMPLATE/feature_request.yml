@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest an idea or improvement
+title: '[Feature]: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [ROADMAP.md](https://github.com/antonioaren/gaveta/blob/main/ROADMAP.md) for planned phases before opening a request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What pain are you trying to solve? Who benefits (you, agents, teams)?
+      placeholder: I'm trying to …
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like it to work? CLI, app, or both?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other tools or workflows you looked at.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope (optional)
+      options:
+        - label: CLI / `gaveta` commands
+        - label: Web app
+        - label: Import / export (Markdown)
+        - label: Agent skill or MCP
+        - label: Documentation only
