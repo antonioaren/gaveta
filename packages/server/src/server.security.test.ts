@@ -114,7 +114,7 @@ it('does not leak stack traces on errors', async () => {
       headers: authHeaders(token),
     });
     expect(response.statusCode).toBe(404);
-    expect(response.body).not.toContain('at ');
+    expect(response.body).not.toMatch(/\s+at [^(]+\(/);
     expect(response.body).not.toContain('node_modules');
     await server.close();
   });

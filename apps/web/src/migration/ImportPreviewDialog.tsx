@@ -8,6 +8,8 @@ import {
 } from '../api/migration.ts';
 import type { UploadFileEntry } from './collect-upload-files.ts';
 import { formatImportSummary } from './migration-summary.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 
 interface ImportPreviewDialogProps {
   readonly files: readonly UploadFileEntry[];
@@ -16,6 +18,7 @@ interface ImportPreviewDialogProps {
 }
 
 export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPreviewDialogProps) {
+  const { t } = useI18n();
   const titleId = useId();
   const [preview, setPreview] = useState<ImportPreviewData | null>(null);
   const [stagingId, setStagingId] = useState<string | null>(null);
@@ -40,9 +43,7 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
         }
       } catch (caught) {
         if (!cancelled) {
-          setError(
-            caught instanceof Error ? caught.message : 'No se pudo preparar la vista previa',
-          );
+          setError(messageFromCaught(caught, 'web.api.error.fallbackImportPrepare'));
           setLoading(false);
         }
       }
@@ -71,9 +72,7 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
         }
       } catch (caught) {
         if (!cancelled) {
-          setError(
-            caught instanceof Error ? caught.message : 'No se pudo preparar la vista previa',
-          );
+          setError(messageFromCaught(caught, 'web.api.error.fallbackImportPrepare'));
         }
       } finally {
         if (!cancelled) {
@@ -101,7 +100,7 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
       onCommitted();
       onClose();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'No se pudo importar');
+      setError(messageFromCaught(caught, 'web.api.error.fallbackImport'));
       setSubmitting(false);
     }
   };
@@ -116,22 +115,29 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
       >
         <header className="modal__header">
           <h2 id={titleId} className="modal__title">
-            Importar Markdown
+            {t('web.migration.import.title')}
           </h2>
-          <button type="button" className="modal__close" onClick={onClose} aria-label="Cerrar">
+          <button
+            type="button"
+            className="modal__close"
+            onClick={onClose}
+            aria-label={t('web.common.close')}
+          >
             ×
           </button>
         </header>
         <div className="modal__body migration-modal__body">
-          {loading ? <p>Cargando vista previa…</p> : null}
+          {loading ? <p>{t('web.migration.loadingPreview')}</p> : null}
           {error !== null ? <p className="migration-modal__error">{error}</p> : null}
           {preview !== null ? (
             <>
               <p className="migration-modal__summary" data-testid="import-preview-summary">
-                Vista previa de importación: {formatImportSummary(preview.summary)}.
+                {t('web.migration.import.previewSummary', {
+                  summary: formatImportSummary(preview.summary, t),
+                })}
               </p>
               <label className="field">
-                <span className="field__label">Carpeta destino en el vault (opcional)</span>
+                <span className="field__label">{t('web.migration.import.field.destFolder')}</span>
                 <input
                   className="field__control"
                   value={inFolder}
@@ -142,7 +148,7 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
                 />
               </label>
               <label className="field">
-                <span className="field__label">Si existe conflicto</span>
+                <span className="field__label">{t('web.migration.import.field.conflict')}</span>
                 <select
                   className="field__control"
                   value={onConflict}
@@ -150,18 +156,18 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
                     setOnConflict(event.target.value as 'skip' | 'rename' | 'overwrite');
                   }}
                 >
-                  <option value="skip">Omitir</option>
-                  <option value="rename">Renombrar</option>
-                  <option value="overwrite">Sobrescribir</option>
+                  <option value="skip">{t('web.migration.import.conflict.skip')}</option>
+                  <option value="rename">{t('web.migration.import.conflict.rename')}</option>
+                  <option value="overwrite">{t('web.migration.import.conflict.overwrite')}</option>
                 </select>
               </label>
               <div className="migration-modal__table-wrap">
                 <table className="migration-table">
                   <thead>
                     <tr>
-                      <th>Origen</th>
-                      <th>Destino</th>
-                      <th>Acción</th>
+                      <th>{t('web.migration.import.table.source')}</th>
+                      <th>{t('web.migration.import.table.dest')}</th>
+                      <th>{t('web.migration.import.table.action')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -177,7 +183,7 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
               </div>
               {preview.failures.length > 0 ? (
                 <p className="migration-modal__error">
-                  {preview.failures.length} archivo(s) con error antes de importar.
+                  {t('web.migration.import.failures', { count: preview.failures.length })}
                 </p>
               ) : null}
             </>
@@ -185,7 +191,7 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
         </div>
         <footer className="modal__footer">
           <button type="button" className="button button--ghost" onClick={onClose}>
-            Cancelar
+            {t('web.common.cancel')}
           </button>
           <button
             type="button"
@@ -196,7 +202,7 @@ export function ImportPreviewDialog({ files, onClose, onCommitted }: ImportPrevi
               void confirm();
             }}
           >
-            {submitting ? 'Importando…' : 'Confirmar importación'}
+            {submitting ? t('web.migration.import.importing') : t('web.migration.import.confirm')}
           </button>
         </footer>
       </div>

@@ -1,0 +1,22 @@
+{
+  "name": "@gaveta/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Typed message catalogs and locale resolution for Gaveta (en and es).",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

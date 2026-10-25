@@ -43,9 +43,11 @@ function capture(overrides: Omit<CliIo, 'stdout' | 'stderr'> = {}): {
 } {
   let out = '';
   let err = '';
+  const env: NodeJS.ProcessEnv = { GAVETA_LANG: 'es', ...overrides.env };
   return {
     io: {
       ...overrides,
+      env,
       stdout(chunk: string) {
         out += chunk;
       },

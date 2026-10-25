@@ -21,18 +21,18 @@ import {
 import { CliFailure } from '../failure.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
-const MISSING_REF = 'Falta la referencia.';
-const MISSING_FROM = 'Falta la nota de origen.';
-const MISSING_TO = 'Falta la nota de destino.';
-const BAD_TYPE = 'El tipo no es un tipo de nota válido.';
-const BAD_TAG = 'La etiqueta no puede estar vacía ni tener espacios alrededor.';
-const BAD_REL = 'El rel no puede estar vacío.';
-const BAD_DEPTH = 'La profundidad tiene que ser un entero entre 1 y 3.';
-const BAD_DEPTH_WITHOUT_REF = 'La profundidad solo aplica con una referencia.';
-const BAD_REF_WITHOUT_DEPTH = 'Indica --depth entre 1 y 3 para el grafo local.';
-const BAD_HASH = 'El hash de --if-match tiene que ser sha256: y 64 hexadecimales.';
-const BAD_TEXT = 'El texto del enlace no puede estar vacío.';
-const BAD_SECTION = 'El id de sección no es válido.';
+const MISSING_REF = 'cli.auto.falta_la_referencia';
+const MISSING_FROM = 'cli.auto.falta_la_nota_de_origen';
+const MISSING_TO = 'cli.auto.falta_la_nota_de_destino';
+const BAD_TYPE = 'cli.auto.el_tipo_no_es_un_tipo_de_nota_valido';
+const BAD_TAG = 'cli.auto.la_etiqueta_no_puede_estar_vacia_ni_tener_espaci';
+const BAD_REL = 'cli.auto.el_rel_no_puede_estar_vacio';
+const BAD_DEPTH = 'cli.auto.la_profundidad_tiene_que_ser_un_entero_entre_1_y';
+const BAD_DEPTH_WITHOUT_REF = 'cli.auto.la_profundidad_solo_aplica_con_una_referencia';
+const BAD_REF_WITHOUT_DEPTH = 'cli.auto.indica_depth_entre_1_y_3_para_el_grafo_local';
+const BAD_HASH = 'cli.auto.el_hash_de_if_match_tiene_que_ser_sha256_y_64_he';
+const BAD_TEXT = 'cli.auto.el_texto_del_enlace_no_puede_estar_vacio';
+const BAD_SECTION = 'cli.auto.el_id_de_seccion_no_es_valido';
 const CONTENT_HASH = /^sha256:[0-9a-f]{64}$/;
 
 interface LinkTargetView {
@@ -76,11 +76,11 @@ interface GraphEdgeView {
 
 export const linksCommand: CommandSpec = {
   name: 'links',
-  summary: 'Lista los enlaces salientes de una nota.',
+  summary: 'cli.auto.lista_los_enlaces_salientes_de_una_nota',
   example: 'gaveta links "Usar SQLite" --json',
   requiresVault: true,
   input: 'none',
-  args: [{ name: 'ref', description: 'Id, ruta o título de la nota.', required: true }],
+  args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true }],
   options: [],
   async run(context): Promise<CommandResult> {
     const ref = readRef(context);
@@ -101,11 +101,11 @@ export const linksCommand: CommandSpec = {
 
 export const backlinksCommand: CommandSpec = {
   name: 'backlinks',
-  summary: 'Lista los enlaces entrantes con el contexto donde aparecen.',
+  summary: 'cli.auto.lista_los_enlaces_entrantes_con_el_contexto_dond',
   example: 'gaveta backlinks "Usar SQLite" --json',
   requiresVault: true,
   input: 'none',
-  args: [{ name: 'ref', description: 'Id, ruta o título de la nota.', required: true }],
+  args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true }],
   options: [],
   async run(context): Promise<CommandResult> {
     const ref = readRef(context);
@@ -126,26 +126,26 @@ export const backlinksCommand: CommandSpec = {
 
 export const linkCommand: CommandSpec = {
   name: 'link',
-  summary: 'Añade un enlace canónico entre dos notas sin editar el HTML.',
+  summary: 'cli.auto.anade_un_enlace_canonico_entre_dos_notas_sin_edi',
   example: 'gaveta link origen destino --rel related --json',
   requiresVault: true,
   input: 'none',
   args: [
-    { name: 'origen', description: 'Nota que enlazará.', required: true },
-    { name: 'destino', description: 'Nota destino del enlace.', required: true },
+    { name: 'origen', description: 'cli.auto.nota_que_enlazara', required: true },
+    { name: 'destino', description: 'cli.auto.nota_destino_del_enlace', required: true },
   ],
   options: [
-    { name: 'rel', flags: '--rel <rel>', description: 'Valor de rel en el ancla.' },
-    { name: 'text', flags: '--text <texto>', description: 'Texto visible del enlace.' },
+    { name: 'rel', flags: '--rel <rel>', description: 'cli.auto.valor_de_rel_en_el_ancla' },
+    { name: 'text', flags: '--text <texto>', description: 'cli.auto.texto_visible_del_enlace' },
     {
       name: 'section',
       flags: '--section <id>',
-      description: 'Sección donde insertar el enlace.',
+      description: 'cli.auto.seccion_donde_insertar_el_enlace',
     },
     {
       name: 'ifMatch',
       flags: '--if-match <hash>',
-      description: 'Rechaza la escritura si el hash no coincide.',
+      description: 'cli.auto.rechaza_la_escritura_si_el_hash_no_coincide',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -189,20 +189,24 @@ export const linkCommand: CommandSpec = {
 
 export const graphCommand: CommandSpec = {
   name: 'graph',
-  summary: 'Muestra el grafo global o local de notas y enlaces.',
+  summary: 'cli.auto.muestra_el_grafo_global_o_local_de_notas_y_enlac',
   example: 'gaveta graph --json',
   requiresVault: true,
   input: 'none',
-  args: [{ name: 'ref', description: 'Centro del grafo local.', required: false }],
+  args: [{ name: 'ref', description: 'cli.auto.centro_del_grafo_local', required: false }],
   options: [
     {
       name: 'depth',
       flags: '--depth <n>',
-      description: 'Profundidad del grafo local, entre 1 y 3.',
+      description: 'cli.auto.profundidad_del_grafo_local_entre_1_y_3',
     },
-    { name: 'type', flags: '--type <tipo>', description: 'Filtra por tipo: doc, slides o todo.' },
-    { name: 'tag', flags: '--tag <etiqueta>', description: 'Filtra por una etiqueta.' },
-    { name: 'rel', flags: '--rel <rel>', description: 'Filtra por rel en las aristas.' },
+    {
+      name: 'type',
+      flags: '--type <tipo>',
+      description: 'cli.auto.filtra_por_tipo_doc_slides_o_todo',
+    },
+    { name: 'tag', flags: '--tag <etiqueta>', description: 'cli.auto.filtra_por_una_etiqueta' },
+    { name: 'rel', flags: '--rel <rel>', description: 'cli.auto.filtra_por_rel_en_las_aristas' },
   ],
   async run(context): Promise<CommandResult> {
     const ref = readOptionalRef(context);

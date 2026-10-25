@@ -28,7 +28,7 @@ const GUIDE_OPTIONS = [
   {
     name: 'errors',
     flags: '--errors',
-    description: 'Muestra solo el catálogo de errores y avisos.',
+    description: 'cli.auto.muestra_solo_el_catalogo_de_errores_y_avisos',
     kind: 'boolean' as const,
   },
 ];
@@ -36,7 +36,7 @@ const GUIDE_OPTIONS = [
 export function createGuideCommand(peers: readonly CommandSpec[]): CommandSpec {
   const spec: CommandSpec = {
     name: 'guide',
-    summary: 'Imprime el contrato de autoría, los comandos y el catálogo de errores.',
+    summary: 'cli.auto.imprime_el_contrato_de_autoria_los_comandos_y_el',
     example: 'gaveta guide --topic tipos',
     requiresVault: false,
     input: 'none',

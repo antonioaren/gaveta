@@ -15,6 +15,8 @@ import { NoteOpsHost } from '../note-ops/NoteOpsHost.tsx';
 import { MigrationHost } from '../migration/MigrationHost.tsx';
 import { useMigrationActions } from '../migration/MigrationActionsContext.tsx';
 import type { NoteListItem } from '../api/types.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import type { Locale } from '@gaveta/i18n';
 
 export function ShellLayout() {
   const vault = useVaultNotes();
@@ -50,6 +52,7 @@ function ShellLayoutBody({
   const navigate = useNavigate();
   const location = useLocation();
   const graphMode = location.pathname === '/grafo';
+  const { t, locale, setLocale } = useI18n();
 
   return (
     <NewNoteDialogProvider>
@@ -65,16 +68,31 @@ function ShellLayoutBody({
                   <span className="topbar__logo" aria-hidden="true">
                     ◈
                   </span>
-                  <span className="topbar__name">Gaveta</span>
+                  <span className="topbar__name">{t('web.shell.brand')}</span>
                 </div>
                 <div className="topbar__nav">
+                  <label className="topbar__locale">
+                    <span className="visually-hidden">{t('web.language.select.aria')}</span>
+                    <select
+                      className="topbar__button topbar__button--select"
+                      data-testid="language-select"
+                      aria-label={t('web.language.select.aria')}
+                      value={locale}
+                      onChange={(event) => {
+                        setLocale(event.target.value as Locale);
+                      }}
+                    >
+                      <option value="en">{t('web.language.en')}</option>
+                      <option value="es">{t('web.language.es')}</option>
+                    </select>
+                  </label>
                   <button
                     type="button"
                     className="topbar__button"
                     data-testid="vault-import"
                     onClick={migration.openImportPicker}
                   >
-                    Importar
+                    {t('web.common.import')}
                   </button>
                   <button
                     type="button"
@@ -84,7 +102,7 @@ function ShellLayoutBody({
                       migration.openExport({ kind: 'vault' });
                     }}
                   >
-                    Exportar a Markdown
+                    {t('web.common.exportMarkdown')}
                   </button>
                   <button
                     type="button"
@@ -93,7 +111,7 @@ function ShellLayoutBody({
                       void navigate(graphMode ? '/' : '/grafo');
                     }}
                   >
-                    {graphMode ? 'Notas' : 'Grafo'}
+                    {graphMode ? t('web.topbar.notes') : t('web.topbar.graph')}
                   </button>
                   <button
                     type="button"
@@ -102,7 +120,7 @@ function ShellLayoutBody({
                       void navigate(-1);
                     }}
                   >
-                    Atrás
+                    {t('web.topbar.back')}
                   </button>
                   <button
                     type="button"
@@ -111,7 +129,7 @@ function ShellLayoutBody({
                       void navigate(1);
                     }}
                   >
-                    Adelante
+                    {t('web.topbar.forward')}
                   </button>
                 </div>
               </header>

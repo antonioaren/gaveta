@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 import * as metaWrite from '../api/meta-write.ts';
+import { renderWithI18n } from '../i18n/render-with-i18n.tsx';
 import * as readNote from '../api/read-note.ts';
 import { NoteMetaPanel } from './NoteMetaPanel.tsx';
 
@@ -24,7 +25,7 @@ it('keeps the saved indicator when live index metadata updates after save', asyn
   });
 
   const user = userEvent.setup();
-  const { rerender } = render(
+  const { rerender } = renderWithI18n(
     <NoteMetaPanel noteRef="nota" initialTags={[]} initialAliases={[]} />,
   );
 

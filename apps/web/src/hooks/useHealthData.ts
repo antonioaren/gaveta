@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiJson } from '../api/client.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 import { subscribeVaultNoteLiveRefresh } from '../connections/connections-refresh.ts';
 import type { DoctorResponse } from '../health/health-types.ts';
 
@@ -68,8 +69,7 @@ export function useHealthData(): HealthData {
         if (disposed || fetchGeneration !== generation || isAbortError(cause)) {
           return;
         }
-        const message =
-          cause instanceof Error ? cause.message : 'No se pudo cargar la salud del vault';
+        const message = messageFromCaught(cause, 'web.api.error.fallbackLoadHealth');
         setError(message);
         setReport(null);
       } finally {

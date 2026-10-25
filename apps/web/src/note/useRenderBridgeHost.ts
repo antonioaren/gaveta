@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
 import { ApiError } from '../api/client.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 import { fetchNoteContentHash } from '../api/note-hash.ts';
 import { todoSetChecked } from '../api/todo-write.ts';
 import type { useTabs } from '../tabs/useTabs.ts';
@@ -55,7 +56,7 @@ export function useRenderBridgeHost(options: {
             const message =
               error instanceof ApiError
                 ? error.message
-                : 'No se pudo actualizar la tarea. Vuelve a intentarlo.';
+                : messageFromCaught(error, 'web.api.error.fallbackTaskUpdate');
             setTaskErrorState({ noteRef, message });
           }
         })

@@ -15,19 +15,17 @@ import {
 } from './filter-graph.ts';
 import { useNewNoteDialog } from '../new-note/useNewNoteDialog.ts';
 import { ghostCreateCommand } from './ghost-create-command.ts';
-import { GRAPH_LEGEND_ITEMS, graphNodeCssClass } from './graph-node-style.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import { noteTypeMessageKey } from '../i18n/note-type-label.ts';
+import type { CreateNoteType } from '../new-note/note-types.ts';
+import { GRAPH_LEGEND_ENTRIES, graphNodeCssClass } from './graph-node-style.ts';
 import { useForceLayout } from './useForceLayout.ts';
 import { useGlobalGraph } from './useGlobalGraph.ts';
 
 const LAYOUT_WIDTH = 1200;
 const LAYOUT_HEIGHT = 800;
 
-const TYPE_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: '', label: 'Todos' },
-  { value: 'doc', label: 'Documento' },
-  { value: 'slides', label: 'Presentación' },
-  { value: 'todo', label: 'Tareas' },
-];
+const FILTER_TYPES: readonly CreateNoteType[] = ['doc', 'slides', 'todo'];
 
 function emptyFilters(): GraphFilterState {
   return {
@@ -41,6 +39,7 @@ function emptyFilters(): GraphFilterState {
 }
 
 export function GlobalGraphView() {
+  const { t } = useI18n();
   const [filters, setFilters] = useState<GraphFilterState>(emptyFilters);
   const { graph, loading, error } = useGlobalGraph(filters);
   const tabState = useTabs();
@@ -122,7 +121,7 @@ export function GlobalGraphView() {
     const command = ghostCreateCommand(selectedGhost.title);
     try {
       await navigator.clipboard.writeText(command);
-      setCopyStatus('Comando copiado al portapapeles.');
+      setCopyStatus(t('web.graph.copySuccess'));
     } catch {
       setCopyStatus(command);
     }
@@ -132,15 +131,15 @@ export function GlobalGraphView() {
     <div className="graph-view">
       <header className="graph-view__header">
         <div>
-          <h1 className="graph-view__title">Grafo global</h1>
+          <h1 className="graph-view__title">{t('web.graph.title')}</h1>
           <p className="graph-view__hint">
-            {view.nodes.length} nodos · {view.edges.length} aristas
-            {computing ? ' · Calculando disposición…' : ''}
+            {t('web.graph.stats', { nodes: view.nodes.length, edges: view.edges.length })}
+            {computing ? t('web.graph.computingLayout') : ''}
           </p>
         </div>
-        <div className="graph-view__filters" aria-label="Filtros del grafo">
+        <div className="graph-view__filters" aria-label={t('web.graph.filters.aria')}>
           <label className="field">
-            <span className="field__label">Tipo</span>
+            <span className="field__label">{t('web.common.type')}</span>
             <select
               className="field__control"
               value={filters.type ?? ''}
@@ -149,15 +148,16 @@ export function GlobalGraphView() {
                 setFilters((current) => ({ ...current, type: value.length === 0 ? null : value }));
               }}
             >
-              {TYPE_OPTIONS.map((option) => (
-                <option key={option.label} value={option.value}>
-                  {option.label}
+              <option value="">{t('web.common.allMasculine')}</option>
+              {FILTER_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {t(noteTypeMessageKey(type))}
                 </option>
               ))}
             </select>
           </label>
           <label className="field">
-            <span className="field__label">Carpeta</span>
+            <span className="field__label">{t('web.graph.field.folder')}</span>
             <select
               className="field__control"
               value={filters.folder ?? ''}
@@ -169,7 +169,7 @@ export function GlobalGraphView() {
                 }));
               }}
             >
-              <option value="">Todas</option>
+              <option value="">{t('web.common.allFeminine')}</option>
               {folderOptions.map((folder) => (
                 <option key={folder} value={folder}>
                   {folder}
@@ -178,7 +178,7 @@ export function GlobalGraphView() {
             </select>
           </label>
           <label className="field">
-            <span className="field__label">Etiqueta</span>
+            <span className="field__label">{t('web.common.tag')}</span>
             <select
               className="field__control"
               value={filters.tag ?? ''}
@@ -187,7 +187,7 @@ export function GlobalGraphView() {
                 setFilters((current) => ({ ...current, tag: value.length === 0 ? null : value }));
               }}
             >
-              <option value="">Todas</option>
+              <option value="">{t('web.common.allFeminine')}</option>
               {tagOptions.map((tag) => (
                 <option key={tag} value={tag}>
                   {tag}
@@ -196,7 +196,7 @@ export function GlobalGraphView() {
             </select>
           </label>
           <label className="field">
-            <span className="field__label">Relación</span>
+            <span className="field__label">{t('web.graph.field.rel')}</span>
             <select
               className="field__control"
               value={filters.rel ?? ''}
@@ -205,7 +205,7 @@ export function GlobalGraphView() {
                 setFilters((current) => ({ ...current, rel: value.length === 0 ? null : value }));
               }}
             >
-              <option value="">Todas</option>
+              <option value="">{t('web.common.allFeminine')}</option>
               {relOptions.map((rel) => (
                 <option key={rel} value={rel}>
                   {rel}
@@ -221,7 +221,7 @@ export function GlobalGraphView() {
                 setFilters((current) => ({ ...current, hideOrphans: event.target.checked }));
               }}
             />
-            <span>Ocultar huérfanas</span>
+            <span>{t('web.graph.filter.hideOrphans')}</span>
           </label>
           <label className="field field--checkbox">
             <input
@@ -231,14 +231,14 @@ export function GlobalGraphView() {
                 setFilters((current) => ({ ...current, showTagNodes: event.target.checked }));
               }}
             />
-            <span>Etiquetas como nodos</span>
+            <span>{t('web.graph.filter.showTagNodes')}</span>
           </label>
         </div>
       </header>
 
       {loading ? (
         <p className="graph-view__status" role="status">
-          Cargando grafo…
+          {t('web.graph.loading')}
         </p>
       ) : error !== null ? (
         <p className="graph-view__status graph-view__status--error" role="alert">
@@ -246,7 +246,7 @@ export function GlobalGraphView() {
         </p>
       ) : layout === null ? (
         <p className="graph-view__status" role="status">
-          Preparando vista…
+          {t('web.graph.preparing')}
         </p>
       ) : (
         <div className="graph-view__body">
@@ -283,7 +283,7 @@ export function GlobalGraphView() {
               className="graph-view__svg"
               viewBox={`0 0 ${String(LAYOUT_WIDTH)} ${String(LAYOUT_HEIGHT)}`}
               role="img"
-              aria-label="Grafo global del vault"
+              aria-label={t('web.graph.aria')}
             >
               <g transform={`translate(${String(pan.x)} ${String(pan.y)}) scale(${String(zoom)})`}>
                 {view.edges.map((edge, index) => {
@@ -363,23 +363,23 @@ export function GlobalGraphView() {
               </g>
             </svg>
           </div>
-          <aside className="graph-view__aside" aria-label="Leyenda y acciones">
-            <h2 className="graph-view__aside-title">Leyenda</h2>
+          <aside className="graph-view__aside" aria-label={t('web.graph.aside.aria')}>
+            <h2 className="graph-view__aside-title">{t('web.graph.legend')}</h2>
             <ul className="graph-view__legend">
-              {GRAPH_LEGEND_ITEMS.map((item) => (
+              {GRAPH_LEGEND_ENTRIES.map((item) => (
                 <li key={item.className}>
                   <span
                     className={`graph-view__legend-swatch ${item.className}`}
                     aria-hidden="true"
                   />
-                  {item.label}
+                  {t(item.labelKey)}
                 </li>
               ))}
             </ul>
             {selectedGhost !== null ? (
-              <section className="graph-view__ghost" aria-label="Nodo fantasma">
+              <section className="graph-view__ghost" aria-label={t('web.graph.ghost.aria')}>
                 <h3 className="graph-view__ghost-title">{selectedGhost.title}</h3>
-                <p className="graph-view__ghost-hint">Esta nota aún no existe en el vault.</p>
+                <p className="graph-view__ghost-hint">{t('web.graph.ghost.hint')}</p>
                 <button
                   type="button"
                   className="topbar__button topbar__button--primary"
@@ -390,14 +390,14 @@ export function GlobalGraphView() {
                     });
                   }}
                 >
-                  Crear nota
+                  {t('web.common.createNote')}
                 </button>
                 <button
                   type="button"
                   className="topbar__button"
                   onClick={() => void copyGhostCommand()}
                 >
-                  Copiar comando CLI
+                  {t('web.graph.copyCli')}
                 </button>
                 {copyStatus !== null ? (
                   <p className="graph-view__ghost-command" role="status">

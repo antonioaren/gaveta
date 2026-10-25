@@ -12,13 +12,14 @@ import {
   type VaultIndex,
 } from '@gaveta/core';
 import { CliFailure } from '../failure.ts';
+import { m } from '../messages.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
-const EMPTY_QUERY = 'La consulta no puede estar vacía.';
-const BAD_TYPE = 'El tipo tiene que ser doc, slides o todo.';
-const BAD_TAG = 'La etiqueta no puede estar vacía ni tener espacios alrededor.';
-const BAD_LIMIT = 'El límite tiene que ser un entero entre 1 y 100.';
-const EMPTY_HITS = 'No hay notas que coincidan.\n';
+const EMPTY_QUERY = 'cli.auto.la_consulta_no_puede_estar_vacia';
+const BAD_TYPE = 'cli.auto.el_tipo_tiene_que_ser_doc_slides_o_todo';
+const BAD_TAG = 'cli.auto.la_etiqueta_no_puede_estar_vacia_ni_tener_espaci';
+const BAD_LIMIT = 'cli.auto.el_limite_tiene_que_ser_un_entero_entre_1_y_100';
+const EMPTY_HITS = 'cli.auto.no_hay_notas_que_coincidan';
 
 interface SearchHitView {
   readonly path: string;
@@ -39,14 +40,14 @@ interface SearchRequest {
 
 export const searchCommand: CommandSpec = {
   name: 'search',
-  summary: 'Busca texto en el título, los alias, los encabezados y el cuerpo.',
+  summary: 'cli.auto.busca_texto_en_el_titulo_los_alias_los_encabezad',
   example: 'gaveta search "base de datos" --json',
   requiresVault: true,
   input: 'none',
   args: [
     {
       name: 'consulta',
-      description: 'Texto a buscar.',
+      description: 'cli.auto.texto_a_buscar',
       required: true,
     },
   ],
@@ -54,17 +55,17 @@ export const searchCommand: CommandSpec = {
     {
       name: 'type',
       flags: '--type <tipo>',
-      description: 'Filtra por tipo: doc, slides o todo.',
+      description: 'cli.auto.filtra_por_tipo_doc_slides_o_todo',
     },
     {
       name: 'tag',
       flags: '--tag <etiqueta>',
-      description: 'Filtra por una etiqueta.',
+      description: 'cli.auto.filtra_por_una_etiqueta',
     },
     {
       name: 'limit',
       flags: '--limit <n>',
-      description: 'Máximo de resultados, entre 1 y 100.',
+      description: 'cli.auto.maximo_de_resultados_entre_1_y_100',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -239,7 +240,7 @@ function escapeHtmlChar(char: string): string {
 
 function renderHuman(hits: readonly SearchHitView[]): string {
   if (hits.length === 0) {
-    return EMPTY_HITS;
+    return m(EMPTY_HITS);
   }
   return `${hits.map((hit) => renderHit(hit)).join('\n')}\n`;
 }

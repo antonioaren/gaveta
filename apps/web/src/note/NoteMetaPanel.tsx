@@ -2,6 +2,8 @@ import { useCallback, useEffect, useId, useState } from 'react';
 import { ApiError } from '../api/client.ts';
 import { fetchNoteRead } from '../api/read-note.ts';
 import { postNoteMeta } from '../api/meta-write.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 import { formatTagsInput, parseTagsInput } from '../new-note/parse-tags.ts';
 
 interface NoteMetaPanelProps {
@@ -10,10 +12,8 @@ interface NoteMetaPanelProps {
   readonly initialAliases: readonly string[];
 }
 
-const CONFLICT_MESSAGE =
-  'La nota ha cambiado desde la última lectura. Recarga la nota e inténtalo de nuevo.';
-
 export function NoteMetaPanel({ noteRef, initialTags, initialAliases }: NoteMetaPanelProps) {
+  const { t } = useI18n();
   const tagsId = useId();
   const aliasesId = useId();
   const [tagsInput, setTagsInput] = useState(formatTagsInput(initialTags));
@@ -52,28 +52,30 @@ export function NoteMetaPanel({ noteRef, initialTags, initialAliases }: NoteMeta
       setSaved(true);
     } catch (caught) {
       if (caught instanceof ApiError && caught.code === 'E_CONFLICT') {
-        setError(CONFLICT_MESSAGE);
+        setError(t('web.api.error.E_CONFLICT_META'));
         const read = await fetchNoteRead(noteRef);
         setHash(read.hash);
       } else {
         const message =
-          caught instanceof ApiError ? caught.message : 'No se pudieron guardar los metadatos';
+          caught instanceof ApiError
+            ? caught.message
+            : messageFromCaught(caught, 'web.api.error.fallbackMetaSave');
         setError(message);
       }
     } finally {
       setSaving(false);
     }
-  }, [aliasesInput, hash, noteRef, tagsInput]);
+  }, [aliasesInput, hash, noteRef, tagsInput, t]);
 
   return (
     <section
       className="note-meta-panel"
-      aria-label="Etiquetas y alias"
+      aria-label={t('web.noteMeta.aria')}
       data-testid="note-meta-panel"
     >
-      <h2 className="note-meta-panel__title">Metadatos</h2>
+      <h2 className="note-meta-panel__title">{t('web.noteMeta.title')}</h2>
       <label className="field" htmlFor={tagsId}>
-        <span className="field__label">Etiquetas</span>
+        <span className="field__label">{t('web.noteMeta.tags')}</span>
         <input
           id={tagsId}
           className="field__control"
@@ -85,7 +87,7 @@ export function NoteMetaPanel({ noteRef, initialTags, initialAliases }: NoteMeta
         />
       </label>
       <label className="field" htmlFor={aliasesId}>
-        <span className="field__label">Alias</span>
+        <span className="field__label">{t('web.noteMeta.aliases')}</span>
         <input
           id={aliasesId}
           className="field__control"
@@ -103,7 +105,7 @@ export function NoteMetaPanel({ noteRef, initialTags, initialAliases }: NoteMeta
       ) : null}
       {saved ? (
         <p className="note-meta-panel__ok" data-testid="note-meta-saved">
-          Metadatos guardados.
+          {t('web.noteMeta.saved')}
         </p>
       ) : null}
       <button
@@ -115,7 +117,7 @@ export function NoteMetaPanel({ noteRef, initialTags, initialAliases }: NoteMeta
           void save();
         }}
       >
-        {saving ? 'Guardando…' : 'Guardar metadatos'}
+        {saving ? t('web.common.saving') : t('web.noteMeta.save')}
       </button>
     </section>
   );

@@ -12,7 +12,7 @@ import {
   type BodyElement,
   type ElementGroup,
 } from './contract.ts';
-import { DIAGNOSTICS, type DiagnosticCode, diagnosticCodes } from './errors.ts';
+import { DIAGNOSTICS, formatDiagnostic, type DiagnosticCode, diagnosticCodes } from './errors.ts';
 
 export const GUIDE_TOPICS = [
   'elementos',
@@ -185,11 +185,12 @@ function buildDiagnostics(): GuideDiagnosticEntry[] {
     .sort((left, right) => left.localeCompare(right))
     .map((code) => {
       const spec = DIAGNOSTICS[code];
+      const formatted = formatDiagnostic(code);
       return {
         code,
         severity: spec.severity,
-        message: spec.message,
-        hint: spec.hint,
+        message: formatted.message,
+        hint: formatted.hint,
         exitCode: spec.exitCode,
       };
     });

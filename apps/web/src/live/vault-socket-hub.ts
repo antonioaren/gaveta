@@ -1,4 +1,6 @@
+import { formatMessage } from '@gaveta/i18n';
 import { getSessionToken } from '../auth/session-token.ts';
+import { readWebLocale } from '../i18n/read-web-locale.ts';
 import { pushLiveE2eLog } from './live-e2e-log.ts';
 import { recordLivePipelineFromServer } from './live-pipeline-client.ts';
 import type { LivePipelineTracePayload } from './live-pipeline-types.ts';
@@ -9,8 +11,9 @@ type VaultListener = (event: VaultNoteEvent) => void;
 type ReconnectListener = () => void;
 type AuthFailureListener = (message: string) => void;
 
-const AUTH_FAILURE_MESSAGE =
-  'La sesión en vivo ha caducado. Vuelve a abrir Gaveta desde la CLI para seguir recibiendo cambios.';
+function liveAuthFailureMessage(): string {
+  return formatMessage('web.live.authFailure', readWebLocale());
+}
 
 const INITIAL_BACKOFF_MS = 1_000;
 const MAX_BACKOFF_MS = 30_000;
@@ -134,7 +137,7 @@ function handleMessage(message: MessageEvent): void {
   }
   if (record.type === 'error' && record.code === 'E_AUTH_REQUIRED') {
     authFailed = true;
-    notifyAuthFailure(AUTH_FAILURE_MESSAGE);
+    notifyAuthFailure(liveAuthFailureMessage());
     socket?.close();
     return;
   }
@@ -202,7 +205,7 @@ function connect(): void {
     authed = false;
     if (event.code === 4401) {
       authFailed = true;
-      notifyAuthFailure(AUTH_FAILURE_MESSAGE);
+      notifyAuthFailure(liveAuthFailureMessage());
       return;
     }
     if (!intentionalClose) {

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { ApiError } from '../api/client.ts';
-import { CONFLICT_MESSAGE, INVALID_HTML_MESSAGE, saveNoteDocument } from '../api/note-edit.ts';
+import { conflictEditMessage, invalidHtmlMessage, saveNoteDocument } from '../api/note-edit.ts';
 import { fetchNoteHtml } from '../api/note-read.ts';
 import { CodeNoteEditor } from '../editor/code/CodeNoteEditor.tsx';
 import { validateNoteHtml } from '../editor/code/validate-diagnostics.ts';
+import { useI18n } from '../i18n/useI18n.ts';
 
 export interface NoteCodeModeProps {
   readonly noteRef: string;
@@ -13,6 +14,7 @@ export interface NoteCodeModeProps {
 }
 
 export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModeProps): ReactElement {
+  const { t } = useI18n();
   const [html, setHtml] = useState<string | null>(null);
   const [hash, setHash] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,13 +38,13 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
         if (cancelled) {
           return;
         }
-        setLoadError('No se pudo cargar el HTML de la nota.');
+        setLoadError(t('web.api.error.fallbackLoadNoteHtml'));
         setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [noteRef]);
+  }, [noteRef, t]);
 
   const handleChange = useCallback((next: string) => {
     setHtml(next);
@@ -64,7 +66,7 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
       .then((validation) => {
         if (!validation.ok) {
           setSaving(false);
-          setSaveError(INVALID_HTML_MESSAGE);
+          setSaveError(invalidHtmlMessage());
           return null;
         }
         return saveNoteDocument(noteRef, html, hash);
@@ -82,24 +84,24 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
         setSaving(false);
         if (error instanceof ApiError) {
           if (error.status === 409 || error.code === 'E_CONFLICT') {
-            setSaveError(CONFLICT_MESSAGE);
+            setSaveError(conflictEditMessage());
             return;
           }
           if (error.status === 422 || error.code === 'E_HTML_INVALID') {
-            setSaveError(INVALID_HTML_MESSAGE);
+            setSaveError(invalidHtmlMessage());
             return;
           }
           setSaveError(error.message);
           return;
         }
-        setSaveError('No se pudo guardar la nota.');
+        setSaveError(t('web.api.error.fallbackSaveNoteDot'));
       });
-  }, [dirty, hash, html, onSaved, noteRef, path, saving]);
+  }, [dirty, hash, html, onSaved, noteRef, path, saving, t]);
 
   if (loading) {
     return (
       <p className="note-pane__placeholder" role="status">
-        Cargando modo código…
+        {t('web.note.code.loading')}
       </p>
     );
   }
@@ -107,7 +109,7 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
   if (loadError !== null || html === null) {
     return (
       <p className="note-pane__placeholder note-pane__placeholder--error" role="alert">
-        {loadError ?? 'No se pudo cargar la nota.'}
+        {loadError ?? t('web.api.error.fallbackLoadNoteDot')}
       </p>
     );
   }
@@ -116,7 +118,7 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
     <div className="note-code-mode">
       <div className="note-code-mode__toolbar">
         <button type="button" className="note-code-mode__button" onClick={onExit}>
-          Vista lectura
+          {t('web.note.code.readView')}
         </button>
         <button
           type="button"
@@ -124,7 +126,7 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? 'Guardando…' : 'Guardar'}
+          {saving ? t('web.common.saving') : t('web.common.save')}
         </button>
       </div>
       {saveError !== null ? (

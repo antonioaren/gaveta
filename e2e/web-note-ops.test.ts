@@ -6,7 +6,7 @@ import { BACKLINK_COUNT, NOTE_X, linkerSpec, vaultPath } from '@gaveta/fixtures'
 import { doctorVault, noteContentHash, readVaultText } from '@gaveta/core';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = vaultPath('backlinks');
@@ -92,7 +92,7 @@ it('REQ-APP-14: rename rewrites backlinks with CLI parity', async () => {
   try {
     const started = await startServe(webVault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openNoteX(page, url);
     await page.getByTestId('note-action-rename').click();
     await expectBacklinksDialog(page);
@@ -129,7 +129,7 @@ it('REQ-APP-14: move to folder matches CLI bytes', async () => {
   try {
     const started = await startServe(webVault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openNoteX(page, url);
     await page.getByTestId('note-action-move').click();
     await expectBacklinksDialog(page);
@@ -157,7 +157,7 @@ it('REQ-APP-14: rm is blocked by backlinks until force', async () => {
   try {
     const started = await startServe(webVault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openNoteX(page, url);
     await page.getByTestId('note-action-delete').click();
     await expectBacklinksDialog(page);
@@ -177,7 +177,7 @@ it('REQ-APP-14: rm --force matches CLI bytes', async () => {
   try {
     const started = await startServe(webVault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openNoteX(page, url);
     await page.getByTestId('note-action-delete').click();
     await page.getByTestId('note-delete-force').click();
@@ -206,7 +206,7 @@ it('REQ-APP-14: stale If-Match shows conflict and refreshes', async () => {
   try {
     const started = await startServe(webVault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openNoteX(page, url);
     const readResponse = page.waitForResponse((response) => response.url().includes('/api/read'));
     const backlinksResponse = page.waitForResponse((response) =>

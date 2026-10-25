@@ -1,5 +1,6 @@
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
+import { useI18n } from '../../i18n/useI18n.ts';
 
 function readHtml(attrs: unknown): string {
   if (attrs === null || typeof attrs !== 'object' || !('html' in attrs)) {
@@ -10,6 +11,7 @@ function readHtml(attrs: unknown): string {
 }
 
 export function HtmlBlockNodeView({ node }: NodeViewProps) {
+  const { t } = useI18n();
   const html = readHtml(node.attrs);
   return (
     <NodeViewWrapper
@@ -18,9 +20,7 @@ export function HtmlBlockNodeView({ node }: NodeViewProps) {
       data-gaveta-html-block="1"
       contentEditable={false}
     >
-      <p className="visual-editor__html-block-label">
-        Bloque HTML (solo lectura en el editor visual)
-      </p>
+      <p className="visual-editor__html-block-label">{t('web.editor.htmlBlock.label')}</p>
       <pre className="visual-editor__html-block-code">{html}</pre>
     </NodeViewWrapper>
   );

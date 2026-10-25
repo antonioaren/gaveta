@@ -1,12 +1,5 @@
 import { spawn } from 'node:child_process';
-import {
-  cpSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  readdirSync,
-  writeFileSync,
-} from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, sep } from 'node:path';
 import { adoptNote, importMarkdownFolder, initVault } from '@gaveta/core';
@@ -15,6 +8,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   GAVETA_BIN,
+  newWebPage,
   parseJson,
   removeTempTree,
   stopServeChildren,
@@ -136,7 +130,7 @@ async function assertGroupRoundTrip(
   shellUrl: string,
   htmlPaths: readonly string[],
 ): Promise<void> {
-  const page = await browser.newPage();
+  const page = await newWebPage(browser);
   try {
     for (const path of htmlPaths) {
       const absolute = join(vault, path);
@@ -249,7 +243,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
     expect(noteId).not.toBeNull();
     try {
       const started = await startServe(vault);
-      const page = await browser.newPage();
+      const page = await newWebPage(browser);
       await openNote(page, started.json.data.url, noteId ?? '');
       await page.getByTestId('note-edit-button').click();
       await page.getByTestId('visual-editor-surface').waitFor();
@@ -284,7 +278,7 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
     expect(noteId).not.toBeNull();
     try {
       const started = await startServe(vault);
-      const page = await browser.newPage();
+      const page = await newWebPage(browser);
       await openNote(page, started.json.data.url, noteId ?? '');
       await page.getByTestId('note-edit-button').click();
       await page.getByTestId('visual-editor-surface').waitFor();

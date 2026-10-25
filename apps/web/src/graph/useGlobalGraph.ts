@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiJson } from '../api/client.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 import type { GraphResponse } from '../api/types.ts';
 import { subscribeVaultNoteLiveRefresh } from '../connections/connections-refresh.ts';
 import { type GraphFilterState, buildGraphApiPath } from './filter-graph.ts';
@@ -71,8 +72,7 @@ export function useGlobalGraph(filters: GraphFilterState): {
         if (isAbortError(cause)) {
           return;
         }
-        const message =
-          cause instanceof Error ? cause.message : 'No se pudo cargar el grafo global';
+        const message = messageFromCaught(cause, 'web.api.error.fallbackLoadGraph');
         if (!signal.aborted) {
           setError(message);
           setGraph(null);

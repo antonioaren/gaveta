@@ -66,7 +66,7 @@ function renderHuman(data: ImportCliData): string {
 
 export const importCommand: CommandSpec = {
   name: 'import',
-  summary: 'Importa Markdown desde un archivo o una carpeta al vault.',
+  summary: 'cli.auto.importa_markdown_desde_un_archivo_o_una_carpeta_',
   example:
     'gaveta import ./docs --in proyectos --dry-run --on-conflict skip --continue-on-error --json',
   requiresVault: true,
@@ -74,7 +74,7 @@ export const importCommand: CommandSpec = {
   args: [
     {
       name: 'ruta',
-      description: 'Archivo .md o carpeta con Markdown fuera del vault.',
+      description: 'cli.auto.archivo_md_o_carpeta_con_markdown_fuera_del_vaul',
       required: true,
     },
   ],
@@ -82,30 +82,30 @@ export const importCommand: CommandSpec = {
     {
       name: 'in',
       flags: '--in <carpeta>',
-      description: 'Carpeta destino dentro del vault (raíz si se omite).',
+      description: 'cli.auto.carpeta_destino_dentro_del_vault_raiz_si_se_omit',
     },
     {
       name: 'exclude',
       flags: '--exclude <patrón>',
-      description: 'Patrón glob adicional de exclusión (repetible).',
+      description: 'cli.auto.patron_glob_adicional_de_exclusion_repetible',
       kind: 'stringList',
     },
     {
       name: 'dryRun',
       flags: '--dry-run',
-      description: 'Planifica la importación sin escribir en el vault.',
+      description: 'cli.auto.planifica_la_importacion_sin_escribir_en_el_vaul',
       kind: 'boolean',
     },
     {
       name: 'onConflict',
       flags: '--on-conflict <modo>',
-      description: 'Qué hacer si la nota destino ya existe: skip, rename u overwrite.',
+      description: 'cli.auto.que_hacer_si_la_nota_destino_ya_existe_skip_rena',
       choices: ['skip', 'rename', 'overwrite'],
     },
     {
       name: 'continueOnError',
       flags: '--continue-on-error',
-      description: 'Importa las notas válidas y lista las que fallen.',
+      description: 'cli.auto.importa_las_notas_validas_y_lista_las_que_fallen',
       kind: 'boolean',
     },
   ],

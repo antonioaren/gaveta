@@ -7,6 +7,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import {
   GAVETA_BIN,
+  newWebPage,
   parseJson,
   removeTempTree,
   stopServeChildren,
@@ -91,7 +92,7 @@ it('REQ-APP-18: creates a folder and edits tags from the note pane', async () =>
   cpSync(BACKLINKS, vault, { recursive: true });
   try {
     const started = await startServe(vault);
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openShell(page, started.json.data.url);
 
     await page.getByTestId('explorer-new-folder').click();

@@ -1,14 +1,23 @@
+import { getActiveLocale, t, type MessageKey } from '@gaveta/i18n';
+import { m } from './messages.ts';
 import type { CommandSpec } from './types.ts';
 
-const OPTION_LINES = [
-  '  --json             Escribe el sobre JSON versionado en stdout',
-  '  --vault <dir>      Ruta del vault. Si se omite, se usa GAVETA_VAULT o se busca .gaveta/ hacia arriba',
-  '  --from <ruta|->    Contenido desde un archivo, o - para leer stdin',
-  '  -h, --help         Muestra la ayuda',
-  '  -V, --version      Muestra la versión',
-];
+function loc(key: MessageKey): string {
+  return t(key, getActiveLocale());
+}
 
-/** Spanish help. Commander's built-in help is English, so the CLI prints this instead. */
+function optionLines(): string[] {
+  return [
+    `  --json             ${loc('cli.help.globalJson')}`,
+    `  --vault <dir>      ${loc('cli.help.globalVault')}`,
+    `  --from <ruta|->    ${loc('cli.help.globalFrom')}`,
+    `  --lang <en|es>     ${loc('cli.help.globalLang')}`,
+    `  -h, --help         ${loc('cli.help.globalHelp')}`,
+    `  -V, --version      ${loc('cli.help.globalVersion')}`,
+  ];
+}
+
+/** Localized help. Commander's built-in help is English, so the CLI prints this instead. */
 export function renderHelp(registry: readonly CommandSpec[], commandName?: string): string {
   if (commandName !== undefined && commandName.length > 0) {
     const command = registry.find((item) => item.name === commandName);
@@ -18,15 +27,15 @@ export function renderHelp(registry: readonly CommandSpec[], commandName?: strin
           ? []
           : [
               '',
-              'Subcomandos:',
-              ...command.subcommands.map((sub) => `  ${sub.name.padEnd(8)}  ${sub.summary}`),
+              loc('cli.help.subcommands'),
+              ...command.subcommands.map((sub) => `  ${sub.name.padEnd(8)}  ${m(sub.summary)}`),
             ];
       return [
         usageLine(command),
         '',
-        command.summary,
+        m(command.summary),
         '',
-        `Ejemplo: ${command.example}`,
+        `${loc('cli.help.examplePrefix')} ${command.example}`,
         ...subcommandLines,
         '',
         ...optionBlock(command),
@@ -37,20 +46,20 @@ export function renderHelp(registry: readonly CommandSpec[], commandName?: strin
 
   const width = registry.reduce((longest, command) => Math.max(longest, command.name.length), 0);
   const commandLines = registry.map(
-    (command) => `  ${command.name.padEnd(width)}  ${command.summary}`,
+    (command) => `  ${command.name.padEnd(width)}  ${m(command.summary)}`,
   );
   return [
-    'Uso: gaveta [opciones] [comando]',
+    loc('cli.help.usageRoot'),
     '',
-    'Base de conocimiento local. gv es un alias de este binario.',
+    loc('cli.help.tagline'),
     '',
-    'Opciones:',
-    ...OPTION_LINES,
+    loc('cli.help.options'),
+    ...optionLines(),
     '',
-    'Comandos:',
+    loc('cli.help.commands'),
     ...commandLines,
     '',
-    'Ejemplos:',
+    loc('cli.help.examples'),
     ...registry.map((command) => `  ${command.example}`),
     '',
   ].join('\n');
@@ -61,17 +70,18 @@ function usageLine(command: CommandSpec): string {
     .map((argument) => (argument.required ? `<${argument.name}>` : `[${argument.name}]`))
     .join(' ');
   if (args.length === 0) {
-    return `Uso: gaveta ${command.name} [opciones]`;
+    return t('cli.help.usageCommand', getActiveLocale(), { name: command.name });
   }
-  return `Uso: gaveta ${command.name} ${args} [opciones]`;
+  return t('cli.help.usageCommandArgs', getActiveLocale(), { name: command.name, args });
 }
 
 function optionBlock(command: CommandSpec): string[] {
   const specific = commandOptionLines(command);
+  const lines = optionLines();
   if (specific.length === 0) {
-    return ['Opciones:', ...OPTION_LINES];
+    return [loc('cli.help.options'), ...lines];
   }
-  return ['Opciones:', ...OPTION_LINES, '', 'Opciones del comando:', ...specific];
+  return [loc('cli.help.options'), ...lines, '', loc('cli.help.commandOptions'), ...specific];
 }
 
 function commandOptionLines(command: CommandSpec): string[] {
@@ -80,5 +90,5 @@ function commandOptionLines(command: CommandSpec): string[] {
     return [];
   }
   const width = options.reduce((longest, option) => Math.max(longest, option.flags.length), 0);
-  return options.map((option) => `  ${option.flags.padEnd(width)}  ${option.description}`);
+  return options.map((option) => `  ${option.flags.padEnd(width)}  ${m(option.description)}`);
 }

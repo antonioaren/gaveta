@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { BacklinksResponse, GraphResponse, LinksResponse } from '../api/types.ts';
 import { subscribeConnectionsRefresh } from '../connections/connections-refresh.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 import { fetchConnectionsBundle } from './fetch-connections.ts';
 
 export interface ConnectionsData {
@@ -60,8 +61,7 @@ export function useConnectionsData(ref: string | null): ConnectionsData {
         if (cancelledRef.current || isAbortError(cause)) {
           return;
         }
-        const message =
-          cause instanceof Error ? cause.message : 'No se pudieron cargar las conexiones';
+        const message = messageFromCaught(cause, 'web.api.error.fallbackLoadConnections');
         setError(message);
         setLinks(null);
         setBacklinks(null);

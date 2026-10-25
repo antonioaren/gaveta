@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { renderWithI18n } from '../i18n/render-with-i18n.tsx';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -16,7 +17,7 @@ afterEach(() => {
 });
 
 function renderDialog() {
-  return render(
+  return renderWithI18n(
     <MemoryRouter>
       <TabProvider>
         <NoteOpsDialog
@@ -33,6 +34,7 @@ function renderDialog() {
         />
       </TabProvider>
     </MemoryRouter>,
+    { locale: 'es' },
   );
 }
 

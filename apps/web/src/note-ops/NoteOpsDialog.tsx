@@ -11,6 +11,8 @@ import type { NoteListItem } from '../api/types.ts';
 import { notifyLocalNoteRemoved } from '../live/local-note-events.ts';
 import { useTabs } from '../tabs/useTabs.ts';
 import type { NoteOpKind, NoteOpTarget } from './note-op-target.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 
 interface NoteOpsDialogProps {
   readonly kind: NoteOpKind;
@@ -20,9 +22,6 @@ interface NoteOpsDialogProps {
   readonly onConflictRefresh: () => void;
 }
 
-const CONFLICT_MESSAGE =
-  'La nota ha cambiado desde la última lectura. Se ha actualizado la vista; vuelve a intentarlo si aún aplica.';
-
 export function NoteOpsDialog({
   kind,
   target,
@@ -30,6 +29,7 @@ export function NoteOpsDialog({
   onClose,
   onConflictRefresh,
 }: NoteOpsDialogProps) {
+  const { t } = useI18n();
   const titleId = useId();
   const tabState = useTabs();
   const initialFolder = splitNotePath(target.path).folder;
@@ -78,7 +78,7 @@ export function NoteOpsDialog({
       );
       setBacklinks(backlinksEnvelope.data.backlinks);
     } catch (caught) {
-      const message = caught instanceof Error ? caught.message : 'No se pudo cargar la nota';
+      const message = messageFromCaught(caught, 'web.api.error.fallbackLoadNote');
       setError(message);
     } finally {
       setLoading(false);
@@ -116,9 +116,7 @@ export function NoteOpsDialog({
       if (kind === 'delete') {
         const force = dangerStep || backlinks.length === 0;
         if (backlinks.length > 0 && !dangerStep) {
-          setError(
-            'Esta nota tiene enlaces entrantes. Confirma el borrado forzado para continuar.',
-          );
+          setError(t('web.noteOps.delete.needsForceConfirm'));
           setSubmitting(false);
           return;
         }
@@ -129,7 +127,7 @@ export function NoteOpsDialog({
       }
       const destination = destinationPreview;
       if (destination === null || destination === target.path) {
-        setError('Indica un destino válido distinto del actual.');
+        setError(t('web.noteOps.destination.invalid'));
         setSubmitting(false);
         return;
       }
@@ -140,12 +138,11 @@ export function NoteOpsDialog({
       if (caught instanceof ApiError && caught.code === 'E_CONFLICT') {
         onConflictRefresh();
         await reloadMeta();
-        setError(CONFLICT_MESSAGE);
+        setError(t('web.api.error.E_CONFLICT_NOTE_OPS'));
       } else if (caught instanceof ApiError && caught.code === 'E_HAS_BACKLINKS') {
-        setError('La nota tiene enlaces entrantes y no se puede borrar sin forzar.');
+        setError(t('web.api.error.E_HAS_BACKLINKS'));
       } else {
-        const message =
-          caught instanceof Error ? caught.message : 'No se pudo completar la operación';
+        const message = messageFromCaught(caught, 'web.api.error.fallbackNoteOp');
         setError(message);
       }
     } finally {
@@ -161,21 +158,26 @@ export function NoteOpsDialog({
     onClose,
     onConflictRefresh,
     reloadMeta,
+    t,
     target,
     titleInput,
   ]);
 
   const dialogTitle =
-    kind === 'rename' ? 'Renombrar nota' : kind === 'move' ? 'Mover nota' : 'Borrar nota';
+    kind === 'rename'
+      ? t('web.noteOps.title.rename')
+      : kind === 'move'
+        ? t('web.noteOps.title.move')
+        : t('web.noteOps.title.delete');
 
   const primaryLabel =
     kind === 'rename'
-      ? 'Renombrar'
+      ? t('web.common.rename')
       : kind === 'move'
-        ? 'Mover'
+        ? t('web.common.move')
         : dangerStep
-          ? 'Borrar definitivamente'
-          : 'Borrar';
+          ? t('web.common.deletePermanently')
+          : t('web.common.delete');
 
   return (
     <dialog open className="note-ops-dialog" aria-labelledby={titleId} onClose={onClose}>
@@ -194,11 +196,13 @@ export function NoteOpsDialog({
           <p className="note-ops-dialog__subtitle">{target.title}</p>
         </header>
 
-        {loading ? <p className="note-ops-dialog__status">Cargando enlaces entrantes…</p> : null}
+        {loading ? (
+          <p className="note-ops-dialog__status">{t('web.noteOps.loadingBacklinks')}</p>
+        ) : null}
 
         {kind === 'rename' ? (
           <label className="field">
-            <span className="field__label">Nuevo título</span>
+            <span className="field__label">{t('web.noteOps.field.newTitle')}</span>
             <input
               className="field__control"
               value={titleInput}
@@ -212,7 +216,7 @@ export function NoteOpsDialog({
 
         {kind === 'move' ? (
           <label className="field">
-            <span className="field__label">Carpeta de destino</span>
+            <span className="field__label">{t('web.noteOps.field.destFolder')}</span>
             <input
               className="field__control"
               list="note-move-folders"
@@ -232,24 +236,29 @@ export function NoteOpsDialog({
 
         {destinationPreview !== null && kind !== 'delete' ? (
           <p className="note-ops-dialog__preview">
-            Destino: <code>{destinationPreview}</code>
+            {t('web.noteOps.destination.prefix')} <code>{destinationPreview}</code>
           </p>
         ) : null}
 
-        <section className="note-ops-dialog__backlinks" aria-label="Enlaces entrantes">
+        <section
+          className="note-ops-dialog__backlinks"
+          aria-label={t('web.noteOps.backlinks.aria')}
+        >
           <h3 className="note-ops-dialog__backlinks-title">
-            Enlaces entrantes ({backlinks.length})
+            {t('web.noteOps.backlinks.title', { count: backlinks.length })}
           </h3>
           {kind === 'delete' && backlinks.length > 0 ? (
-            <p className="note-ops-dialog__warning">
-              No se puede borrar mientras otras notas enlacen aquí. Puedes forzar el borrado y
-              convertir esos enlaces en pendientes.
-            </p>
+            <p className="note-ops-dialog__warning">{t('web.noteOps.delete.incomingWarning')}</p>
           ) : null}
           {kind !== 'delete' && backlinks.length > 0 ? (
             <p className="note-ops-dialog__hint">
-              Se reescribirán los enlaces entrantes en {backlinks.length}{' '}
-              {backlinks.length === 1 ? 'nota' : 'notas'}.
+              {t('web.noteOps.backlinks.rewriteHint', {
+                count: backlinks.length,
+                noteWord:
+                  backlinks.length === 1
+                    ? t('web.noteOps.backlinks.noteSingular')
+                    : t('web.noteOps.backlinks.notePlural'),
+              })}
             </p>
           ) : null}
           <ul className="note-ops-dialog__backlink-list">
@@ -270,7 +279,7 @@ export function NoteOpsDialog({
 
         <footer className="note-ops-dialog__actions">
           <button type="button" className="button button--ghost" onClick={onClose}>
-            Cancelar
+            {t('web.common.cancel')}
           </button>
           {kind === 'delete' && backlinks.length > 0 && !dangerStep ? (
             <button
@@ -282,7 +291,7 @@ export function NoteOpsDialog({
                 setError(null);
               }}
             >
-              Borrar con fuerza
+              {t('web.noteOps.delete.force')}
             </button>
           ) : null}
           <button

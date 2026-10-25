@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, newWebPage, parseJson, type JsonEnvelope } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = join(REPO_ROOT, 'fixtures/vaults/backlinks');
@@ -75,7 +75,7 @@ it('REQ-APP-04: opens the palette with Ctrl+K, searches, and opens a note by ULI
     const started = await startServe(vault);
     const { url } = started.json.data;
 
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await page.goto(url, { waitUntil: 'networkidle' });
 
     await page.keyboard.press('Control+K');

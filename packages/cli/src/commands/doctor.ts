@@ -23,7 +23,7 @@ interface FixView {
 
 export const doctorCommand: CommandSpec = {
   name: 'doctor',
-  summary: 'Revisa enlaces rotos, pendientes, huérfanas, ids duplicados y notas inválidas.',
+  summary: 'cli.auto.revisa_enlaces_rotos_pendientes_huerfanas_ids_du',
   example: 'gaveta doctor --json',
   requiresVault: true,
   input: 'none',
@@ -31,7 +31,7 @@ export const doctorCommand: CommandSpec = {
     {
       name: 'fix',
       flags: '--fix',
-      description: 'Repara href desfasados y rutas del tema de forma determinista.',
+      description: 'cli.auto.repara_href_desfasados_y_rutas_del_tema_de_forma',
       kind: 'boolean',
     },
   ],

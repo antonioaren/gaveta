@@ -25,6 +25,7 @@
     "vitest": "catalog:"
   },
   "dependencies": {
+    "@gaveta/i18n": "workspace:*",
     "parse5": "8.0.1",
     "rehype-parse": "^9.0.1",
     "rehype-raw": "^7.0.0",
