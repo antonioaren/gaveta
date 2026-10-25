@@ -1,6 +1,6 @@
 import { access } from 'node:fs/promises';
 import nodePath from 'node:path';
-import { openVaultIndex, type VaultIndex } from '@gaveta/core';
+import { openVaultIndex, scanNoteFiles, type VaultIndex } from '@gaveta/core';
 import { warningFromCode, type ApiWarning } from './envelope.ts';
 import type { VaultNoteEvent } from './vault-events.ts';
 import { readNoteUlidFromVaultFile } from './vault-note-id.ts';
@@ -64,9 +64,14 @@ export class VaultIndexSession {
       const relativePath = change.relativePath;
       if (change.kind === 'unlink') {
         const id = noteIdForPath(index, relativePath);
-        const to =
-          pairMoveByNoteId(id, recentAdds, now, movePairWindowMs, relativePath) ??
-          (await recentAddPathWithNoteFile(this.vaultRoot, id, relativePath, recentAdds));
+        const to = await resolveMoveDestinationForUnlink(
+          this.vaultRoot,
+          id,
+          relativePath,
+          recentAdds,
+          now,
+          movePairWindowMs,
+        );
         if (to !== null) {
           recentAdds.delete(to);
           recentUnlinks.delete(relativePath);
@@ -101,9 +106,14 @@ export class VaultIndexSession {
       }
       if (!(await vaultNoteFileExists(this.vaultRoot, relativePath))) {
         const id = noteIdForPath(index, relativePath);
-        const to =
-          pairMoveByNoteId(id, recentAdds, now, movePairWindowMs, relativePath) ??
-          (await recentAddPathWithNoteFile(this.vaultRoot, id, relativePath, recentAdds));
+        const to = await resolveMoveDestinationForUnlink(
+          this.vaultRoot,
+          id,
+          relativePath,
+          recentAdds,
+          now,
+          movePairWindowMs,
+        );
         if (to !== null) {
           recentAdds.delete(to);
           recentUnlinks.delete(relativePath);
@@ -120,12 +130,7 @@ export class VaultIndexSession {
       }
       await index.upsert(relativePath);
       const id = noteIdForPath(index, relativePath);
-      const from = await indexedPathWithNoteIdMissingFile(
-        index,
-        this.vaultRoot,
-        id,
-        relativePath,
-      );
+      const from = await indexedPathWithNoteIdMissingFile(index, this.vaultRoot, id, relativePath);
       if (from !== null) {
         recentUnlinks.delete(from);
         recentAdds.delete(relativePath);
@@ -192,6 +197,26 @@ async function indexedPathWithNoteIdMissingFile(
   return null;
 }
 
+async function resolveMoveDestinationForUnlink(
+  vaultRoot: string,
+  id: string | null,
+  relativePath: string,
+  recentAdds: ReadonlyMap<string, RecentUnlink>,
+  now: number,
+  movePairWindowMs: number,
+): Promise<string | null> {
+  const fromRecent =
+    pairMoveByNoteId(id, recentAdds, now, movePairWindowMs, relativePath) ??
+    (await recentAddPathWithNoteFile(vaultRoot, id, relativePath, recentAdds));
+  if (fromRecent !== null) {
+    return fromRecent;
+  }
+  if (id === null || (await vaultNoteFileExists(vaultRoot, relativePath))) {
+    return null;
+  }
+  return await vaultPathWithSameNoteIdAndBasename(vaultRoot, id, relativePath);
+}
+
 async function recentAddPathWithNoteFile(
   vaultRoot: string,
   noteId: string | null,
@@ -202,9 +227,39 @@ async function recentAddPathWithNoteFile(
     return null;
   }
   for (const [addPath, meta] of recentAdds) {
-    if (addPath !== exceptPath && meta.id === noteId && (await vaultNoteFileExists(vaultRoot, addPath))) {
+    if (
+      addPath !== exceptPath &&
+      meta.id === noteId &&
+      (await vaultNoteFileExists(vaultRoot, addPath))
+    ) {
       return addPath;
     }
+  }
+  return null;
+}
+
+async function vaultPathWithSameNoteIdAndBasename(
+  vaultRoot: string,
+  noteId: string,
+  unlinkedPath: string,
+): Promise<string | null> {
+  const basename = nodePath.posix.basename(unlinkedPath);
+  const scanned = await scanNoteFiles(vaultRoot);
+  const matches: string[] = [];
+  for (const file of scanned.files) {
+    if (file.relativePath === unlinkedPath) {
+      continue;
+    }
+    if (nodePath.posix.basename(file.relativePath) !== basename) {
+      continue;
+    }
+    const fileId = await readNoteUlidFromVaultFile(vaultRoot, file.relativePath);
+    if (fileId === noteId) {
+      matches.push(file.relativePath);
+    }
+  }
+  if (matches.length === 1) {
+    return matches[0];
   }
   return null;
 }
