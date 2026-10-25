@@ -38,6 +38,11 @@ export interface GraphPayload {
   }[];
 }
 
+/** Remove a temp vault tree; retries while macOS CI still has serve/SQLite handles open. */
+export function removeTempTree(target: string): void {
+  rmSync(target, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+}
+
 export function childEnv(overrides: Record<string, string> = {}): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env };
   delete env.GAVETA_VAULT;

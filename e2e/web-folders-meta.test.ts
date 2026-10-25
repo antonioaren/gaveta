@@ -1,11 +1,11 @@
 import { spawn } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { NOTE_X, vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, removeTempTree, type JsonEnvelope } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = vaultPath('backlinks');
@@ -113,6 +113,6 @@ it('REQ-APP-18: creates a folder and edits tags from the note pane', async () =>
 
     await page.screenshot({ path: join(screenshotDir, 't3-12-folders-meta.png'), fullPage: true });
   } finally {
-    rmSync(parent, { recursive: true, force: true });
+    removeTempTree(parent);
   }
 });
