@@ -2,6 +2,7 @@
   "name": "@gaveta/web",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "React app. Shell until the phase 2 viewer.",
   "type": "module",
   "engines": {

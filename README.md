@@ -111,3 +111,7 @@ Los scripts y estilos inline se eliminan en tipos declarativos (`doc`, `slides`,
 | `@gaveta/web`    | `apps/web`        | esqueleto React + Vite                     |
 
 Los paquetes de Node usan TypeScript estricto con `NodeNext` y sin emit. Los imports relativos llevan extensión `.ts`. La app usa la resolución de Vite.
+
+## Licencia
+
+Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para el texto completo.
