@@ -9,6 +9,7 @@ import { attachCspGuard, installCspViolationListener } from './csp-guard.ts';
 import {
   GAVETA_BIN,
   initVault,
+  modChord,
   newWebPage,
   parseJson,
   runGaveta,
@@ -187,7 +188,7 @@ it('T3.15: VS Code layer exposes fold gutter and localized search', async () => 
     expect(Number.parseFloat(foldGutterWidth)).toBeGreaterThan(0);
     const editor = page.locator('.code-editor .cm-content');
     await editor.click();
-    await page.keyboard.press('Control+f');
+    await page.keyboard.press(modChord('f'));
     await page.locator('.code-editor .cm-panel.cm-search').waitFor({ timeout: 10_000 });
     const searchPanelText = await page.locator('.code-editor .cm-panel.cm-search').innerText();
     expect(searchPanelText).toContain('siguiente');
@@ -220,7 +221,7 @@ it('T3.15: Mod-s saves edits through the API without CSP violations', async () =
         response.ok(),
       { timeout: 15_000 },
     );
-    await page.keyboard.press('Control+s');
+    await page.keyboard.press(modChord('s'));
     await saveResponse;
     const bytesAfter = readFileSync(notePath);
     expect(bytesAfter.toString('utf8')).toContain('texto editado');

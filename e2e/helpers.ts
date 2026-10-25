@@ -5,6 +5,12 @@ import { join } from 'node:path';
 import type { Browser } from 'playwright';
 import { vaultPath, type VaultName } from '@gaveta/fixtures';
 
+/** Playwright chord for CodeMirror / app `Mod-*` bindings (Cmd on macOS, Ctrl elsewhere). */
+export function modChord(key: string): string {
+  const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
+  return `${mod}+${key}`;
+}
+
 /** Pin the web shell to Spanish for e2e assertions written against `es` copy. */
 export async function newWebPage(browser: Browser) {
   const page = await browser.newPage();
