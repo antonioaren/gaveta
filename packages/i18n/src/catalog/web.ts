@@ -4,8 +4,7 @@ export const webMessagesEs = {
   'web.api.error.E_CONFLICT': 'La nota cambió mientras creabas; inténtalo de nuevo.',
   'web.api.error.E_CONFLICT_EDIT':
     'La nota cambió en otro sitio. Recarga el contenido antes de volver a guardar.',
-  'web.api.error.E_CONFLICT_EDIT_ALT':
-    'La nota cambió en otro sitio; no se guardó tu versión.',
+  'web.api.error.E_CONFLICT_EDIT_ALT': 'La nota cambió en otro sitio; no se guardó tu versión.',
   'web.api.error.E_CONFLICT_META':
     'La nota ha cambiado desde la última lectura. Recarga la nota e inténtalo de nuevo.',
   'web.api.error.E_CONFLICT_NOTE_OPS':
@@ -244,6 +243,9 @@ export const webMessagesEs = {
   'web.topbar.forward': 'Adelante',
   'web.topbar.graph': 'Grafo',
   'web.topbar.notes': 'Notas',
+  'web.language.select.aria': 'Idioma',
+  'web.language.en': 'English',
+  'web.language.es': 'Español',
 } as const;
 
 export const webMessagesEn = {
@@ -252,8 +254,7 @@ export const webMessagesEn = {
   'web.api.error.E_CONFLICT': 'The note changed while you were creating it; try again.',
   'web.api.error.E_CONFLICT_EDIT':
     'The note changed elsewhere. Reload the content before saving again.',
-  'web.api.error.E_CONFLICT_EDIT_ALT':
-    'The note changed elsewhere; your version was not saved.',
+  'web.api.error.E_CONFLICT_EDIT_ALT': 'The note changed elsewhere; your version was not saved.',
   'web.api.error.E_CONFLICT_META':
     'The note changed since it was last read. Reload the note and try again.',
   'web.api.error.E_CONFLICT_NOTE_OPS':
@@ -325,8 +326,7 @@ export const webMessagesEn = {
   'web.editor.code.aria': 'HTML code editor',
   'web.editor.htmlBlock.label': 'HTML block (read-only in the visual editor)',
   'web.editor.iframe.defaultTitle': 'Embedded frame',
-  'web.editor.iframe.hint':
-    'Iframe preview (scripts not executed). Edit the content in code mode.',
+  'web.editor.iframe.hint': 'Iframe preview (scripts not executed). Edit the content in code mode.',
   'web.editor.task.aria': 'Task',
   'web.explorer.aria': 'Note explorer',
   'web.explorer.exportVaultLabel': 'vault',
@@ -376,8 +376,7 @@ export const webMessagesEn = {
   'web.health.aria': 'Health panel',
   'web.health.dismiss': 'Got it',
   'web.health.empty': 'No issues detected.',
-  'web.health.externalChange':
-    'An external change affected vault health (links or contract).',
+  'web.health.externalChange': 'An external change affected vault health (links or contract).',
   'web.health.hint': 'Findings from gaveta doctor.',
   'web.health.loading': 'Loading health…',
   'web.health.severity.error': 'Errors',
@@ -491,4 +490,7 @@ export const webMessagesEn = {
   'web.topbar.forward': 'Forward',
   'web.topbar.graph': 'Graph',
   'web.topbar.notes': 'Notes',
+  'web.language.select.aria': 'Language',
+  'web.language.en': 'English',
+  'web.language.es': 'Español',
 } satisfies Record<keyof typeof webMessagesEs, string>;
