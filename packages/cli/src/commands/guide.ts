@@ -22,7 +22,7 @@ const GUIDE_OPTIONS = [
   {
     name: 'topic',
     flags: '--topic <tema>',
-    description: `Sección a mostrar: ${GUIDE_TOPICS.join(', ')}.`,
+    description: 'cli.human.guide.section_option',
     choices: [...GUIDE_TOPICS],
   },
   {

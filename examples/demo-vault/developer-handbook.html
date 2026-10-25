@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Developer Handbook</title>
+    <meta name="gaveta:id" content="01M5SXTFT21EAB80DEQA3H4SH0" />
+    <meta name="gaveta:type" content="doc" />
+    <meta name="gaveta:tags" content="demo, guide, reference" />
+    <meta name="gaveta:aliases" content="Handbook" />
+    <meta name="gaveta:created" content="2026-10-25T16:20:41.922Z" />
+    <meta name="gaveta:updated" content="2026-10-25T16:20:41.922Z" />
+    <link rel="stylesheet" href=".gaveta/theme.css" />
+  </head>
+  <body>
+    <article>
+      <header class="note-header">
+        <span>Document</span>
+        <h1>Developer Handbook</h1>
+        <ul>
+          <li><span class="badge">guide</span></li>
+          <li><span class="badge">reference</span></li>
+        </ul>
+      </header>
+      <nav class="toc">
+        <a href="#callouts">Callouts</a> <a href="#table">Table</a> <a href="#code">Code</a>
+      </nav>
+      <section id="callouts">
+        <h2>Callouts</h2>
+        <aside class="callout" data-kind="info">
+          <p>Gaveta stores notes as HTML files you can diff, grep, and edit with agents.</p>
+        </aside>
+        <aside class="callout" data-kind="tip">
+          <p>Link ideas with <code>[[Wikilinks and the Graph]]</code> instead of brittle URLs.</p>
+        </aside>
+        <aside class="callout" data-kind="warning">
+          <p>Keep secrets out of the vault; this demo is meant for public screenshots.</p>
+        </aside>
+      </section>
+      <section id="table">
+        <h2>Table</h2>
+        <table>
+          <caption>
+            Where to look next
+          </caption>
+          <thead>
+            <tr>
+              <th>Topic</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Architecture</td>
+              <td>
+                <a href="architecture-notes.html" data-g-to="01M5SXTHFDB1PS483WNE3NGBB5"
+                  >Architecture Notes</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>CLI</td>
+              <td>
+                <a href="cli-quick-reference.html" data-g-to="01M5SXTJNWVDCZQ970TMGEQ033"
+                  >CLI Quick Reference</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>Security</td>
+              <td>
+                <a href="security-model.html" data-g-to="01M5SXTJ99FE1GYCHSMKJCMHY9"
+                  >Security Model</a
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <section id="code">
+        <h2>Code</h2>
+        <pre><code class="language-ts">import { doctorVault } from '@gaveta/core';
+
+const report = await doctorVault(process.cwd());
+console.log(report.ok);</code></pre>
+        <p>
+          See also
+          <a href="sqlite-index-internals.html" data-g-to="01M5SXTHWF6C0MPB910K7QS0BS"
+            >SQLite Index Internals</a
+          >
+          and
+          <a href="local-first-knowledge.html" data-g-to="01M5SXTG7H85KT4RVTPXBZ9SB9"
+            >Local-First Knowledge</a
+          >.
+        </p>
+      </section>
+    </article>
+  </body>
+</html>

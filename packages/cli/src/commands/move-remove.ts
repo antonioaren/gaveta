@@ -11,6 +11,7 @@ import {
   type VaultIndex,
 } from '@gaveta/core';
 import { CliFailure } from '../failure.ts';
+import { hm } from '../messages.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
 const MISSING_REF = 'cli.auto.falta_la_referencia';
@@ -65,7 +66,7 @@ export const mvCommand: CommandSpec = {
 export const rmCommand: CommandSpec = {
   name: 'rm',
   summary: 'cli.auto.borra_una_nota_con_force_convierte_los_enlaces_e',
-  example: 'gaveta rm "Nota huérfana" --json',
+  example: 'gaveta rm "orphan-note" --json',
   requiresVault: true,
   input: 'none',
   args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true }],
@@ -168,9 +169,13 @@ function presentMove(moved: MoveNoteResult): Record<string, unknown> {
 function renderMove(moved: MoveNoteResult): string {
   const count = moved.rewritten.length;
   const rewritten =
-    count === 0 ? '' : count === 1 ? '1 nota reescrita\n' : `${String(count)} notas reescritas\n`;
+    count === 0
+      ? ''
+      : count === 1
+        ? hm('cli.human.move.rewritten_one')
+        : hm('cli.human.move.rewritten_many', { count });
   const id = moved.id === null ? '' : `${moved.id}\n`;
-  return `Movida ${moved.from} → ${moved.to}\n${id}${rewritten}`;
+  return hm('cli.human.move.done', { from: moved.from, to: moved.to, id, rewritten });
 }
 
 function presentRemove(removed: RemoveNoteResult): Record<string, unknown> {
@@ -189,8 +194,8 @@ function renderRemove(removed: RemoveNoteResult): string {
     pending === 0
       ? ''
       : pending === 1
-        ? '1 enlace convertido en pendiente\n'
-        : `${String(pending)} enlaces convertidos en pendientes\n`;
+        ? hm('cli.human.remove.pending_one')
+        : hm('cli.human.remove.pending_many', { count: pending });
   const id = removed.id === null ? '' : `${removed.id}\n`;
-  return `Borrada ${removed.path}\n${id}${extra}`;
+  return hm('cli.human.remove.done', { path: removed.path, id, pending: extra });
 }

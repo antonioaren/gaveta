@@ -13,6 +13,7 @@ import {
   type NoteWarning,
 } from '@gaveta/core';
 import { CliFailure } from '../failure.ts';
+import { hm } from '../messages.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
 const MISSING_REF = 'cli.auto.falta_la_referencia';
@@ -107,7 +108,11 @@ export const todoCommand: CommandSpec = {
             taskId: result.taskId,
             checked: result.checked,
           },
-          human: `Añadida ${result.taskId}\n${result.path}\n${result.hash}\n`,
+          human: hm('cli.human.todo.added', {
+            taskId: result.taskId,
+            path: result.path,
+            hash: result.hash,
+          }),
           warnings: toCommandWarnings(result.warnings),
         };
       },
@@ -122,7 +127,11 @@ export const todoCommand: CommandSpec = {
       ],
       options: sharedWriteOptions,
       async run(context): Promise<CommandResult> {
-        return presentToggle(await checkTask(toggleInput(context)), context, 'Marcada');
+        return presentToggle(
+          await checkTask(toggleInput(context)),
+          context,
+          hm('cli.human.todo.marked'),
+        );
       },
     },
     {
@@ -135,7 +144,11 @@ export const todoCommand: CommandSpec = {
       ],
       options: sharedWriteOptions,
       async run(context): Promise<CommandResult> {
-        return presentToggle(await uncheckTask(toggleInput(context)), context, 'Desmarcada');
+        return presentToggle(
+          await uncheckTask(toggleInput(context)),
+          context,
+          hm('cli.human.todo.unmarked'),
+        );
       },
     },
     {
@@ -195,7 +208,12 @@ function presentToggle(
       taskId: result.taskId,
       checked: result.checked,
     },
-    human: `${label} ${result.taskId}\n${result.path}\n${result.hash}\n`,
+    human: hm('cli.human.todo.toggle_line', {
+      label,
+      taskId: result.taskId,
+      path: result.path,
+      hash: result.hash,
+    }),
     warnings: toCommandWarnings(result.warnings),
   };
 }
@@ -217,13 +235,21 @@ function presentListed(task: ListedTask): Record<string, unknown> {
 
 function renderList(tasks: readonly ListedTask[]): string {
   if (tasks.length === 0) {
-    return 'No hay tareas que coincidan.\n';
+    return hm('cli.human.todo.list_empty');
   }
   return `${tasks
     .map((task) => {
-      const state = task.checked ? 'hecha' : 'pendiente';
+      const state = task.checked
+        ? hm('cli.human.todo.state_done')
+        : hm('cli.human.todo.state_open');
       const section = task.sectionId === null ? '' : ` · ${task.sectionId}`;
-      return `${task.text}\n${task.path} · ${task.taskId ?? 'sin-id'} · ${state}${section}`;
+      return hm('cli.human.todo.list_item', {
+        text: task.text,
+        path: task.path,
+        taskId: task.taskId ?? hm('cli.human.todo.no_id'),
+        state,
+        section,
+      }).trimEnd();
     })
     .join('\n')}\n`;
 }

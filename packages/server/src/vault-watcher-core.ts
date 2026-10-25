@@ -27,10 +27,13 @@ export interface CreateVaultWatcherCoreOptions {
 
 type PendingChange = import('./vault-batch.ts').PendingFileEvent;
 
+/** macOS FSEvents can deliver unlink/add seconds apart; keep pairing longer than debounce bursts. */
+const DEFAULT_MOVE_PAIR_WINDOW_MS = 3_000;
+
 export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): VaultWatcherCore {
   const debounceMs = options.debounceMs ?? 50;
   const maxWaitMs = options.maxWaitMs ?? 250;
-  const movePairWindowMs = options.movePairWindowMs ?? 200;
+  const movePairWindowMs = options.movePairWindowMs ?? DEFAULT_MOVE_PAIR_WINDOW_MS;
   const pending = new Map<string, PendingChange>();
   const recentUnlinks = new Map<string, RecentUnlink>();
   const lifecycle = { closed: false };

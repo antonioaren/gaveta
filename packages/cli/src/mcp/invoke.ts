@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream';
 import { CliFailure } from '../failure.ts';
+import { hm } from '../messages.ts';
 import { runCli, type CliIo } from '../run.ts';
 import type { CommandSpec, CommandSubSpec } from '../types.ts';
 import type { McpToolDefinition } from './tool-definitions.ts';
@@ -17,7 +18,7 @@ function readString(value: unknown, field: string): string | undefined {
     return undefined;
   }
   if (typeof value !== 'string' || value.length === 0) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: `Invalid MCP field: ${field}` });
+    throw new CliFailure('E_ARG_INVALID', {}, { problem: hm('cli.mcp.invalidField', { field }) });
   }
   return value;
 }

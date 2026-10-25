@@ -5,6 +5,7 @@ import {
   renderMigrationSummary,
   type ExportCliData,
 } from './migration-report.ts';
+import { hm } from '../messages.ts';
 import { renderExportConflictLines } from './migration-human.ts';
 
 function aggregateWarnings(data: ExportCliData): CommandWarning[] {
@@ -22,28 +23,28 @@ function aggregateWarnings(data: ExportCliData): CommandWarning[] {
 
 function renderHuman(data: ExportCliData): string {
   const labels = {
-    created: 'notas',
-    overwritten: 'sobrescritas',
-    renamed: 'renombradas',
-    skipped: 'omitidas',
-    failed: 'conflictos',
-    attachments: 'adjuntos',
+    created: hm('cli.human.export.summary.created'),
+    overwritten: hm('cli.human.export.summary.overwritten'),
+    renamed: hm('cli.human.export.summary.renamed'),
+    skipped: hm('cli.human.export.summary.skipped'),
+    failed: hm('cli.human.export.summary.failed'),
+    attachments: hm('cli.human.export.summary.attachments'),
   };
   const summary = renderMigrationSummary(data.summary, labels);
   const lines: string[] = [];
   if (data.dryRun) {
     if (data.blocked) {
-      lines.push(`Vista previa bloqueada: ${summary}.`);
-      lines.push('Conflictos:');
+      lines.push(hm('cli.human.export.blocked_preview', { summary }));
+      lines.push(hm('cli.human.export.conflicts_heading'));
       lines.push(...renderExportConflictLines(data.conflicts));
     } else {
-      lines.push(`Vista previa de exportación a ${data.outDir}: ${summary}.`);
+      lines.push(hm('cli.human.export.preview', { outDir: data.outDir, summary }));
     }
   } else {
-    lines.push(`Exportación completada en ${data.outDir}: ${summary}.`);
+    lines.push(hm('cli.human.export.completed', { outDir: data.outDir, summary }));
   }
   if (!data.dryRun && data.conflicts.length > 0) {
-    lines.push('Conflictos:');
+    lines.push(hm('cli.human.export.conflicts_heading'));
     lines.push(...renderExportConflictLines(data.conflicts));
   }
   return `${lines.join('\n')}\n`;

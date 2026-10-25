@@ -1,0 +1,14 @@
+{
+  "rel": {
+    "strict": false,
+    "vocabulary": ["related", "depends-on", "part-of", "supersedes", "references"]
+  },
+  "remoteAllowlist": [],
+  "assetsVersion": "0.1.0",
+  "assets": {
+    ".gaveta/theme.css": "acc7885935bcd009ae4f5cdf7941af80061d63008732303e8c458c02ccce04d5",
+    ".gaveta/mermaid.min.js": "07e37dfa97b337ccc85365d57eddf99b9706f09db3b59b260d0333b23b343c4b",
+    ".gaveta/mermaid-boot.js": "a85966bc4a4909f23de77cbf52a96e89a1f335a040991f2ef2960080ff54bcae",
+    ".gaveta/MERMAID-LICENSE.txt": "ec9fb67dcb25eccc416ed56e1aab819222c805a2a4bfe4cb19e7556bf2ffde80"
+  }
+}

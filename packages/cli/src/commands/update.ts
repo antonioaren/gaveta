@@ -11,6 +11,7 @@ import {
   upgradeVaultAssets,
 } from '@gaveta/core';
 import type { CommandResult, CommandSpec, CommandWarning } from '../types.ts';
+import { hm } from '../messages.ts';
 import { cliVersion } from './version.ts';
 
 const CLI_ENTRY = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'bin', 'gaveta.js');
@@ -47,7 +48,7 @@ export const updateCommand: CommandSpec = {
     if (assetsOnly) {
       if (context.vault === null) {
         return {
-          human: 'Indica un vault con --vault para actualizar assets.\n',
+          human: hm('cli.human.update.missing_vault'),
           data: { error: 'missing_vault' },
           exitCode: 1,
         };
@@ -59,9 +60,11 @@ export const updateCommand: CommandSpec = {
       }));
       const lines: string[] = [];
       if (vaultAssets.upgraded.length > 0) {
-        lines.push(`Assets del vault actualizados: ${vaultAssets.upgraded.join(', ')}`);
+        lines.push(
+          hm('cli.human.update.assets_upgraded', { list: vaultAssets.upgraded.join(', ') }),
+        );
       } else {
-        lines.push('Los assets del vault ya están al día.');
+        lines.push(hm('cli.human.update.assets_current'));
       }
       return {
         human: `${lines.join('\n')}\n`,
@@ -125,27 +128,36 @@ export const updateCommand: CommandSpec = {
     const lines: string[] = [];
     if (applied.applied && applied.target !== null) {
       lines.push(
-        `Actualizado: ${applied.previousVersion} (${check.currentShortCommit}) → ${applied.currentVersion} (${applied.currentShortCommit})`,
+        hm('cli.human.update.upgraded', {
+          previousVersion: applied.previousVersion,
+          previousCommit: check.currentShortCommit,
+          currentVersion: applied.currentVersion,
+          currentCommit: applied.currentShortCommit,
+        }),
       );
       if (applied.target.commitCount > 0) {
-        lines.push(`${String(applied.target.commitCount)} commit(s) nuevos en origin/main.`);
+        lines.push(hm('cli.human.update.new_commits', { count: applied.target.commitCount }));
       }
       for (const entry of applied.target.changelogEntries) {
         lines.push(`\n## ${entry.version}\n${entry.body}`);
       }
       if (applied.pnpmInstallRan) {
-        lines.push('\nDependencias actualizadas con pnpm install --frozen-lockfile.');
+        lines.push(`\n${hm('cli.human.update.deps_installed')}`);
       }
       if (webBuildRan) {
-        lines.push('Visor web compilado con pnpm build:web.');
+        lines.push(hm('cli.human.update.web_built'));
       }
     } else if (check.upToDate) {
       lines.push(
-        `Gaveta ${check.currentVersion} (${check.currentShortCommit}) ya está al día (${channel}).`,
+        hm('cli.human.update.up_to_date_already', {
+          version: check.currentVersion,
+          commit: check.currentShortCommit,
+          channel,
+        }),
       );
     }
     if (vaultAssets !== null && vaultAssets.upgraded.length > 0) {
-      lines.push(`Assets del vault actualizados: ${vaultAssets.upgraded.join(', ')}`);
+      lines.push(hm('cli.human.update.assets_upgraded', { list: vaultAssets.upgraded.join(', ') }));
     }
     return {
       human: `${lines.join('\n')}\n`,
@@ -162,14 +174,27 @@ export const updateCommand: CommandSpec = {
 
 function formatCheckHuman(check: ReturnType<typeof checkGitUpdate>, channel: string): string {
   if (check.upToDate) {
-    return `Gaveta ${check.currentVersion} (${check.currentShortCommit}) está al día (${channel}).\n`;
+    return hm('cli.human.update.up_to_date', {
+      version: check.currentVersion,
+      commit: check.currentShortCommit,
+      channel,
+    });
   }
   const target = check.target;
   if (target === null) {
-    return `Hay una actualización disponible.\n`;
+    return hm('cli.human.update.available');
   }
-  const commits = target.commitCount > 0 ? `, ${String(target.commitCount)} commit(s) nuevos` : '';
-  return `Hay una actualización disponible: ${check.currentVersion} (${check.currentShortCommit}) → ${target.version} (${target.shortCommit})${commits}.\n`;
+  const commits =
+    target.commitCount > 0
+      ? hm('cli.human.update.commits_suffix', { count: target.commitCount })
+      : '';
+  return hm('cli.human.update.available_detail', {
+    currentVersion: check.currentVersion,
+    currentCommit: check.currentShortCommit,
+    targetVersion: target.version,
+    targetCommit: target.shortCommit,
+    commits,
+  });
 }
 
 function resolveUpdateRepoRoot(detectedRepoRoot: string | null): string | null {
@@ -237,16 +262,16 @@ function runWebBuild(repoRoot: string): boolean {
 
 function manualUpdateResult(method: string): CommandResult {
   const lines = [
-    'Esta instalación no admite gaveta update automático.',
+    hm('cli.human.update.manual_not_supported'),
     '',
-    'Instalación desde git (recomendada hoy):',
+    hm('cli.human.update.manual_git_heading'),
     '  cd <checkout-de-gaveta>',
     '  git switch main && git pull --ff-only origin main',
     '  pnpm install --frozen-lockfile',
     '  ln -sf "$(pwd)/packages/cli/bin/gaveta.js" ~/.local/bin/gaveta',
     '  ln -sf "$(pwd)/packages/cli/bin/gaveta.js" ~/.local/bin/gv',
     '',
-    `Método detectado: ${method}.`,
+    hm('cli.human.update.manual_detected', { method }),
   ];
   return {
     human: `${lines.join('\n')}\n`,

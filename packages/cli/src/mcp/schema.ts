@@ -65,27 +65,13 @@ export function buildMcpInputSchema(
 ): McpZodShape {
   const shape: McpZodShape = {};
 
-  shape.vault = z
-    .string()
-    .min(1)
-    .optional()
-    .describe('Vault directory (--vault). Defaults to cwd discovery.');
-  shape.lang = z
-    .enum(['en', 'es'])
-    .optional()
-    .describe('Locale for messages (en or es), same as --lang.');
+  shape.vault = z.string().min(1).optional().describe(m('cli.mcp.schemaVault'));
+  shape.lang = z.enum(['en', 'es']).optional().describe(m('cli.mcp.schemaLang'));
 
   const inputMode = commandInputMode(spec, subcommand);
   if (inputMode !== 'none') {
-    shape[MCP_FROM_PROPERTY] = z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Read note content from this file path (--from), relative to cwd.');
-    shape[MCP_CONTENT_PROPERTY] = z
-      .string()
-      .optional()
-      .describe('Note body HTML or text; equivalent to --from - on stdin.');
+    shape[MCP_FROM_PROPERTY] = z.string().min(1).optional().describe(m('cli.mcp.schemaFrom'));
+    shape[MCP_CONTENT_PROPERTY] = z.string().optional().describe(m('cli.mcp.schemaContent'));
   }
 
   for (const arg of commandArgs(spec, subcommand) ?? []) {

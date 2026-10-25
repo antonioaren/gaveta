@@ -1,0 +1,6 @@
+{
+  "server.ws.auth_required": "Authentication required",
+  "server.ws.message_too_large": "Message too large",
+  "server.ws.only_auth_message": "Only the authentication message is supported",
+  "server.ws.too_many_live_connections": "Too many live connections"
+}

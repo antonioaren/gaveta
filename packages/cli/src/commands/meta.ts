@@ -6,6 +6,7 @@ import {
   type NoteWarning,
 } from '@gaveta/core';
 import { CliFailure } from '../failure.ts';
+import { hm } from '../messages.ts';
 import type { CommandContext, CommandResult, CommandSpec } from '../types.ts';
 import { toCommandWarnings } from './notes.ts';
 
@@ -65,7 +66,7 @@ export const metaCommand: CommandSpec = {
         title: edited.title,
         type: edited.type,
       },
-      human: `Metadatos actualizados en ${edited.path}\n${edited.hash}\n`,
+      human: hm('cli.human.meta.updated', { path: edited.path, hash: edited.hash }),
       warnings: toCommandWarnings(edited.warnings),
     };
   },
@@ -115,15 +116,27 @@ function splitNames(value: string | undefined, label: string): string[] {
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
   if (parts.length === 0) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: `Faltan ${label} válidos.` });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: hm('cli.human.meta.missing_valid', { label }) },
+    );
   }
   for (const part of parts) {
     if (part.includes('\0')) {
-      throw new CliFailure('E_ARG_INVALID', {}, { problem: `Faltan ${label} válidos.` });
+      throw new CliFailure(
+        'E_ARG_INVALID',
+        {},
+        { problem: hm('cli.human.meta.missing_valid', { label }) },
+      );
     }
   }
   if (new Set(parts).size !== parts.length) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: `Hay ${label} duplicados.` });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: hm('cli.human.meta.duplicates', { label }) },
+    );
   }
   return parts;
 }
@@ -131,7 +144,7 @@ function splitNames(value: string | undefined, label: string): string[] {
 function refused(warnings: readonly NoteWarning[]): CommandResult {
   return {
     data: { refused: true },
-    human: 'La nota no se guardó por avisos del validador.\n',
+    human: hm('cli.human.meta.not_saved_warnings'),
     warnings: toCommandWarnings(warnings),
     exitCode: 2,
   };

@@ -11,7 +11,7 @@ export function navigationCommands(t: WebTranslate): readonly PaletteCommand[] {
     {
       id: 'nav-back',
       label: t('web.palette.command.navBack'),
-      keywords: ['atras', 'atrás', 'back', 'historial'],
+      keywords: ['atras', 'back', 'historial'],
     },
     {
       id: 'nav-forward',

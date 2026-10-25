@@ -16,6 +16,7 @@
     "vitest.e2e.config.ts",
     "vitest.nfr.config.ts",
     "tests/**/*.ts",
-    "e2e/**/*.ts"
+    "e2e/**/*.ts",
+    "scripts/**/*.ts"
   ]
 }

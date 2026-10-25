@@ -1,13 +1,12 @@
 import { GavetaError } from '@gaveta/core';
 import { GAVETA_SERVE_DEFAULT_PORT, GAVETA_SERVE_HOST, createGavetaServer } from '@gaveta/server';
 import { CliFailure } from '../failure.ts';
+import { hm } from '../messages.ts';
 import type { CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 import { resolveWebDistRoot, webDistReady } from '../web-dist.ts';
 import { cliVersion } from './version.ts';
 
 const BAD_PORT = 'cli.auto.el_puerto_tiene_que_ser_un_entero_entre_0_y_6553';
-const WEB_VIEWER_MISSING_HUMAN =
-  'Aviso: el visor web no está compilado (solo API). Ejecuta `pnpm build:web` en la raíz del repositorio.\n';
 
 export const serveCommand: CommandSpec = {
   name: 'serve',
@@ -32,7 +31,7 @@ export const serveCommand: CommandSpec = {
     if (!webReady) {
       warnings.push({ code: 'W_WEB_VIEWER_MISSING' });
       if (context.emit !== undefined && !context.json) {
-        context.emit.stdout(WEB_VIEWER_MISSING_HUMAN);
+        context.emit.stdout(hm('cli.human.serve.web_not_built'));
       }
     }
     const server = createGavetaServer({
@@ -51,8 +50,8 @@ export const serveCommand: CommandSpec = {
       webViewer: webReady,
     };
     const human = webReady
-      ? `Servidor local en ${address.url}\n`
-      : `Servidor local (solo API) en ${address.url}\n`;
+      ? hm('cli.human.serve.local_with_web', { url: address.url })
+      : hm('cli.human.serve.local_api_only', { url: address.url });
     if (context.emit !== undefined) {
       if (context.json) {
         context.emit.success(data, warnings);

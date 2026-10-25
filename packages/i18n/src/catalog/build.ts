@@ -1,10 +1,18 @@
+import cliHumanEn from './cli.human.en.json' with { type: 'json' };
+import cliHumanEs from './cli.human.es.json' with { type: 'json' };
 import cliEn from './cli.en.auto.json' with { type: 'json' };
 import cliEs from './cli.es.auto.json' with { type: 'json' };
 import { diagnosticMessagesEn, diagnosticMessagesEs } from './diagnostics.ts';
+import serverEn from './server.en.json' with { type: 'json' };
+import serverEs from './server.es.json' with { type: 'json' };
 import { webMessagesEn, webMessagesEs } from './web.ts';
 
 export type MessageKey =
-  keyof typeof diagnosticMessagesEn | keyof typeof cliEs | keyof typeof webMessagesEs;
+  | keyof typeof diagnosticMessagesEn
+  | keyof typeof cliEs
+  | keyof typeof cliHumanEs
+  | keyof typeof serverEs
+  | keyof typeof webMessagesEs;
 
 export type MessageCatalog = Record<MessageKey, string>;
 
@@ -22,8 +30,8 @@ function mergeCatalog(parts: readonly Record<string, string>[]): MessageCatalog 
 }
 
 export const catalogs: Record<'en' | 'es', MessageCatalog> = {
-  en: mergeCatalog([diagnosticMessagesEn, cliEn, webMessagesEn]),
-  es: mergeCatalog([diagnosticMessagesEs, cliEs, webMessagesEs]),
+  en: mergeCatalog([diagnosticMessagesEn, cliEn, cliHumanEn, serverEn, webMessagesEn]),
+  es: mergeCatalog([diagnosticMessagesEs, cliEs, cliHumanEs, serverEs, webMessagesEs]),
 };
 
 export function assertCatalogParity(): void {

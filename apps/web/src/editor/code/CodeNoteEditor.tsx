@@ -1,9 +1,11 @@
 import { html } from '@codemirror/lang-html';
+import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { linter, lintGutter } from '@codemirror/lint';
 import { EditorState } from '@codemirror/state';
 import { EditorView, lineNumbers, highlightActiveLineGutter } from '@codemirror/view';
 import { useEffect, useRef, type ReactElement } from 'react';
 import { fetchNoteValidation } from '../../api/note-validate.ts';
+import { ensureCodeEditorShadowMount } from './code-editor-shadow.ts';
 import { createNoteLinter } from './note-linter.ts';
 import { useI18n } from '../../i18n/useI18n.ts';
 
@@ -34,6 +36,7 @@ export function CodeNoteEditor({
     if (host === null) {
       return;
     }
+    const { shadowRoot, mount } = ensureCodeEditorShadowMount(host);
     const noteLinter = createNoteLinter(notePath, fetchNoteValidation);
     const view = new EditorView({
       state: EditorState.create({
@@ -42,6 +45,7 @@ export function CodeNoteEditor({
           lineNumbers(),
           highlightActiveLineGutter(),
           html(),
+          syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
           lintGutter(),
           linter(noteLinter, { delay: 300 }),
           EditorView.lineWrapping,
@@ -53,7 +57,8 @@ export function CodeNoteEditor({
           EditorView.editable.of(!readOnly),
         ],
       }),
-      parent: host,
+      parent: mount,
+      root: shadowRoot,
     });
     viewRef.current = view;
     return () => {
