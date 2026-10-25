@@ -40,14 +40,12 @@ it('emits note:moved when a note is renamed across folders with the same ULID', 
       (event) =>
         (event.type === 'note:added' || event.type === 'note:changed') &&
         event.path === 'folder-a/destino.html',
-      { timeoutMs: 90_000 },
     );
     await copyFile(path.join(vaultRoot, 'destino-enlace.html'), from);
     await added;
 
     const moved = inbox.waitFor(
       (event) => event.type === 'note:moved' && event.from === 'folder-a/destino.html',
-      { timeoutMs: 90_000 },
     );
     await rename(from, to);
     const event = await moved;
@@ -55,4 +53,4 @@ it('emits note:moved when a note is renamed across folders with the same ULID', 
     socket.close();
     await server.close();
   });
-}, 120_000);
+}, 60_000);
