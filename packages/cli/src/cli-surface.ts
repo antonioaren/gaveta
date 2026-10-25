@@ -4,6 +4,7 @@ export const GLOBAL_CLI_FLAGS = new Set([
   '--json',
   '--vault',
   '--from',
+  '--lang',
   '-h',
   '--help',
   '-V',

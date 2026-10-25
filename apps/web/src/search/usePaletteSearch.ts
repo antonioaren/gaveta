@@ -1,5 +1,7 @@
+import { formatMessage } from '@gaveta/i18n';
 import { useEffect, useState } from 'react';
 import { apiJson } from '../api/client.ts';
+import { readWebLocale } from '../i18n/read-web-locale.ts';
 import type { SearchHitView, SearchResponse } from '../api/types.ts';
 import { subscribeVaultNoteLiveRefresh } from '../connections/connections-refresh.ts';
 
@@ -49,7 +51,10 @@ export function usePaletteSearch(query: string, enabled: boolean): PaletteSearch
           if (cancelled || isAbortError(cause)) {
             return;
           }
-          const message = cause instanceof Error ? cause.message : 'Error al buscar';
+          const message =
+            cause instanceof Error
+              ? cause.message
+              : formatMessage('web.api.error.fallbackSearch', readWebLocale());
           setState({ hits: [], loading: false, error: message });
         }
       })();

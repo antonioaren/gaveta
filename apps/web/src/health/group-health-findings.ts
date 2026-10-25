@@ -13,13 +13,14 @@ export interface HealthSeverityGroup {
   readonly codeGroups: readonly HealthCodeGroup[];
 }
 
-const SEVERITY_LABELS: Record<'error' | 'warning', string> = {
-  error: 'Errores',
-  warning: 'Advertencias',
-};
+export interface HealthSeverityLabels {
+  readonly error: string;
+  readonly warning: string;
+}
 
 export function groupHealthFindings(
   findings: readonly DoctorFindingView[],
+  severityLabels: HealthSeverityLabels,
 ): readonly HealthSeverityGroup[] {
   const bySeverity = new Map<'error' | 'warning', Map<string, DoctorFindingView[]>>();
   for (const finding of findings) {
@@ -46,7 +47,7 @@ export function groupHealthFindings(
     const total = codeGroups.reduce((sum, group) => sum + group.count, 0);
     groups.push({
       severity,
-      label: SEVERITY_LABELS[severity],
+      label: severityLabels[severity],
       total,
       codeGroups,
     });

@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { commands } from './registry.ts';
 import { renderHelp } from './help.ts';
+import { m } from './messages.ts';
 
 it('registers version, init, adopt, search, new, read, edit, mv, rm, connection, todo, validate, doctor, reindex, and guide commands', () => {
   expect(commands.map((command) => command.name)).toEqual([
@@ -67,7 +68,7 @@ it('lists every registered command and its example in the help text', () => {
   expect(help).not.toContain('Usage:');
   for (const command of commands) {
     expect(help).toContain(command.name);
-    expect(help).toContain(command.summary);
+    expect(help).toContain(m(command.summary));
     expect(help).toContain(command.example);
   }
   expect(renderHelp(commands, 'version')).toContain('gaveta version --json');

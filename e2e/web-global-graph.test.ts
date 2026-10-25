@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = join(REPO_ROOT, 'fixtures/vaults/backlinks');
@@ -76,7 +76,7 @@ it('REQ-GRAPH-04: global graph filters and opens a note by ULID', async () => {
     expect(started.json.ok).toBe(true);
     const { url } = started.json.data;
 
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await page.goto(url, { waitUntil: 'networkidle' });
     await page.goto(new URL('/grafo', url).toString(), { waitUntil: 'networkidle' });
 

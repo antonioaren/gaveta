@@ -1,9 +1,12 @@
+import { formatMessage } from '@gaveta/i18n';
 import { apiJson } from '../api/client.ts';
 import type { NoteListItem, SearchHitView } from '../api/types.ts';
+import { readWebLocale } from '../i18n/read-web-locale.ts';
 import { isNoteUlid, noteRenderId } from '../notes/viewer-ref.ts';
 
-export const SEARCH_HIT_NOT_INDEXED_MESSAGE =
-  'Esta nota aún no tiene un id en el índice; no se puede abrir desde la paleta hasta que se reindexe.';
+export function searchHitNotIndexedMessage(): string {
+  return formatMessage('web.search.hitNotIndexed', readWebLocale());
+}
 
 export type ResolvedSearchHitOpen =
   | { readonly ok: true; readonly ref: string; readonly noteId: string }
@@ -26,7 +29,7 @@ export function resolveSearchHitFromNotes(
   }
   const noteId = noteRenderId(match);
   if (noteId === null) {
-    return { ok: false, message: SEARCH_HIT_NOT_INDEXED_MESSAGE };
+    return { ok: false, message: searchHitNotIndexedMessage() };
   }
   return { ok: true, ref: noteId, noteId };
 }
@@ -50,5 +53,5 @@ export async function resolveSearchHitOpen(
   } catch {
     // Fall through to not-indexed message.
   }
-  return { ok: false, message: SEARCH_HIT_NOT_INDEXED_MESSAGE };
+  return { ok: false, message: searchHitNotIndexedMessage() };
 }

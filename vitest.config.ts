@@ -10,7 +10,7 @@ const testGlobs = [
 
 export default defineConfig({
   test: {
-    setupFiles: ['apps/web/src/test-setup.ts'],
+    setupFiles: ['tests/i18n-setup.ts', 'apps/web/src/test-setup.ts'],
     environment: 'node',
     coverage: {
       provider: 'v8',

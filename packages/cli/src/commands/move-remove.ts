@@ -13,25 +13,29 @@ import {
 import { CliFailure } from '../failure.ts';
 import type { CommandContext, CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 
-const MISSING_REF = 'Falta la referencia.';
-const MISSING_DEST = 'Falta el destino.';
-const BAD_HASH = 'El hash de --if-match tiene que ser sha256: y 64 hexadecimales.';
+const MISSING_REF = 'cli.auto.falta_la_referencia';
+const MISSING_DEST = 'cli.auto.falta_el_destino';
+const BAD_HASH = 'cli.auto.el_hash_de_if_match_tiene_que_ser_sha256_y_64_he';
 
 export const mvCommand: CommandSpec = {
   name: 'mv',
-  summary: 'Mueve o renombra una nota y reescribe los enlaces entrantes.',
+  summary: 'cli.auto.mueve_o_renombra_una_nota_y_reescribe_los_enlace',
   example: 'gaveta mv "Nota X" otra/carpeta/ --json',
   requiresVault: true,
   input: 'none',
   args: [
-    { name: 'ref', description: 'Id, ruta o título de la nota.', required: true },
-    { name: 'destino', description: 'Ruta o carpeta de destino dentro del vault.', required: true },
+    { name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true },
+    {
+      name: 'destino',
+      description: 'cli.auto.ruta_o_carpeta_de_destino_dentro_del_vault',
+      required: true,
+    },
   ],
   options: [
     {
       name: 'ifMatch',
       flags: '--if-match <hash>',
-      description: 'Rechaza la operación si el hash de la nota no coincide.',
+      description: 'cli.auto.rechaza_la_operacion_si_el_hash_de_la_nota_no_co',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -60,16 +64,16 @@ export const mvCommand: CommandSpec = {
 
 export const rmCommand: CommandSpec = {
   name: 'rm',
-  summary: 'Borra una nota. Con --force convierte los enlaces entrantes en pendientes.',
+  summary: 'cli.auto.borra_una_nota_con_force_convierte_los_enlaces_e',
   example: 'gaveta rm "Nota huérfana" --json',
   requiresVault: true,
   input: 'none',
-  args: [{ name: 'ref', description: 'Id, ruta o título de la nota.', required: true }],
+  args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true }],
   options: [
     {
       name: 'force',
       flags: '--force',
-      description: 'Convierte los enlaces entrantes en pendientes en lugar de fallar.',
+      description: 'cli.auto.convierte_los_enlaces_entrantes_en_pendientes_en',
       kind: 'boolean',
     },
   ],

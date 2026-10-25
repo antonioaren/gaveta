@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/useI18n.ts';
 import type { NoteOpKind, NoteOpTarget } from './note-op-target.ts';
 
 export function NoteOpsMenuButtons({
@@ -11,15 +12,16 @@ export function NoteOpsMenuButtons({
   readonly onExport: () => void;
   readonly className?: string;
 }) {
+  const { t } = useI18n();
   return (
-    <div className={`note-ops-menu ${className}`} role="group" aria-label="Acciones de la nota">
+    <div className={`note-ops-menu ${className}`} role="group" aria-label={t('web.noteOps.aria')}>
       <button
         type="button"
         className="note-ops-menu__button"
         data-testid="note-action-export"
         onClick={onExport}
       >
-        Exportar a Markdown
+        {t('web.common.exportMarkdown')}
       </button>
       <button
         type="button"
@@ -29,7 +31,7 @@ export function NoteOpsMenuButtons({
           onOpen('rename', target);
         }}
       >
-        Renombrar
+        {t('web.common.rename')}
       </button>
       <button
         type="button"
@@ -39,7 +41,7 @@ export function NoteOpsMenuButtons({
           onOpen('move', target);
         }}
       >
-        Mover
+        {t('web.common.move')}
       </button>
       <button
         type="button"
@@ -49,7 +51,7 @@ export function NoteOpsMenuButtons({
           onOpen('delete', target);
         }}
       >
-        Borrar
+        {t('web.common.delete')}
       </button>
     </div>
   );

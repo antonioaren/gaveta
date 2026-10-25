@@ -428,9 +428,23 @@ const expected = {
   },
 } as const;
 
-it('lists every stable code in catalog order with its Spanish text', () => {
+it('lists every stable code in catalog order with metadata', () => {
   expect(diagnosticCodes()).toEqual(Object.keys(expected));
-  expect(DIAGNOSTICS).toEqual(expected);
+  for (const code of diagnosticCodes()) {
+    const spec = expected[code];
+    expect(DIAGNOSTICS[code]).toEqual({
+      severity: spec.severity,
+      exitCode: spec.exitCode,
+      escalatesToError: spec.escalatesToError,
+    });
+  }
+});
+
+it('formats diagnostics in English when a locale is passed', () => {
+  expect(formatDiagnostic('E_VAULT_NOT_FOUND', {}, 'en').message).toBe('No vault was found.');
+  expect(formatDiagnostic('E_ARG_INVALID', {}, 'en').message).toBe(
+    'The argument is missing or out of range.',
+  );
 });
 
 it('keeps the CLI exit codes from the contract', () => {

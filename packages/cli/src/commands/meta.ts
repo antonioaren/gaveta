@@ -9,24 +9,32 @@ import { CliFailure } from '../failure.ts';
 import type { CommandContext, CommandResult, CommandSpec } from '../types.ts';
 import { toCommandWarnings } from './notes.ts';
 
-const MISSING_REF = 'Falta la referencia.';
-const BAD_HASH = 'El hash de --if-match tiene que ser sha256: y 64 hexadecimales.';
+const MISSING_REF = 'cli.auto.falta_la_referencia';
+const BAD_HASH = 'cli.auto.el_hash_de_if_match_tiene_que_ser_sha256_y_64_he';
 const CONTENT_HASH = /^sha256:[0-9a-f]{64}$/;
 
 export const metaCommand: CommandSpec = {
   name: 'meta',
-  summary: 'Edita las etiquetas y los alias de una nota.',
+  summary: 'cli.auto.edita_las_etiquetas_y_los_alias_de_una_nota',
   example: 'gaveta meta "Nota X" --tags indice,sql --if-match sha256:…',
   requiresVault: true,
   input: 'none',
-  args: [{ name: 'ref', description: 'Id, ruta o título de la nota.', required: true }],
+  args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: true }],
   options: [
-    { name: 'tags', flags: '--tags <etiquetas>', description: 'Etiquetas separadas por comas.' },
-    { name: 'aliases', flags: '--aliases <alias>', description: 'Alias separados por comas.' },
+    {
+      name: 'tags',
+      flags: '--tags <etiquetas>',
+      description: 'cli.auto.etiquetas_separadas_por_comas',
+    },
+    {
+      name: 'aliases',
+      flags: '--aliases <alias>',
+      description: 'cli.auto.alias_separados_por_comas',
+    },
     {
       name: 'ifMatch',
       flags: '--if-match <hash>',
-      description: 'Rechaza la escritura si el hash no coincide.',
+      description: 'cli.auto.rechaza_la_escritura_si_el_hash_no_coincide',
     },
   ],
   async run(context): Promise<CommandResult> {
@@ -35,7 +43,7 @@ export const metaCommand: CommandSpec = {
     const hasTags = context.options.tags !== undefined;
     const hasAliases = context.options.aliases !== undefined;
     if (!hasTags && !hasAliases) {
-      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Indica --tags o --aliases.' });
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'cli.auto.indica_tags_o_aliases' });
     }
     const ifMatch = readIfMatch(context.options.ifMatch);
     await assertIfMatch(root, ref, ifMatch);

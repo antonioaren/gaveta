@@ -16,7 +16,7 @@ import { CliFailure } from '../failure.ts';
 import { presentDiagnostic, renderDiagnosticLine, type DiagnosticView } from './diagnostics.ts';
 import type { CommandResult, CommandSpec } from '../types.ts';
 
-const BOTH_TARGETS = 'Indica una referencia o --all, no ambos.';
+const BOTH_TARGETS = 'cli.auto.indica_una_referencia_o_all_no_ambos';
 
 interface ValidateFileView {
   readonly path: string | null;
@@ -26,16 +26,16 @@ interface ValidateFileView {
 
 export const validateCommand: CommandSpec = {
   name: 'validate',
-  summary: 'Valida una nota, el vault entero o HTML de stdin sin escribir.',
+  summary: 'cli.auto.valida_una_nota_el_vault_entero_o_html_de_stdin_',
   example: 'gaveta validate nota.html --json',
   requiresVault: true,
   input: 'optional',
-  args: [{ name: 'ref', description: 'Id, ruta o título de la nota.', required: false }],
+  args: [{ name: 'ref', description: 'cli.auto.id_ruta_o_titulo_de_la_nota', required: false }],
   options: [
     {
       name: 'all',
       flags: '--all',
-      description: 'Valida todas las notas del vault.',
+      description: 'cli.auto.valida_todas_las_notas_del_vault',
       kind: 'boolean',
     },
   ],

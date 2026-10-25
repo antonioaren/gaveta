@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { GraphEdgeView, GraphNodeView } from '../api/types.ts';
 import { graphNodeKey, viewerRefForGraphNode } from './graph-ref.ts';
 import { layoutLocalGraph } from './layout-local-graph.ts';
+import { useI18n } from '../i18n/useI18n.ts';
 
 const WIDTH = 240;
 const HEIGHT = 180;
@@ -34,6 +35,7 @@ interface LocalGraphProps {
 }
 
 export function LocalGraph({ nodes, edges, centerRef, onNavigate }: LocalGraphProps) {
+  const { t } = useI18n();
   const layout = useMemo(() => {
     const layoutNodes = nodes.map((node) => ({ key: graphNodeKey(node) }));
     const layoutEdges = edges.map((edge) => ({ from: edge.from, to: edge.to }));
@@ -41,7 +43,7 @@ export function LocalGraph({ nodes, edges, centerRef, onNavigate }: LocalGraphPr
   }, [nodes, edges]);
 
   if (nodes.length === 0) {
-    return <p className="connections__empty">Sin nodos en el grafo local.</p>;
+    return <p className="connections__empty">{t('web.connections.graph.emptyNodes')}</p>;
   }
 
   return (
@@ -49,7 +51,7 @@ export function LocalGraph({ nodes, edges, centerRef, onNavigate }: LocalGraphPr
       className="connections-graph"
       viewBox={`0 0 ${String(WIDTH)} ${String(HEIGHT)}`}
       role="img"
-      aria-label="Grafo local de notas cercanas"
+      aria-label={t('web.connections.graph.aria')}
     >
       {edges.map((edge, index) => {
         const from = layout.get(edge.from);

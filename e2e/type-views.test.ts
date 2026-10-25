@@ -3,7 +3,7 @@ import { cpSync, mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson } from './helpers.ts';
+import { GAVETA_BIN, parseJson, newWebPage } from './helpers.ts';
 import { requestLocal } from './serve-http.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
@@ -75,7 +75,7 @@ async function openRenderFrame(
 ): Promise<ReturnType<Browser['newPage']> extends Promise<infer P> ? P : never> {
   const shellOrigin = `http://127.0.0.1:${String(port)}`;
   const renderUrl = `${shellOrigin}/render/${noteId}?t=${encodeURIComponent(ticket)}`;
-  const page = await browser.newPage();
+  const page = await newWebPage(browser);
   await page.goto(`${shellOrigin}/`, { waitUntil: 'domcontentloaded' });
   await page.evaluate((url) => {
     document.body.innerHTML = '';

@@ -14,11 +14,9 @@ import { useNoteLiveState } from '../live/useNoteLiveState.ts';
 import { NoteRenderFrame } from './NoteRenderFrame.tsx';
 import { NoteCodeMode } from './NoteCodeMode.tsx';
 import { NoteMetaPanel } from './NoteMetaPanel.tsx';
+import { useI18n } from '../i18n/useI18n.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 import { useRenderBridgeHost } from './useRenderBridgeHost.ts';
-
-const NO_RENDER_ID_MESSAGE =
-  'Esta nota aún no tiene un id en el índice; no se puede previsualizar hasta que se reindexe.';
-const NOTE_DELETED_MESSAGE = 'Esta nota fue eliminada del vault.';
 
 interface NotePaneProps {
   readonly notes: readonly NoteListItem[];
@@ -32,6 +30,7 @@ interface EditDraft {
 }
 
 export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
+  const { t } = useI18n();
   const { ref: encodedRef } = useParams();
   const tabState = useTabs();
   const { openNewNote } = useNewNoteDialog();
@@ -90,7 +89,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
       setDraft({ html: note.html, hash: note.hash });
       setEditTargetRef(activeTab.ref);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo abrir el editor';
+      const message = messageFromCaught(error, 'web.api.error.fallbackOpenEditor');
       setEditError(message);
     } finally {
       setLoadingEdit(false);
@@ -142,8 +141,8 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
 
   if (activeTab === null) {
     return (
-      <section className="note-pane note-pane--empty" aria-label="Área de nota">
-        <p className="note-pane__placeholder">Elige una nota en el explorador para empezar.</p>
+      <section className="note-pane note-pane--empty" aria-label={t('web.note.aria')}>
+        <p className="note-pane__placeholder">{t('web.note.pickFromExplorer')}</p>
       </section>
     );
   }
@@ -152,7 +151,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
   const showModeButtons = canEdit && !editingAny;
 
   return (
-    <section className="note-pane" aria-label="Área de nota">
+    <section className="note-pane" aria-label={t('web.note.aria')}>
       <header className="note-pane__header">
         <div className="note-pane__header-main">
           <h1 className="note-pane__title">{activeTab.title}</h1>
@@ -174,7 +173,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
                 void startEdit();
               }}
             >
-              {loadingEdit ? 'Abriendo…' : 'Editar'}
+              {loadingEdit ? t('web.common.opening') : t('web.note.edit')}
             </button>
           ) : null}
           {showModeButtons ? (
@@ -184,7 +183,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
               data-testid="enter-code-mode"
               onClick={enterCodeMode}
             >
-              Modo código
+              {t('web.note.mode.code')}
             </button>
           ) : null}
           {opTarget !== null ? (
@@ -204,11 +203,11 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
         </p>
       ) : null}
       {deleted ? (
-        <p className="note-pane__placeholder">{NOTE_DELETED_MESSAGE}</p>
+        <p className="note-pane__placeholder">{t('web.note.deleted')}</p>
       ) : noteId === null ? (
         <div className="note-pane__missing">
           <p className="note-pane__placeholder">
-            {ghostRef !== null ? 'Esta nota aún no existe en el vault.' : NO_RENDER_ID_MESSAGE}
+            {ghostRef !== null ? t('web.note.ghost') : t('web.note.notIndexedPreview')}
           </p>
           {ghostRef !== null ? (
             <button
@@ -218,7 +217,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
                 openNewNote({ title: ghostRef, replaceTabRef: ghostRef });
               }}
             >
-              Crear nota
+              {t('web.common.createNote')}
             </button>
           ) : null}
         </div>

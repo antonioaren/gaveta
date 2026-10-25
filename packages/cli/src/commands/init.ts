@@ -3,7 +3,7 @@ import type { CommandResult, CommandSpec } from '../types.ts';
 
 export const initCommand: CommandSpec = {
   name: 'init',
-  summary: 'Crea un vault, o lo completa, sin tocar los archivos que ya existen.',
+  summary: 'cli.auto.crea_un_vault_o_lo_completa_sin_tocar_los_archiv',
   example: 'gaveta init --agent-instructions agents',
   requiresVault: false,
   skipsVaultDiscovery: true,
@@ -11,7 +11,7 @@ export const initCommand: CommandSpec = {
   args: [
     {
       name: 'dir',
-      description: 'Directorio del vault. Por defecto, el directorio actual.',
+      description: 'cli.auto.directorio_del_vault_por_defecto_el_directorio_a',
       required: false,
     },
   ],
@@ -19,8 +19,7 @@ export const initCommand: CommandSpec = {
     {
       name: 'agentInstructions',
       flags: '--agent-instructions <destino>',
-      description:
-        'Escribe un bloque idempotente en CLAUDE.md, AGENTS.md, .cursor/rules/gaveta.mdc o .github/copilot-instructions.md.',
+      description: 'cli.auto.escribe_un_bloque_idempotente_en_claude_md_agent',
       choices: ['claude', 'agents', 'cursor', 'copilot', 'all'],
     },
   ],

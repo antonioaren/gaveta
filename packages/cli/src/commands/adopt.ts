@@ -3,14 +3,14 @@ import type { CommandResult, CommandSpec } from '../types.ts';
 
 export const adoptCommand: CommandSpec = {
   name: 'adopt',
-  summary: 'Convierte un HTML del vault en una nota, la valida y la indexa.',
+  summary: 'cli.auto.convierte_un_html_del_vault_en_una_nota_la_valid',
   example: 'gaveta adopt nota.html',
   requiresVault: true,
   input: 'none',
   args: [
     {
       name: 'ruta',
-      description: 'Ruta de la nota HTML dentro del vault.',
+      description: 'cli.auto.ruta_de_la_nota_html_dentro_del_vault',
       required: true,
     },
   ],
@@ -18,19 +18,19 @@ export const adoptCommand: CommandSpec = {
     {
       name: 'source',
       flags: '--source <origen>',
-      description: 'Origen del HTML: claude convierte artefactos de Claude.',
+      description: 'cli.auto.origen_del_html_claude_convierte_artefactos_de_c',
       choices: ['claude'],
     },
     {
       name: 'as',
       flags: '--as <tipo>',
-      description: 'Fuerza el tipo: doc, slides, dashboard, design o artifact.',
+      description: 'cli.auto.fuerza_el_tipo_doc_slides_dashboard_design_o_art',
       choices: ['doc', 'slides', 'dashboard', 'design', 'artifact', 'todo'],
     },
     {
       name: 'allowCdn',
       flags: '--allow-cdn',
-      description: 'Permite scripts y estilos CDN dentro del srcdoc de artifact.',
+      description: 'cli.auto.permite_scripts_y_estilos_cdn_dentro_del_srcdoc_',
       kind: 'boolean',
     },
   ],

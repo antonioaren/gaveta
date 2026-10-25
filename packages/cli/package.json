@@ -19,6 +19,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@gaveta/i18n": "workspace:*",
     "@gaveta/core": "workspace:*",
     "@gaveta/server": "workspace:*",
     "commander": "14.0.3"

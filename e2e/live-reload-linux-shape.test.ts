@@ -6,7 +6,7 @@ import { writeAtomic } from '@gaveta/core';
 import { vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const children: ReturnType<typeof spawn>[] = [];
@@ -85,7 +85,7 @@ describe('live iframe reload (Linux-shaped watcher)', () => {
     const vault = copyBacklinksVault();
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openDestinoNote(page, url);
     const frame = page.frameLocator('[data-testid="note-render-frame"]');
     const notePath = join(vault, 'destino-enlace.html');
@@ -106,7 +106,7 @@ describe('live iframe reload (Linux-shaped watcher)', () => {
     const vault = copyBacklinksVault();
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openDestinoNote(page, url);
     const frame = page.frameLocator('[data-testid="note-render-frame"]');
     const finalMarker = `burst-final-${String(Date.now())}`;
@@ -139,7 +139,7 @@ describe('live iframe reload (Linux-shaped watcher)', () => {
     const vault = copyBacklinksVault();
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openDestinoNote(page, url);
     const frame = page.frameLocator('[data-testid="note-render-frame"]');
     const notePath = join(vault, 'destino-enlace.html');

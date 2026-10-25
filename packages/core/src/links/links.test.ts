@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DUPLICATE_ID, GHOST_TITLE, NOTE_X, vaultPath, type VaultName } from '@gaveta/fixtures';
 import {
-  DIAGNOSTICS,
+  formatDiagnostic,
   GavetaError,
   GavetaRefError,
   SUGGESTED_REL,
@@ -199,8 +199,8 @@ describe('resolveRef', () => {
         } catch (error) {
           expect(error).toMatchObject({
             code: 'E_REF_AMBIGUOUS',
-            message: DIAGNOSTICS.E_REF_AMBIGUOUS.message,
-            hint: DIAGNOSTICS.E_REF_AMBIGUOUS.hint,
+            message: formatDiagnostic('E_REF_AMBIGUOUS').message,
+            hint: formatDiagnostic('E_REF_AMBIGUOUS').hint,
             details: {
               candidates: [
                 { id: NOTE_B, title: 'Otra', path: 'a.html' },
@@ -240,7 +240,7 @@ describe('resolveRef', () => {
         } catch (error) {
           expect(error).toMatchObject({
             code: 'E_REF_NOT_FOUND',
-            message: DIAGNOSTICS.E_REF_NOT_FOUND.message,
+            message: formatDiagnostic('E_REF_NOT_FOUND').message,
           });
           if (!(error instanceof GavetaRefError)) {
             throw error;
@@ -336,7 +336,7 @@ describe('wikilinks', () => {
         expect(result.warnings[0]).toMatchObject({
           code: 'W_LINK_PENDING',
           severity: 'warning',
-          message: DIAGNOSTICS.W_LINK_PENDING.message,
+          message: formatDiagnostic('W_LINK_PENDING').message,
           details: { title: 'Roadmap' },
         });
         const suggestions = result.warnings[0]?.details?.suggestions;

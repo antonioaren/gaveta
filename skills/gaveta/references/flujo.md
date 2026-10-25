@@ -22,55 +22,55 @@ Usa este orden al documentar con la CLI. El contrato HTML (elementos, componente
 
 ### search
 
-Busca texto en el título, los alias, los encabezados y el cuerpo.
+cli.auto.busca_texto_en_el_titulo_los_alias_los_encabezad
 `gaveta search "base de datos" --json`
 
 ### import
 
-Importa Markdown desde un archivo o una carpeta al vault.
+cli.auto.importa_markdown_desde_un_archivo_o_una_carpeta_
 `gaveta import ./docs --in proyectos --dry-run --on-conflict skip --continue-on-error --json`
 
 ### export
 
-Exporta notas del vault a Markdown.
+cli.auto.exporta_notas_del_vault_a_markdown
 `gaveta export --all --to md --out ./export-md --links wiki --dry-run --json`
 
 ### new
 
-Crea una nota, completa los metadatos y resuelve los enlaces [[…]].
+cli.auto.crea_una_nota_completa_los_metadatos_y_resuelve_
 `gaveta new "Usar SQLite" --type doc --in decisiones --from -`
 
 ### edit
 
-Sustituye, añade o antepone contenido en una sección o en el artículo.
+cli.auto.sustituye_anade_o_antepone_contenido_en_una_secc
 `gaveta edit "Usar SQLite" --section resumen --replace --from -`
 
 ### read
 
-Lee una nota como html, text u outline y devuelve su hash.
+cli.auto.lee_una_nota_como_html_text_u_outline_y_devuelve
 `gaveta read "Usar SQLite" --as outline`
 
 ### backlinks
 
-Lista los enlaces entrantes con el contexto donde aparecen.
+cli.auto.lista_los_enlaces_entrantes_con_el_contexto_dond
 `gaveta backlinks "Usar SQLite" --json`
 
 ### graph
 
-Muestra el grafo global o local de notas y enlaces.
+cli.auto.muestra_el_grafo_global_o_local_de_notas_y_enlac
 `gaveta graph --json`
 
 ### validate
 
-Valida una nota, el vault entero o HTML de stdin sin escribir.
+cli.auto.valida_una_nota_el_vault_entero_o_html_de_stdin_
 `gaveta validate nota.html --json`
 
 ### doctor
 
-Revisa enlaces rotos, pendientes, huérfanas, ids duplicados y notas inválidas.
+cli.auto.revisa_enlaces_rotos_pendientes_huerfanas_ids_du
 `gaveta doctor --json`
 
 ### guide
 
-Imprime el contrato de autoría, los comandos y el catálogo de errores.
+cli.auto.imprime_el_contrato_de_autoria_los_comandos_y_el
 `gaveta guide --topic tipos`

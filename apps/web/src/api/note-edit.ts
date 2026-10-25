@@ -1,4 +1,6 @@
+import { formatMessage } from '@gaveta/i18n';
 import { apiFetch, ApiError } from './client.ts';
+import { readWebLocale } from '../i18n/read-web-locale.ts';
 import type { ApiEnvelope } from './types.ts';
 
 export interface EditNoteResult {
@@ -12,6 +14,7 @@ export async function saveNoteDocument(
   html: string,
   ifMatch: string,
 ): Promise<EditNoteResult> {
+  const locale = readWebLocale();
   const response = await apiFetch('/api/edit', {
     method: 'POST',
     headers: {
@@ -32,14 +35,17 @@ export async function saveNoteDocument(
   };
   if (!response.ok || !body.ok) {
     const code = body.error?.code ?? 'E_INTERNAL';
-    const message = body.error?.message ?? 'No se pudo guardar la nota.';
+    const message =
+      body.error?.message ?? formatMessage('web.api.error.fallbackSaveNoteDot', locale);
     throw new ApiError(response.status, code, message);
   }
   return body.data;
 }
 
-export const CONFLICT_MESSAGE =
-  'La nota cambió en otro sitio. Recarga el contenido antes de volver a guardar.';
+export function conflictEditMessage(): string {
+  return formatMessage('web.api.error.E_CONFLICT_EDIT', readWebLocale());
+}
 
-export const INVALID_HTML_MESSAGE =
-  'El HTML no es válido. Corrige los errores marcados en el editor antes de guardar.';
+export function invalidHtmlMessage(): string {
+  return formatMessage('web.api.error.invalidHtml', readWebLocale());
+}

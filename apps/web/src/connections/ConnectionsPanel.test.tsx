@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { renderWithI18n } from '../i18n/render-with-i18n.tsx';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { clearSessionToken, setSessionToken } from '../auth/session-token.ts';
@@ -86,7 +87,7 @@ it('renders backlink context as plain text without HTML', async () => {
     }),
   );
 
-  render(
+  renderWithI18n(
     <MemoryRouter initialEntries={[`/nota/${DESTINO_ID}`]}>
       <TabProvider>
         <Routes>
@@ -94,6 +95,7 @@ it('renders backlink context as plain text without HTML', async () => {
         </Routes>
       </TabProvider>
     </MemoryRouter>,
+    { locale: 'es' },
   );
 
   await waitFor(() => {

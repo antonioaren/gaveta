@@ -5,13 +5,13 @@ import type { CommandResult, CommandSpec, CommandWarning } from '../types.ts';
 import { resolveWebDistRoot, webDistReady } from '../web-dist.ts';
 import { cliVersion } from './version.ts';
 
-const BAD_PORT = 'El puerto tiene que ser un entero entre 0 y 65535.';
+const BAD_PORT = 'cli.auto.el_puerto_tiene_que_ser_un_entero_entre_0_y_6553';
 const WEB_VIEWER_MISSING_HUMAN =
   'Aviso: el visor web no está compilado (solo API). Ejecuta `pnpm build:web` en la raíz del repositorio.\n';
 
 export const serveCommand: CommandSpec = {
   name: 'serve',
-  summary: 'Arranca la API local de solo lectura en 127.0.0.1.',
+  summary: 'cli.auto.arranca_la_api_local_de_solo_lectura_en_127_0_0_',
   example: 'gaveta serve --port 3847 --json',
   requiresVault: true,
   input: 'none',
@@ -19,7 +19,7 @@ export const serveCommand: CommandSpec = {
     {
       name: 'port',
       flags: '--port <puerto>',
-      description: 'Puerto TCP (0 = aleatorio). Por defecto 3847.',
+      description: 'cli.auto.puerto_tcp_0_aleatorio_por_defecto_3847',
     },
   ],
   async run(context): Promise<CommandResult> {

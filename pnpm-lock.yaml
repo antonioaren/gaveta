@@ -38,6 +38,9 @@ importers:
       '@gaveta/fixtures':
         specifier: workspace:*
         version: link:fixtures
+      '@gaveta/i18n':
+        specifier: workspace:*
+        version: link:packages/i18n
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.5
@@ -95,6 +98,9 @@ importers:
       '@gaveta/editor':
         specifier: workspace:*
         version: link:../../packages/editor
+      '@gaveta/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@tiptap/core':
         specifier: 3.32.0
         version: 3.32.0(@tiptap/pm@3.32.0)
@@ -165,6 +171,9 @@ importers:
       '@gaveta/core':
         specifier: workspace:*
         version: link:../core
+      '@gaveta/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@gaveta/server':
         specifier: workspace:*
         version: link:../server
@@ -187,6 +196,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@gaveta/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       parse5:
         specifier: 8.0.1
         version: 8.0.1
@@ -274,6 +286,18 @@ importers:
         specifier: 'catalog:'
         version: 4.1.12(@types/node@22.20.5)(@vitest/coverage-v8@4.1.12)(jsdom@27.0.0)(vite@8.3.5(@types/node@22.20.5)(yaml@2.9.1))
 
+  packages/i18n:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.12(@types/node@22.20.5)(@vitest/coverage-v8@4.1.12)(jsdom@27.0.0)(vite@8.3.5(@types/node@22.20.5)(yaml@2.9.1))
+
   packages/server:
     dependencies:
       '@fastify/rate-limit':
@@ -288,6 +312,9 @@ importers:
       '@gaveta/core':
         specifier: workspace:*
         version: link:../core
+      '@gaveta/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       chokidar:
         specifier: 4.0.3
         version: 4.0.3

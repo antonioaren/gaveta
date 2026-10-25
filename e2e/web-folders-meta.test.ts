@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { NOTE_X, vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = vaultPath('backlinks');
@@ -85,7 +85,7 @@ it('REQ-APP-18: creates a folder and edits tags from the note pane', async () =>
   cpSync(BACKLINKS, vault, { recursive: true });
   try {
     const started = await startServe(vault);
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openShell(page, started.json.data.url);
 
     await page.getByTestId('explorer-new-folder').click();

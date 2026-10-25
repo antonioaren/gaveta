@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup } from '@testing-library/react';
+import { renderWithI18n } from '../i18n/render-with-i18n.tsx';
 import { afterEach } from 'vitest';
 import { describe, expect, it, vi, type Mock } from 'vitest';
 import { parseReloadGenerationFromIframeSrc } from './render-frame.ts';
@@ -25,8 +26,9 @@ afterEach(() => {
 
 describe('NoteRenderFrame', () => {
   it('remounts the iframe for each reload generation', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithI18n(
       <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={1} onIframeWindow={noop} />,
+      { locale: 'es' },
     );
     const first = iframeElement();
     expect(parseReloadGenerationFromIframeSrc(first.src)).toBe(1);
@@ -42,8 +44,9 @@ describe('NoteRenderFrame', () => {
   });
 
   it('ignores a late load on a detached iframe after a newer generation mounted', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithI18n(
       <NoteRenderFrame noteId="01NOTE" title="Nota" reloadGeneration={1} onIframeWindow={noop} />,
+      { locale: 'es' },
     );
     const stale = iframeElement();
 
