@@ -112,6 +112,18 @@ Los scripts y estilos inline se eliminan en tipos declarativos (`doc`, `slides`,
 
 Los paquetes de Node usan TypeScript estricto con `NodeNext` y sin emit. Los imports relativos llevan extensión `.ts`. La app usa la resolución de Vite.
 
+## MCP (Claude Code)
+
+`gaveta mcp` arranca un servidor [Model Context Protocol](https://modelcontextprotocol.io) por stdio. Cada comando de la CLI (salvo `mcp` y el bloqueante `serve`) es una herramienta MCP. Las respuestas usan el mismo sobre JSON que `gaveta … --json` (`ok`, `data`, `warnings`, códigos estables `E_*` / `W_*`). Indica `vault` en los argumentos de la herramienta o define `GAVETA_VAULT`; `lang` (`en` / `es`) equivale a `--lang`.
+
+Registro en Claude Code (con `gaveta` en el `PATH`):
+
+```bash
+claude mcp add gaveta -- gaveta mcp
+```
+
+Los registros y avisos van a stderr; stdout queda reservado al protocolo MCP.
+
 ## Licencia
 
 Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](../LICENSE) para el texto completo.

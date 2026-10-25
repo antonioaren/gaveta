@@ -31,6 +31,7 @@
     "@gaveta/editor": "workspace:*",
     "@gaveta/fixtures": "workspace:*",
     "@gaveta/i18n": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@types/node": "catalog:",
     "@types/ws": "8.18.1",
     "@vitest/coverage-v8": "catalog:",

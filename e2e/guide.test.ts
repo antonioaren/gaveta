@@ -143,6 +143,7 @@ it('runs registry command examples against a prepared vault', () => {
       'link',
       'update',
       'serve',
+      'mcp',
       'mkdir',
       'mv-folder',
       'rm-folder',

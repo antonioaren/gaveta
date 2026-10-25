@@ -18,18 +18,18 @@ An Obsidian-style knowledge vault where every note is an HTML file, built for hu
 
 ## What works today
 
-| Area               | What you get                                                                                                                                             |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Editors**        | Visual editor (TipTap) and code mode (CodeMirror 6) in the web app, both saving through the core validator.                                              |
-| **Tasks**          | Interactive checkboxes in the reader and editor; CLI `gaveta todo` for the same data.                                                                    |
-| **Links**          | `[[wikilinks]]`, canonical `data-g-to` links, pending links, backlinks with context, and graph queries (CLI + app).                                      |
-| **Graph**          | Global and local graph views with filters; ghost nodes for missing notes.                                                                                |
-| **Organization**   | Folders, tags, and aliases in the vault, explorer, and note metadata (CLI and app).                                                                      |
-| **Markdown**       | `gaveta import` / `gaveta export` for folders and notes; round-trip tests on fixtures (some lossy cases are documented).                                 |
-| **CLI**            | `gaveta` / `gv` at parity with vault operations: init, new, read, edit, links, graph, search, doctor, mv, rm, adopt, serve, and more—see `gaveta guide`. |
-| **Local-first**    | `gaveta serve` binds **127.0.0.1** only (Fastify); index in **node:sqlite** with FTS5; **Node ≥ 22.18** required.                                        |
-| **Safe rendering** | Notes render in a **sandboxed iframe** with a strict CSP and render tickets (no session token in note URLs).                                             |
-| **Concurrency**    | Optimistic writes with **`If-Match`** / `--if-match` on CLI and API so concurrent edits fail safely instead of silently overwriting.                     |
+| Area               | What you get                                                                                                                                                    |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Editors**        | Visual editor (TipTap) and code mode (CodeMirror 6) in the web app, both saving through the core validator.                                                     |
+| **Tasks**          | Interactive checkboxes in the reader and editor; CLI `gaveta todo` for the same data.                                                                           |
+| **Links**          | `[[wikilinks]]`, canonical `data-g-to` links, pending links, backlinks with context, and graph queries (CLI + app).                                             |
+| **Graph**          | Global and local graph views with filters; ghost nodes for missing notes.                                                                                       |
+| **Organization**   | Folders, tags, and aliases in the vault, explorer, and note metadata (CLI and app).                                                                             |
+| **Markdown**       | `gaveta import` / `gaveta export` for folders and notes; round-trip tests on fixtures (some lossy cases are documented).                                        |
+| **CLI**            | `gaveta` / `gv` at parity with vault operations: init, new, read, edit, links, graph, search, doctor, mv, rm, adopt, serve, `mcp`, and more—see `gaveta guide`. |
+| **Local-first**    | `gaveta serve` binds **127.0.0.1** only (Fastify); index in **node:sqlite** with FTS5; **Node ≥ 22.18** required.                                               |
+| **Safe rendering** | Notes render in a **sandboxed iframe** with a strict CSP and render tickets (no session token in note URLs).                                                    |
+| **Concurrency**    | Optimistic writes with **`If-Match`** / `--if-match` on CLI and API so concurrent edits fail safely instead of silently overwriting.                            |
 
 ![Note view with theme and connections](docs/assets/screenshot-note.png)
 
@@ -85,6 +85,18 @@ pnpm exec gaveta search Other --vault mi-vault --json
 ```
 
 On macOS you can open a note in the default browser via `file://` after `gaveta init` copies the theme into the vault.
+
+## MCP (Claude Code)
+
+`gaveta mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server on stdio. Each CLI command (except `mcp` and long-running `serve`) is one MCP tool. Tool results use the same versioned JSON envelope as `gaveta … --json` (`ok`, `data`, `warnings`, stable `E_*` / `W_*` codes). Pass `vault` in tool arguments or set `GAVETA_VAULT`; use `lang` (`en` / `es`) like `--lang`.
+
+Register with Claude Code when `gaveta` is on your `PATH`:
+
+```bash
+claude mcp add gaveta -- gaveta mcp
+```
+
+Logs and diagnostics go to stderr; stdout is reserved for the MCP protocol.
 
 ## How it is built
 
