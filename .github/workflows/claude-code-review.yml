@@ -40,6 +40,8 @@ jobs:
         if: steps.gate.outputs.enabled == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Allow Cloud Agent draft/ready toggles (login is cursor[bot] on GitHub).
+          allowed_bots: 'cursor[bot]'
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
