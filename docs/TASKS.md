@@ -148,14 +148,20 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [x] **T3.3 Tareas interactivas.** Marcar y desmarcar desde la vista persiste `checked`. Cubre: REQ-APP-08. Depende de: T3.2.
 - [x] **T3.4 Editor visual.** Componentes P0 y bloques HTML desconocidos conservados byte a byte. Abrir y guardar sin cambios no altera el archivo. Cubre: REQ-APP-09 y 10. Depende de: T3.1, T3.2.
 - [x] **T3.5 Modo código.** CodeMirror 6 con validación en vivo usando el validador del núcleo. Cubre: REQ-APP-11. Depende de: T3.2.
-- [ ] **T3.6 Autocompletado de `[[`** en los dos modos. Cubre: REQ-APP-12. Depende de: T3.4, T3.5.
-- [ ] **T3.7 Conflictos.** Aviso y diff cuando la nota cambia fuera durante la edición. Cubre: REQ-APP-13. Depende de: T3.2, T2.2.
+- [x] **T3.14 Estilos del modo código bajo CSP.** Montar CodeMirror en un shadow root abierto (`EditorView({ root: shadowRoot })`) para que `style-src 'self'` no bloquee los estilos de la librería. Cubre: REQ-SEC-01, REQ-APP-11. Depende de: T3.5.
+- [ ] **T3.15 Capa base tipo VS Code.** Keymap de VS Code, búsqueda y reemplazo, plegado, multicursor, tema desde variables CSS, Ctrl+S y carga diferida del modo código. Cubre: REQ-APP-11. Depende de: T3.14.
+- [ ] **T3.16 UX de problemas.** Avisos `W_*`, hover con código y mensaje, F8 / Shift+F8 y barra de estado con recuentos. Cubre: REQ-APP-11. Depende de: T3.14.
+- [ ] **T3.17 Inteligencia HTML y Emmet.** Autocompletado acotado al contrato y Emmet (núcleo MIT). Cubre: REQ-APP-11. Depende de: T3.15.
+- [ ] **T3.18 Paleta y «Formatear documento».** Comandos del editor en la paleta (T2.8) y formateo vía el normalizador del núcleo. Cubre: REQ-APP-04, REQ-APP-11. Depende de: T3.15.
+- [ ] **T3.19 Abrir en VS Code.** Enlace `vscode://file/…` con ruta absoluta solo al hacer clic. Cubre: REQ-APP-11. Depende de: T3.5.
+- [ ] **T3.6 Autocompletado de `[[`** en los dos modos (ítem 5 del plan VS Code / modo código). Cubre: REQ-APP-12. Depende de: T3.4, T3.5, T3.15.
+- [ ] **T3.7 Conflictos.** Aviso y MergeView cuando la nota cambia fuera durante la edición (ítem 6 del plan VS Code). Cubre: REQ-APP-13. Depende de: T3.2, T2.2, T3.14.
 - [x] **T3.8 Renombrar, mover y borrar desde la app**, con diálogo de backlinks. Cubre: REQ-APP-14. Depende de: T3.2.
 - [x] **T3.11 Crear notas desde la app.** Botón "Nueva nota" y atajo de teclado, con selección de tipo, carpeta, tags y título. También desde un nodo fantasma o un enlace pendiente, con el título ya rellenado. Cubre: REQ-APP-17. Depende de: T3.2.
 - [x] **T3.12 Carpetas, tags y alias desde la app.** Crear, renombrar y borrar carpetas (reescribiendo los enlaces de las notas que contienen), y editar tags y alias desde el panel de la nota. Cubre: REQ-APP-18. Depende de: T3.8.
-- [~] **T3.13 Paridad entre app y CLI.** Tests que ejecutan cada operación de CRUD desde la API de la app y desde la CLI, y comprueban que producen archivos idénticos. Cubre: REQ-APP-18, DEC-08. Depende de: T3.3 a T3.12.
+- [~] **T3.13 Paridad entre app y CLI.** Tests que ejecutan cada operación de CRUD desde la API de la app y desde la CLI, y comprueban que producen archivos idénticos. Cubre: REQ-APP-18, DEC-08. Depende de: T3.3 a T3.12, T3.14 a T3.19.
 - [x] **T3.10 Importar y exportar desde la app.** Arrastrar y soltar archivos o carpetas `.md` (o el menú "Importar") con una vista previa del `--dry-run` antes de confirmar, y "Exportar a Markdown" en una nota, en una carpeta y en el vault. Cubre: REQ-MIG-12. Depende de: T3.2, T2.17.
-- [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8, T3.10 a T3.13.
+- [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8, T3.10 a T3.13, T3.14 a T3.19.
 
 ## Fase 4 — P1
 
