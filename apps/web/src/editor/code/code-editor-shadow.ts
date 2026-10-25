@@ -26,6 +26,16 @@ const SHELL_STYLES = `
 .cm-lintRange-error {
   background: color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
+.cm-lintRange-warning {
+  background: color-mix(in srgb, var(--color-accent-todo) 22%, transparent);
+}
+.cm-gaveta-problems-status {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: var(--font-size-xs);
+  padding: var(--space-1) var(--space-3);
+}
 :host {
   --gaveta-cm-comment: var(--color-muted);
   --gaveta-cm-keyword: var(--color-accent);
