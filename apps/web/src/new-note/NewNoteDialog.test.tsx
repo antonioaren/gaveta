@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
+import { renderWithI18n } from '../i18n/render-with-i18n.tsx';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -61,7 +62,7 @@ it('is closed until openNewNote is called', async () => {
       </button>
     );
   }
-  render(
+  renderWithI18n(
     <MemoryRouter>
       <TabProvider>
         <NewNoteDialogProvider>
@@ -70,6 +71,7 @@ it('is closed until openNewNote is called', async () => {
         </NewNoteDialogProvider>
       </TabProvider>
     </MemoryRouter>,
+    { locale: 'es' },
   );
   expect(screen.queryByRole('dialog')).toBeNull();
   await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
@@ -92,7 +94,7 @@ it('submits create and shows Spanish validation for empty title', async () => {
       </button>
     );
   }
-  render(
+  renderWithI18n(
     <MemoryRouter>
       <TabProvider>
         <NewNoteDialogProvider>
@@ -101,6 +103,7 @@ it('submits create and shows Spanish validation for empty title', async () => {
         </NewNoteDialogProvider>
       </TabProvider>
     </MemoryRouter>,
+    { locale: 'es' },
   );
   await userEvent.click(screen.getByRole('button', { name: 'Abrir' }));
   const dialog = screen.getByRole('dialog', { name: 'Nueva nota' });

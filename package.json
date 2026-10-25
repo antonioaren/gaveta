@@ -29,6 +29,7 @@
     "@gaveta/core": "workspace:*",
     "@gaveta/editor": "workspace:*",
     "@gaveta/fixtures": "workspace:*",
+    "@gaveta/i18n": "workspace:*",
     "@types/node": "catalog:",
     "@types/ws": "8.18.1",
     "@vitest/coverage-v8": "catalog:",

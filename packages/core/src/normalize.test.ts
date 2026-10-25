@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DIAGNOSTICS,
   MAX_NOTE_DEPTH,
   MAX_NOTE_HTML_CHARS,
   NOTE_TYPE_STRUCTURES,
@@ -132,7 +131,7 @@ describe('normalizeNote canonical form', () => {
     expect(styled.diagnostics[0]).toMatchObject({
       code: 'W_INLINE_STYLE_REMOVED',
       message: formatDiagnostic('W_INLINE_STYLE_REMOVED', { count: 1 }).message,
-      hint: DIAGNOSTICS.W_INLINE_STYLE_REMOVED.hint,
+      hint: formatDiagnostic('W_INLINE_STYLE_REMOVED').hint,
       details: { count: 1 },
     });
     expect(styled.diagnostics[1]).toMatchObject({
@@ -384,8 +383,8 @@ describe('normalizeNote security', () => {
     expect(
       result.diagnostics.find((diagnostic) => diagnostic.code === 'W_UNSAFE_REMOVED'),
     ).toMatchObject({
-      message: DIAGNOSTICS.W_UNSAFE_REMOVED.message,
-      hint: DIAGNOSTICS.W_UNSAFE_REMOVED.hint,
+      message: formatDiagnostic('W_UNSAFE_REMOVED').message,
+      hint: formatDiagnostic('W_UNSAFE_REMOVED').hint,
     });
   });
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { FolderOpKind } from '../folder-ops/folder-op-kind.ts';
+import { useI18n } from '../i18n/useI18n.ts';
 
 interface ExplorerFolderContextMenuProps {
   readonly open: boolean;
@@ -20,6 +21,7 @@ export function ExplorerFolderContextMenu({
   onSelect,
   onExport,
 }: ExplorerFolderContextMenuProps) {
+  const { t } = useI18n();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function ExplorerFolderContextMenu({
       className="explorer-context-menu"
       style={{ top: y, left: x }}
       role="menu"
-      aria-label="Acciones de la carpeta"
+      aria-label={t('web.folder.context.aria')}
       data-testid="explorer-folder-context-menu"
     >
       <button
@@ -58,12 +60,15 @@ export function ExplorerFolderContextMenu({
         className="explorer-context-menu__item"
         data-testid="explorer-folder-export"
         onClick={() => {
-          const label = folder.length === 0 ? 'vault' : (folder.split('/').pop() ?? folder);
+          const label =
+            folder.length === 0
+              ? t('web.explorer.exportVaultLabel')
+              : (folder.split('/').pop() ?? folder);
           onExport(folder, label);
           onClose();
         }}
       >
-        Exportar a Markdown
+        {t('web.common.exportMarkdown')}
       </button>
       <button
         type="button"
@@ -75,7 +80,7 @@ export function ExplorerFolderContextMenu({
           onClose();
         }}
       >
-        Nueva subcarpeta
+        {t('web.folder.context.newSubfolder')}
       </button>
       <button
         type="button"
@@ -87,7 +92,7 @@ export function ExplorerFolderContextMenu({
           onClose();
         }}
       >
-        Renombrar
+        {t('web.common.rename')}
       </button>
       <button
         type="button"
@@ -99,7 +104,7 @@ export function ExplorerFolderContextMenu({
           onClose();
         }}
       >
-        Borrar
+        {t('web.common.delete')}
       </button>
     </div>
   );

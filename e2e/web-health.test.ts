@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = join(REPO_ROOT, 'fixtures/vaults/backlinks');
@@ -69,7 +69,7 @@ it('REQ-APP-07: CLI link change surfaces a live doctor finding in the health pan
     const started = await startServe(vault);
     const { url } = started.json.data;
 
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await page.goto(url, { waitUntil: 'networkidle' });
     const health = page.getByLabel('Panel de salud');
     await health.getByRole('heading', { name: 'Salud' }).waitFor({ timeout: 30_000 });

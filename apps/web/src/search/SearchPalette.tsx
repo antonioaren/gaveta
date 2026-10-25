@@ -11,19 +11,16 @@ import { useNavigate } from 'react-router-dom';
 import type { NoteListItem, SearchHitView } from '../api/types.ts';
 import { useVaultNotes } from '../hooks/useVaultNotes.ts';
 import { useTabs } from '../tabs/useTabs.ts';
-import { filterPaletteCommands, type PaletteCommand } from './palette-commands.ts';
+import { useI18n } from '../i18n/useI18n.ts';
+import { noteTypeMessageKeyForFilter } from '../i18n/note-type-label.ts';
+import {
+  filterPaletteCommands,
+  navigationCommands,
+  type PaletteCommand,
+} from './palette-commands.ts';
 import { resolveSearchHitOpen } from './resolve-search-hit.ts';
 import { SnippetText } from './SnippetText.tsx';
 import { usePaletteSearch } from './usePaletteSearch.ts';
-
-const TYPE_LABELS: Record<string, string> = {
-  doc: 'Documento',
-  slides: 'Presentación',
-  todo: 'Tareas',
-  dashboard: 'Panel',
-  design: 'Diseño',
-  artifact: 'Artefacto',
-};
 
 type PaletteItem =
   | { readonly kind: 'command'; readonly command: PaletteCommand }
@@ -44,9 +41,10 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
   const [openError, setOpenError] = useState<string | null>(null);
   const navigate = useNavigate();
   const tabState = useTabs();
+  const { t } = useI18n();
   const { hits, loading, error } = usePaletteSearch(query, open);
 
-  const commands = useMemo(() => filterPaletteCommands(query), [query]);
+  const commands = useMemo(() => filterPaletteCommands(navigationCommands(t), query), [query, t]);
   const items = useMemo((): readonly PaletteItem[] => {
     const commandItems = commands.map((command) => ({ kind: 'command' as const, command }));
     const hitItems = hits.map((hit) => ({ kind: 'hit' as const, hit }));
@@ -173,11 +171,11 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
         className="palette"
         role="dialog"
         aria-modal="true"
-        aria-label="Paleta de comandos y búsqueda"
+        aria-label={t('web.palette.aria')}
         onKeyDown={onDialogKeyDown}
       >
         <label className="palette__label" htmlFor={`${listboxId}-input`}>
-          Buscar notas o comandos
+          {t('web.palette.label')}
         </label>
         <input
           ref={inputRef}
@@ -189,7 +187,7 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
           aria-expanded={items.length > 0}
           aria-controls={listboxId}
           aria-activedescendant={activeOptionId}
-          placeholder="Buscar… (Ctrl+K)"
+          placeholder={t('web.palette.placeholder')}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -198,12 +196,17 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
           }}
           onKeyDown={onInputKeyDown}
         />
-        <ul id={listboxId} className="palette__list" role="listbox" aria-label="Resultados">
+        <ul
+          id={listboxId}
+          className="palette__list"
+          role="listbox"
+          aria-label={t('web.palette.list.aria')}
+        >
           {items.length === 0 && !loading && error === null ? (
             <li className="palette__empty" role="presentation">
               {query.trim().length === 0
-                ? 'Escribe para buscar o elige un comando de navegación.'
-                : 'Sin resultados para esta búsqueda.'}
+                ? t('web.palette.empty.noQuery')
+                : t('web.palette.empty.noResults')}
             </li>
           ) : null}
           {error !== null ? (
@@ -218,7 +221,7 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
           ) : null}
           {loading ? (
             <li className="palette__status" role="status">
-              Buscando…
+              {t('web.palette.searching')}
             </li>
           ) : null}
           {items.map((item, index) => {
@@ -243,7 +246,7 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
                   }}
                 >
                   <span className="palette__option-title">{item.command.label}</span>
-                  <span className="palette__option-meta">Comando</span>
+                  <span className="palette__option-meta">{t('web.palette.command.meta')}</span>
                 </li>
               );
             }
@@ -270,7 +273,10 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
                   <span className="palette__option-title">{hit.title}</span>
                   {hit.type !== null ? (
                     <span className={`badge badge--${typeClass}`}>
-                      {TYPE_LABELS[hit.type] ?? hit.type}
+                      {(() => {
+                        const typeKey = noteTypeMessageKeyForFilter(hit.type);
+                        return typeKey !== null ? t(typeKey) : hit.type;
+                      })()}
                     </span>
                   ) : null}
                 </div>

@@ -29,6 +29,7 @@ function run(
 ): RunResult {
   const env: NodeJS.ProcessEnv = { ...process.env };
   delete env.GAVETA_VAULT;
+  env.GAVETA_LANG ??= 'es';
   const result = spawnSync(process.execPath, [bin, ...args], {
     cwd: options.cwd,
     env: options.env ?? env,

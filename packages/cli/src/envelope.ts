@@ -7,10 +7,9 @@ export const SCHEMA_VERSION = 1;
  */
 export const INTERNAL_ERROR_CODE = 'E_INTERNAL';
 
-export const INTERNAL_ERROR_MESSAGE = 'Ha ocurrido un error interno.';
+export const INTERNAL_ERROR_MESSAGE = 'cli.auto.ha_ocurrido_un_error_interno';
 
-export const INTERNAL_ERROR_HINT =
-  'Vuelve a ejecutar el comando. Si se repite, es un fallo de Gaveta.';
+export const INTERNAL_ERROR_HINT = 'cli.auto.vuelve_a_ejecutar_el_comando_si_se_repite_es_un_';
 
 export interface JsonWarning {
   readonly code: string;

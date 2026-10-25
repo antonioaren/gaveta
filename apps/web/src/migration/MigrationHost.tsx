@@ -7,6 +7,7 @@ import {
 } from './collect-upload-files.ts';
 import { ImportPreviewDialog } from './ImportPreviewDialog.tsx';
 import { ExportMarkdownDialog, type ExportMarkdownTarget } from './ExportMarkdownDialog.tsx';
+import { useI18n } from '../i18n/useI18n.ts';
 
 interface MigrationHostProps {
   readonly onVaultChanged: () => void;
@@ -14,6 +15,7 @@ interface MigrationHostProps {
 }
 
 export function MigrationHost({ onVaultChanged, children }: MigrationHostProps) {
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importFiles, setImportFiles] = useState<readonly UploadFileEntry[] | null>(null);
   const [exportTarget, setExportTarget] = useState<ExportMarkdownTarget | null>(null);
@@ -92,7 +94,7 @@ export function MigrationHost({ onVaultChanged, children }: MigrationHostProps) 
       </MigrationActionsContext.Provider>
       {dragActive ? (
         <div className="migration-host__overlay" data-testid="import-drop-overlay">
-          Suelta archivos o carpetas Markdown para importar
+          {t('web.migration.dropOverlay')}
         </div>
       ) : null}
       {importFiles !== null ? (

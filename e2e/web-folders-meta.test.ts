@@ -1,11 +1,18 @@
 import { spawn } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { NOTE_X, vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
+import {
+  GAVETA_BIN,
+  newWebPage,
+  parseJson,
+  removeTempTree,
+  stopServeChildren,
+  type JsonEnvelope,
+} from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = vaultPath('backlinks');
@@ -85,7 +92,7 @@ it('REQ-APP-18: creates a folder and edits tags from the note pane', async () =>
   cpSync(BACKLINKS, vault, { recursive: true });
   try {
     const started = await startServe(vault);
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openShell(page, started.json.data.url);
 
     await page.getByTestId('explorer-new-folder').click();
@@ -97,8 +104,15 @@ it('REQ-APP-18: creates a folder and edits tags from the note pane', async () =>
     await page.getByTestId('note-meta-panel').waitFor({ state: 'visible' });
     await page.getByTestId('note-meta-tags').fill('e2e, carpetas');
     await page.getByTestId('note-meta-aliases').fill('Equis demo');
+    const saveDone = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes('/api/meta') &&
+        response.ok(),
+    );
     await page.getByTestId('note-meta-save').click();
-    await page.getByText('Metadatos guardados.').waitFor({ state: 'visible' });
+    await saveDone;
+    await page.getByTestId('note-meta-saved').waitFor({ state: 'visible' });
 
     const html = readFileSync(join(vault, NOTE_X.path), 'utf8');
     expect(html).toContain('name="gaveta:tags" content="e2e, carpetas"');
@@ -106,6 +120,7 @@ it('REQ-APP-18: creates a folder and edits tags from the note pane', async () =>
 
     await page.screenshot({ path: join(screenshotDir, 't3-12-folders-meta.png'), fullPage: true });
   } finally {
-    rmSync(parent, { recursive: true, force: true });
+    await stopServeChildren(children);
+    removeTempTree(parent);
   }
 });

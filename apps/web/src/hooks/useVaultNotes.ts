@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiJson } from '../api/client.ts';
+import { messageFromCaught } from '../i18n/api-error-message.ts';
 import type { NoteListItem, NotesResponse } from '../api/types.ts';
 import { useVaultWebSocket } from '../live/useVaultWebSocket.ts';
 import { subscribeVaultAuthFailure, subscribeVaultReconnect } from '../live/vault-socket-hub.ts';
@@ -41,8 +42,7 @@ export function useVaultNotes(): {
         const envelope = await apiJson<NotesResponse>('/api/notes');
         setNotes(envelope.data.notes);
       } catch (caught) {
-        const message =
-          caught instanceof Error ? caught.message : 'No se pudieron cargar las notas';
+        const message = messageFromCaught(caught, 'web.api.error.fallbackLoadNotes');
         setError(message);
       } finally {
         setLoading(false);

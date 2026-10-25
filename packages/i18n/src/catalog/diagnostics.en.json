@@ -1,0 +1,238 @@
+{
+  "E_ARG_INVALID": {
+    "message": "The argument is missing or out of range.",
+    "hint": "Run gaveta guide to see the values this command accepts."
+  },
+  "E_VAULT_NOT_FOUND": {
+    "message": "No vault was found.",
+    "hint": "Pass --vault, set GAVETA_VAULT, or run the command inside a directory that contains .gaveta/."
+  },
+  "E_REF_NOT_FOUND": {
+    "message": "No note matches that reference.",
+    "hint": "Check the id, path, or title, or search with gaveta search."
+  },
+  "E_REF_AMBIGUOUS": {
+    "message": "The title or alias matches several notes.",
+    "hint": "Use the id or path. Candidates are listed in details.candidates."
+  },
+  "E_LINK_UNRESOLVED": {
+    "message": "'{title}' does not exist.",
+    "hint": "Did you mean '{suggestion}'?"
+  },
+  "E_LINK_BROKEN": {
+    "message": "The link points to an id that does not exist in the vault.",
+    "hint": "Fix data-g-to or create the target note. gaveta doctor --fix does not repair broken links."
+  },
+  "E_META_MISSING": {
+    "message": "A required metadata field is missing.",
+    "hint": "The note needs title, gaveta:id, gaveta:type, and gaveta:created."
+  },
+  "E_ID_DUPLICATE": {
+    "message": "Two files share the same gaveta:id.",
+    "hint": "gaveta doctor lists both. Keep a single file with that id."
+  },
+  "E_HTML_INVALID": {
+    "message": "The HTML cannot be parsed or contains an element outside the contract.",
+    "hint": "See allowed elements with gaveta guide."
+  },
+  "E_TYPE_STRUCTURE": {
+    "message": "The structure does not match the note type.",
+    "hint": "A slides note needs at least one section.slide; a doc note needs an article; a todo note needs ul.tasks; dashboard, design, and artifact have their own rules (gaveta guide)."
+  },
+  "E_ARTIFACT_SANDBOX": {
+    "message": "The artifact iframe does not use the allowed sandbox.",
+    "hint": "Only sandbox=\"allow-scripts\" is allowed, without allow-same-origin or other flags."
+  },
+  "E_ARTIFACT_CSP": {
+    "message": "The artifact srcdoc CSP does not match the note.",
+    "hint": "Re-import with --allow-cdn or remove remote scripts from the original HTML."
+  },
+  "E_ARTIFACT_IFRAME": {
+    "message": "An artifact note must have a single iframe with srcdoc and no src.",
+    "hint": "Scripts belong only inside the srcdoc; do not add more iframes or other attributes."
+  },
+  "E_AUTH_REQUIRED": {
+    "message": "The local server session token is missing.",
+    "hint": "Use the URL printed by gaveta serve or the Authorization: Bearer <token> header."
+  },
+  "E_ORIGIN_INVALID": {
+    "message": "The Origin or Host header does not match this server.",
+    "hint": "Only requests to 127.0.0.1 on this session's port are accepted."
+  },
+  "E_TASK_INVALID": {
+    "message": "The task has invalid attributes.",
+    "hint": "data-g-due must be an ISO 8601 date and data-g-priority must be low, medium, or high."
+  },
+  "E_UNSAFE_SCRIPT": {
+    "message": "The note contains a script, which is not allowed.",
+    "hint": "Remove it. Gaveta does not run code inside notes."
+  },
+  "E_UNSAFE_HANDLER": {
+    "message": "The note contains an event handler attribute (on*), which is not allowed.",
+    "hint": "Remove attributes that start with on."
+  },
+  "E_UNSAFE_URL": {
+    "message": "The note contains a javascript: URL, which is not allowed.",
+    "hint": "Use a relative path or an https URL."
+  },
+  "E_UNSAFE_ELEMENT": {
+    "message": "The note contains an element that is not allowed for security reasons.",
+    "hint": "iframe, object, embed, form, and base are not permitted."
+  },
+  "E_PATH_OUTSIDE_VAULT": {
+    "message": "The path leaves the vault.",
+    "hint": "Use a path inside the vault, without .. or symlinks that escape it."
+  },
+  "E_CONFIG_INVALID": {
+    "message": "config.json is invalid: {detail}.",
+    "hint": "Fix .gaveta/config.json. Unknown keys and wrong types are rejected."
+  },
+  "E_PATH_EXISTS": {
+    "message": "The destination already exists.",
+    "hint": "Choose a different path."
+  },
+  "E_SKILL_PATH": {
+    "message": "The skill install path is not valid.",
+    "hint": "Do not use .. or symlinks that escape the project or user directory."
+  },
+  "E_SKILL_MODIFIED": {
+    "message": "The installed skill was edited manually.",
+    "hint": "Reinstall with --force if you want to overwrite it."
+  },
+  "E_HAS_BACKLINKS": {
+    "message": "The note has incoming links and cannot be deleted.",
+    "hint": "Review affected notes or rerun with --force to turn them into pending links."
+  },
+  "E_CONFLICT": {
+    "message": "The note changed since it was last read.",
+    "hint": "Read the note again and retry with the current hash in --if-match."
+  },
+  "E_IF_MATCH_REQUIRED": {
+    "message": "The note hash in If-Match is missing.",
+    "hint": "Read the note with gaveta read or the read API and send its hash in If-Match."
+  },
+  "E_SECTION_NOT_FOUND": {
+    "message": "No section with that id exists.",
+    "hint": "Use gaveta read --as outline to list section ids."
+  },
+  "E_TASK_NOT_FOUND": {
+    "message": "No task with that id exists in the note.",
+    "hint": "Use gaveta todo list <ref> to list task ids."
+  },
+  "W_LINK_PENDING": {
+    "message": "A pending link was created.",
+    "hint": "Create the missing note or pick one of the similarity suggestions."
+  },
+  "W_LINK_HREF_STALE": {
+    "message": "href does not match data-g-to.",
+    "hint": "Run gaveta doctor --fix to recalculate the relative path."
+  },
+  "W_NOTE_ORPHAN": {
+    "message": "The note has no incoming or outgoing links.",
+    "hint": "Link it to another note or delete it if it is no longer needed."
+  },
+  "W_THEME_HREF": {
+    "message": "The theme path does not match the note depth.",
+    "hint": "Run gaveta doctor --fix to point to the theme with the correct relative path."
+  },
+  "W_MERMAID_ASSET_MISSING": {
+    "message": "Mermaid scripts are missing from the vault .gaveta/ directory.",
+    "hint": "Run gaveta init in the vault or copy mermaid.min.js and mermaid-boot.js from a new vault."
+  },
+  "W_REL_UNKNOWN": {
+    "message": "rel is not in the vault vocabulary.",
+    "hint": "Add it to the configuration or use a suggested value. With rel.strict this becomes an error."
+  },
+  "W_REMOTE_RESOURCE": {
+    "message": "A remote resource was blocked.",
+    "hint": "Download it with --fetch-assets or allow the domain in remoteAllowlist."
+  },
+  "W_INLINE_STYLE_REMOVED": {
+    "message": "{count} inline styles were removed.",
+    "hint": "Appearance comes from the vault theme, not the style attribute."
+  },
+  "W_CLAUDE_DROPPED": {
+    "message": "Content from Claude HTML was dropped ({detail}).",
+    "hint": "Scripts, inline styles, and tags outside the contract are not kept for declarative note types."
+  },
+  "W_CLASS_REMOVED": {
+    "message": "{count} classes outside the contract were removed.",
+    "hint": "Only contract classes are kept."
+  },
+  "W_UNSAFE_REMOVED": {
+    "message": "Unsafe content was removed on save.",
+    "hint": "The saved file no longer contains it."
+  },
+  "E_IMPORT_PARSE": {
+    "message": "The Markdown could not be parsed.",
+    "hint": "Check the YAML front matter and file syntax."
+  },
+  "E_IMPORT_ABORTED": {
+    "message": "Import was aborted and nothing was written.",
+    "hint": "Fix the error or use --continue-on-error."
+  },
+  "W_IMPORT_UNSUPPORTED": {
+    "message": "Some Markdown syntax has no contract equivalent.",
+    "hint": "It was kept as an HTML block."
+  },
+  "W_IMPORT_SKIPPED": {
+    "message": "A file was skipped.",
+    "hint": "This is the result of --on-conflict skip or --exclude."
+  },
+  "W_EXPORT_LOSSY": {
+    "message": "Part of the note cannot be represented in Markdown and was degraded.",
+    "hint": "The JSON output lists per file what was degraded."
+  },
+  "E_RUNTIME_UNSUPPORTED": {
+    "message": "This environment is not supported: Node {version} detected; Node {minimum} or newer is required.",
+    "hint": "Install a recent Node version (for example `nvm install 22` or `brew install node`) and run gaveta again."
+  },
+  "E_INDEX_CORRUPT": {
+    "message": "The SQLite index is corrupt and could not be rebuilt.",
+    "hint": "Delete .gaveta/index.sqlite and run gaveta reindex. Note files are unchanged."
+  },
+  "E_UPDATE_DIRTY": {
+    "message": "The git checkout has uncommitted changes.",
+    "hint": "Commit or discard local changes before running gaveta update."
+  },
+  "E_UPDATE_BRANCH": {
+    "message": "The git checkout is not on the main branch.",
+    "hint": "Switch to main (git switch main) and run gaveta update again."
+  },
+  "E_UPDATE_NOT_FAST_FORWARD": {
+    "message": "The update would require a non-fast-forward merge.",
+    "hint": "Rebase or merge manually in the git checkout; gaveta update never forces or resets."
+  },
+  "E_UPDATE_REMOTE": {
+    "message": "The origin remote does not point to the official Gaveta repository.",
+    "hint": "Set origin to github.com/antonioaren/gaveta before updating."
+  },
+  "E_UPDATE_FAILED": {
+    "message": "The update from git could not be completed.",
+    "hint": "Check that git and pnpm work in the checkout and try again."
+  },
+  "E_UPDATE_UNSUPPORTED": {
+    "message": "This install method does not support automatic gaveta update.",
+    "hint": "Follow the manual instructions from the command or see the README."
+  },
+  "W_INDEX_RECOVERED": {
+    "message": "The index was damaged or incompatible and was recreated.",
+    "hint": "Files were not modified. gaveta reindex repopulates it."
+  },
+  "W_SKILL_OUTDATED": {
+    "message": "The installed skill is older than this CLI version.",
+    "hint": "Run gaveta skill install to update it."
+  },
+  "W_VAULT_ASSET_MODIFIED": {
+    "message": "A .gaveta/ file differs from the CLI bundled theme and was not overwritten.",
+    "hint": "Manually copy changes you want from the new theme or restore the default file."
+  },
+  "W_VAULT_ASSETS_OUTDATED": {
+    "message": ".gaveta/ assets are older than this CLI version.",
+    "hint": "Run gaveta update inside the vault or gaveta init to refresh theme.css without touching notes."
+  },
+  "W_WEB_VIEWER_MISSING": {
+    "message": "The web viewer is not built; only the read API is running.",
+    "hint": "At the repository root run `pnpm build:web` and start gaveta serve again."
+  }
+}

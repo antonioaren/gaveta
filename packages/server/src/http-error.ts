@@ -6,11 +6,15 @@ import {
   formatDiagnostic,
   isErrorCode,
 } from '@gaveta/core';
+import {
+  formatMessage,
+  getActiveLocale,
+  resolveLocaleFromAcceptLanguage,
+  type Locale,
+} from '@gaveta/i18n';
 import type { ApiErrorBody } from './envelope.ts';
 
 const INTERNAL_ERROR_CODE = 'E_INTERNAL';
-const INTERNAL_MESSAGE = 'Ha ocurrido un error interno.';
-const INTERNAL_HINT = 'Vuelve a intentarlo. Si se repite, es un fallo de Gaveta.';
 
 export function httpStatusForCode(code: string): number {
   if (code === INTERNAL_ERROR_CODE) {
@@ -44,9 +48,18 @@ export function httpStatusForCode(code: string): number {
   return 400;
 }
 
-export function toApiErrorBody(error: unknown): ApiErrorBody {
+export function localeFromRequestHeaders(
+  headers: Readonly<Record<string, string | string[] | undefined>>,
+): Locale {
+  const raw = headers['accept-language'];
+  const header = Array.isArray(raw) ? raw.join(',') : raw;
+  return resolveLocaleFromAcceptLanguage(header);
+}
+
+export function toApiErrorBody(error: unknown, locale?: Locale): ApiErrorBody {
+  const loc = locale ?? getActiveLocale();
   if (error instanceof GavetaRefError) {
-    const formatted = formatDiagnostic(error.code);
+    const formatted = formatDiagnostic(error.code, {}, loc);
     const details = { ...error.details };
     return {
       code: error.code,
@@ -56,7 +69,7 @@ export function toApiErrorBody(error: unknown): ApiErrorBody {
     };
   }
   if (error instanceof GavetaOperationError) {
-    const formatted = formatDiagnostic(error.code);
+    const formatted = formatDiagnostic(error.code, {}, loc);
     const details = { ...error.details };
     return {
       code: error.code,
@@ -66,7 +79,7 @@ export function toApiErrorBody(error: unknown): ApiErrorBody {
     };
   }
   if (error instanceof GavetaError) {
-    const formatted = formatDiagnostic(error.code);
+    const formatted = formatDiagnostic(error.code, {}, loc);
     return {
       code: error.code,
       message: formatted.message,
@@ -75,7 +88,7 @@ export function toApiErrorBody(error: unknown): ApiErrorBody {
   }
   return {
     code: INTERNAL_ERROR_CODE,
-    message: INTERNAL_MESSAGE,
-    hint: INTERNAL_HINT,
+    message: formatMessage('cli.auto.ha_ocurrido_un_error_interno', loc),
+    hint: formatMessage('cli.auto.vuelve_a_ejecutar_el_comando_si_se_repite_es_un_', loc),
   };
 }

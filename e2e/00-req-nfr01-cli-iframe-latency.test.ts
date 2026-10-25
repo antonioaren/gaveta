@@ -6,7 +6,7 @@ import { performance } from 'node:perf_hooks';
 import { vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 /** REQ-NFR-01 product target (p95 &lt; 500 ms on a warm 1000-note vault). */
 const LATENCY_SPEC_P95_MS = 500;
@@ -141,7 +141,7 @@ describe('T2.10 REQ-NFR-01 CLI-to-viewer latency', () => {
     const notePath = join(vault, noteRelative);
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => {
       Reflect.set(globalThis, '__gavetaLiveLog', []);

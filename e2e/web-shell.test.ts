@@ -8,6 +8,7 @@ import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import {
   GAVETA_BIN,
   initVault,
+  newWebPage,
   parseJson,
   withTempVaultAsync,
   type JsonEnvelope,
@@ -95,7 +96,7 @@ it('REQ-APP-01 / REQ-SEC-06: gaveta serve loads the viewer shell and bootstraps 
     expect(started.json.ok).toBe(true);
     const { url, token } = started.json.data;
 
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     const errors: string[] = [];
     page.on('pageerror', (error) => {
       errors.push(error.message);
@@ -133,7 +134,7 @@ it('T2.2: editing a note on disk reloads the shell render iframe', async () => {
     expect(started.json.ok).toBe(true);
     const { url } = started.json.data;
 
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await page.goto(url, { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: 'Reload probe' }).click();
     const frame = page.frameLocator('[data-testid="note-render-frame"]');

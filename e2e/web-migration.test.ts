@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { NOTE_X, vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, initVault, parseJson, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, initVault, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = vaultPath('backlinks');
@@ -96,7 +96,7 @@ it('REQ-MIG-12: import preview and export preview in the app', async () => {
     writeFileSync(mdFile, '# Entrada web\n\nPárrafo de prueba.\n', 'utf8');
     const started = await startServe(importVault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openShell(page, url);
     await page.getByTestId('vault-import').click();
     await page.getByTestId('import-file-input').setInputFiles(mdFile);
@@ -118,7 +118,7 @@ it('REQ-MIG-12: export markdown zip from a note', async () => {
     cpSync(BACKLINKS, webVault, { recursive: true });
     const started = await startServe(webVault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openShell(page, url);
     await page.getByTestId(`explorer-note-${NOTE_X.path}`).click();
     await page.getByTestId('note-action-export').click();

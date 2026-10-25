@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useHealthData } from '../hooks/useHealthData.ts';
+import { useI18n } from '../i18n/useI18n.ts';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
 import { useTabs } from '../tabs/useTabs.ts';
 import { viewerRefForFinding } from './finding-viewer-ref.ts';
@@ -8,9 +9,20 @@ import { healthCodeTone } from './health-code-tone.ts';
 import { plainTextFromContext } from '../connections/plain-text.ts';
 
 export function HealthPanel() {
+  const { t } = useI18n();
   const { report, loading, error, externalChangeNotice, dismissExternalNotice } = useHealthData();
   const tabState = useTabs();
-  const groups = useMemo(() => groupHealthFindings(report?.findings ?? []), [report?.findings]);
+  const severityLabels = useMemo(
+    () => ({
+      error: t('web.health.severity.error'),
+      warning: t('web.health.severity.warning'),
+    }),
+    [t],
+  );
+  const groups = useMemo(
+    () => groupHealthFindings(report?.findings ?? [], severityLabels),
+    [report?.findings, severityLabels],
+  );
 
   const openFinding = (path: string, noteId: string | null): void => {
     const ref = noteId !== null && isNoteUlid(noteId) ? noteId : path;
@@ -18,32 +30,30 @@ export function HealthPanel() {
   };
 
   return (
-    <aside className="health" aria-label="Panel de salud">
+    <aside className="health" aria-label={t('web.health.aria')}>
       <header className="health__header">
-        <h2 className="health__title">Salud</h2>
-        <p className="health__hint">Hallazgos de gaveta doctor.</p>
+        <h2 className="health__title">{t('web.health.title')}</h2>
+        <p className="health__hint">{t('web.health.hint')}</p>
       </header>
       <div className="health__body">
         {externalChangeNotice ? (
           <div className="health__alert" role="alert">
-            <p className="health__alert-text">
-              Un cambio externo ha afectado la salud del vault (enlaces o contrato).
-            </p>
+            <p className="health__alert-text">{t('web.health.externalChange')}</p>
             <button type="button" className="health__alert-dismiss" onClick={dismissExternalNotice}>
-              Entendido
+              {t('web.health.dismiss')}
             </button>
           </div>
         ) : null}
         {loading ? (
           <p className="health__status" role="status">
-            Cargando salud…
+            {t('web.health.loading')}
           </p>
         ) : error !== null ? (
           <p className="health__status health__status--error" role="alert">
             {error}
           </p>
         ) : (report?.findings.length ?? 0) === 0 ? (
-          <p className="health__empty">Sin problemas detectados.</p>
+          <p className="health__empty">{t('web.health.empty')}</p>
         ) : (
           groups.map((group) => (
             <section

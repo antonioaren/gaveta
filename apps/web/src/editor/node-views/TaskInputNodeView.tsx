@@ -1,5 +1,6 @@
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
+import { useI18n } from '../../i18n/useI18n.ts';
 
 function readGavetaAttrs(attrs: unknown): Record<string, string> {
   if (attrs === null || typeof attrs !== 'object' || !('gavetaAttrs' in attrs)) {
@@ -19,6 +20,7 @@ function readGavetaAttrs(attrs: unknown): Record<string, string> {
 }
 
 export function TaskInputNodeView({ node, updateAttributes }: NodeViewProps) {
+  const { t } = useI18n();
   const gavetaAttrs = readGavetaAttrs(node.attrs);
   const checked = gavetaAttrs.checked === '' || gavetaAttrs.checked === 'checked';
   return (
@@ -26,7 +28,7 @@ export function TaskInputNodeView({ node, updateAttributes }: NodeViewProps) {
       <input
         type="checkbox"
         checked={checked}
-        aria-label="Tarea"
+        aria-label={t('web.editor.task.aria')}
         onChange={(event) => {
           const next = { ...gavetaAttrs };
           if (event.target.checked) {

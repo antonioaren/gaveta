@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   COMPONENTS,
-  DIAGNOSTICS,
   LINKS,
   MAX_NOTE_DEPTH,
   MAX_NOTE_HTML_CHARS,
@@ -169,8 +168,8 @@ describe('validateNote happy path', () => {
     expect(codes(pending)).toEqual(['W_LINK_PENDING']);
     expect(pending.diagnostics[0]).toMatchObject({
       severity: 'warning',
-      message: DIAGNOSTICS.W_LINK_PENDING.message,
-      hint: DIAGNOSTICS.W_LINK_PENDING.hint,
+      message: formatDiagnostic('W_LINK_PENDING').message,
+      hint: formatDiagnostic('W_LINK_PENDING').hint,
       details: { title: 'Roadmap' },
     });
   });
@@ -207,8 +206,8 @@ describe('validateNote contract rules', () => {
     expect(result.diagnostics[0]).toMatchObject({
       code: 'E_HTML_INVALID',
       severity: 'error',
-      message: DIAGNOSTICS.E_HTML_INVALID.message,
-      hint: DIAGNOSTICS.E_HTML_INVALID.hint,
+      message: formatDiagnostic('E_HTML_INVALID').message,
+      hint: formatDiagnostic('E_HTML_INVALID').hint,
       details: { reason: 'element', element: 'div' },
     });
     const location = result.diagnostics[0]?.location;
@@ -292,7 +291,7 @@ describe('validateNote contract rules', () => {
     expect(docMissing.diagnostics).toContainEqual(
       expect.objectContaining({
         code: 'E_TYPE_STRUCTURE',
-        message: DIAGNOSTICS.E_TYPE_STRUCTURE.message,
+        message: formatDiagnostic('E_TYPE_STRUCTURE').message,
         details: { reason: 'required', type: 'doc', element: 'article', className: '' },
       }),
     );
@@ -450,8 +449,8 @@ describe('validateNote contract rules', () => {
       expect.arrayContaining([
         expect.objectContaining({
           code: 'E_TASK_INVALID',
-          message: DIAGNOSTICS.E_TASK_INVALID.message,
-          hint: DIAGNOSTICS.E_TASK_INVALID.hint,
+          message: formatDiagnostic('E_TASK_INVALID').message,
+          hint: formatDiagnostic('E_TASK_INVALID').hint,
           details: { reason: 'due' },
         }),
         expect.objectContaining({ code: 'E_TASK_INVALID', details: { reason: 'priority' } }),
@@ -587,8 +586,8 @@ describe('validateNote contract rules', () => {
       expect.objectContaining({
         code: 'W_REL_UNKNOWN',
         severity: 'warning',
-        message: DIAGNOSTICS.W_REL_UNKNOWN.message,
-        hint: DIAGNOSTICS.W_REL_UNKNOWN.hint,
+        message: formatDiagnostic('W_REL_UNKNOWN').message,
+        hint: formatDiagnostic('W_REL_UNKNOWN').hint,
         details: { rel: 'primo' },
       }),
     );
@@ -718,8 +717,8 @@ describe('validateNote security', () => {
         details.attribute === 'src'
       );
     });
-    expect(remoteImage?.message).toBe(DIAGNOSTICS.W_REMOTE_RESOURCE.message);
-    expect(remoteImage?.hint).toBe(DIAGNOSTICS.W_REMOTE_RESOURCE.hint);
+    expect(remoteImage?.message).toBe(formatDiagnostic('W_REMOTE_RESOURCE').message);
+    expect(remoteImage?.hint).toBe(formatDiagnostic('W_REMOTE_RESOURCE').hint);
 
     const allowed = validateNote(doc('<p><img src="https://cdn.example/a.png" alt="a"></p>'), {
       remoteAllowlist: ['CDN.Example', 'https://other.example/path'],
@@ -755,7 +754,7 @@ describe('validateNote security', () => {
     expect(styled.diagnostics).toContainEqual(
       expect.objectContaining({
         code: 'E_UNSAFE_URL',
-        message: DIAGNOSTICS.E_UNSAFE_URL.message,
+        message: formatDiagnostic('E_UNSAFE_URL').message,
         details: { element: 'p', attribute: 'style' },
       }),
     );
@@ -815,8 +814,8 @@ describe('validateNote security', () => {
     expect(nested.diagnostics).toContainEqual(
       expect.objectContaining({
         code: 'E_PATH_OUTSIDE_VAULT',
-        message: DIAGNOSTICS.E_PATH_OUTSIDE_VAULT.message,
-        hint: DIAGNOSTICS.E_PATH_OUTSIDE_VAULT.hint,
+        message: formatDiagnostic('E_PATH_OUTSIDE_VAULT').message,
+        hint: formatDiagnostic('E_PATH_OUTSIDE_VAULT').hint,
       }),
     );
     const root = validateNote(doc('<p><a href="../nota.html">x</a></p>'), {
@@ -836,7 +835,7 @@ describe('validateNote security', () => {
     expect(badPath.diagnostics).toContainEqual(
       expect.objectContaining({
         code: 'E_ARG_INVALID',
-        message: DIAGNOSTICS.E_ARG_INVALID.message,
+        message: formatDiagnostic('E_ARG_INVALID').message,
         details: { field: 'notePath' },
       }),
     );
@@ -899,7 +898,7 @@ describe('validateNote security', () => {
     expect(missing.diagnostics).toContainEqual(
       expect.objectContaining({
         code: 'E_META_MISSING',
-        message: DIAGNOSTICS.E_META_MISSING.message,
+        message: formatDiagnostic('E_META_MISSING').message,
         details: { field: 'gaveta:id' },
       }),
     );
@@ -944,8 +943,8 @@ describe('validateVault', () => {
       expect.objectContaining({
         code: 'E_ID_DUPLICATE',
         severity: 'error',
-        message: DIAGNOSTICS.E_ID_DUPLICATE.message,
-        hint: DIAGNOSTICS.E_ID_DUPLICATE.hint,
+        message: formatDiagnostic('E_ID_DUPLICATE').message,
+        hint: formatDiagnostic('E_ID_DUPLICATE').hint,
         details: { id: NOTE_ID, path: 'a.html', other: 'b.html' },
       }),
     );

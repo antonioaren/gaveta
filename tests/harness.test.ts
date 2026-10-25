@@ -173,7 +173,7 @@ describe('agent harness', () => {
       'Playwright',
       'path traversal',
       'node:sqlite',
-      'Spanish',
+      '@gaveta/i18n',
       'Node >= 22',
       'NFD',
       'T4.8',

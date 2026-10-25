@@ -6,12 +6,11 @@ import type { Readable } from 'node:stream';
 import { CliFailure } from './failure.ts';
 import type { InputSource, ResolvedInput } from './types.ts';
 
-const BOTH_SOURCES = 'El contenido se indica por argumento o por --from, no por los dos.';
-const MISSING_CONTENT =
-  'Falta el contenido: pásalo como argumento, con --from <archivo> o con --from -.';
-const BAD_FROM_FLAG = 'La ruta de --from no puede empezar por -.';
-const BAD_FROM_PATH = 'La ruta de --from no es válida.';
-const UNREADABLE = 'No se ha podido leer el archivo.';
+const BOTH_SOURCES = 'cli.auto.el_contenido_se_indica_por_argumento_o_por_from_';
+const MISSING_CONTENT = 'cli.auto.falta_el_contenido_pasalo_como_argumento_con_fro';
+const BAD_FROM_FLAG = 'cli.auto.la_ruta_de_from_no_puede_empezar_por';
+const BAD_FROM_PATH = 'cli.auto.la_ruta_de_from_no_es_valida';
+const UNREADABLE = 'cli.auto.no_se_ha_podido_leer_el_archivo';
 
 export async function readCommandInput(options: {
   readonly from: string | undefined;

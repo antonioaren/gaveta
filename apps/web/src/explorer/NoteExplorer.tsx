@@ -10,12 +10,8 @@ import { useNewNoteDialog } from '../new-note/useNewNoteDialog.ts';
 import { useTabs } from '../tabs/useTabs.ts';
 import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
 import { noteOpTargetFromListItem } from '../note-ops/note-op-target.ts';
-
-const TYPE_LABELS: Record<string, string> = {
-  doc: 'Documento',
-  slides: 'Presentación',
-  todo: 'Tareas',
-};
+import { useI18n } from '../i18n/useI18n.ts';
+import { noteTypeMessageKeyForFilter } from '../i18n/note-type-label.ts';
 
 interface NoteExplorerProps {
   readonly notes: readonly NoteListItem[];
@@ -34,6 +30,7 @@ export function NoteExplorer({
   onExportFolder,
   onExportNote,
 }: NoteExplorerProps) {
+  const { t } = useI18n();
   const tabState = useTabs();
   const { openNewNote } = useNewNoteDialog();
   const [tagFilter, setTagFilter] = useState<string | null>(null);
@@ -62,10 +59,10 @@ export function NoteExplorer({
   const activeRef = tabState.tabs.find((tab) => tab.id === tabState.activeTabId)?.ref ?? null;
 
   return (
-    <aside className="explorer" role="navigation" aria-label="Explorador de notas">
+    <aside className="explorer" role="navigation" aria-label={t('web.explorer.aria')}>
       <header className="explorer__header">
         <div className="explorer__header-row">
-          <h2 className="explorer__title">Explorador</h2>
+          <h2 className="explorer__title">{t('web.explorer.title')}</h2>
           <div className="explorer__header-actions">
             <button
               type="button"
@@ -75,7 +72,7 @@ export function NoteExplorer({
               }}
               data-testid="explorer-new-folder"
             >
-              Nueva carpeta
+              {t('web.explorer.newFolder')}
             </button>
             <button
               type="button"
@@ -84,16 +81,16 @@ export function NoteExplorer({
                 openNewNote();
               }}
             >
-              Nueva nota
+              {t('web.explorer.newNote')}
             </button>
           </div>
         </div>
-        <p className="explorer__hint">{notes.length} notas en el vault</p>
+        <p className="explorer__hint">{t('web.explorer.noteCount', { count: notes.length })}</p>
       </header>
 
-      <section className="explorer__filters" aria-label="Filtros">
+      <section className="explorer__filters" aria-label={t('web.explorer.filters.aria')}>
         <label className="field">
-          <span className="field__label">Tipo</span>
+          <span className="field__label">{t('web.common.type')}</span>
           <select
             className="field__control"
             value={typeFilter ?? ''}
@@ -102,16 +99,23 @@ export function NoteExplorer({
               setTypeFilter(value.length === 0 ? null : (value as NoteListItem['type']));
             }}
           >
-            <option value="">Todos</option>
-            {types.map((type) => (
-              <option key={type ?? 'sin-tipo'} value={type ?? ''}>
-                {type === null ? 'Sin tipo' : (TYPE_LABELS[type] ?? type)}
-              </option>
-            ))}
+            <option value="">{t('web.common.allMasculine')}</option>
+            {types.map((type) => {
+              const typeKey = type === null ? null : noteTypeMessageKeyForFilter(type);
+              return (
+                <option key={type ?? 'sin-tipo'} value={type ?? ''}>
+                  {type === null
+                    ? t('web.explorer.type.noType')
+                    : typeKey !== null
+                      ? t(typeKey)
+                      : type}
+                </option>
+              );
+            })}
           </select>
         </label>
         <label className="field">
-          <span className="field__label">Etiqueta</span>
+          <span className="field__label">{t('web.common.tag')}</span>
           <select
             className="field__control"
             value={tagFilter ?? ''}
@@ -120,7 +124,7 @@ export function NoteExplorer({
               setTagFilter(value.length === 0 ? null : value);
             }}
           >
-            <option value="">Todas</option>
+            <option value="">{t('web.common.allFeminine')}</option>
             {tags.map((tag) => (
               <option key={tag} value={tag}>
                 {tag}
@@ -130,7 +134,7 @@ export function NoteExplorer({
         </label>
       </section>
 
-      {loading ? <p className="explorer__status">Cargando notas…</p> : null}
+      {loading ? <p className="explorer__status">{t('web.explorer.loading')}</p> : null}
       {error !== null ? <p className="explorer__status explorer__status--error">{error}</p> : null}
 
       {folderOp !== null ? (
@@ -173,7 +177,7 @@ export function NoteExplorer({
         }}
       />
 
-      <nav className="explorer__tree" aria-label="Árbol de carpetas">
+      <nav className="explorer__tree" aria-label={t('web.explorer.tree.aria')}>
         <FolderBranch
           node={tree}
           depth={0}
@@ -209,6 +213,7 @@ function FolderBranch({
   onContextMenu: (event: MouseEvent, note: NoteListItem) => void;
   onFolderContextMenu: (event: MouseEvent, folderPath: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
       {node.notes.map((note) => (
@@ -229,7 +234,10 @@ function FolderBranch({
           <span className="explorer__note-title">{note.title}</span>
           {note.type !== null ? (
             <span className={`badge badge--${note.type}`}>
-              {TYPE_LABELS[note.type] ?? note.type}
+              {(() => {
+                const typeKey = noteTypeMessageKeyForFilter(note.type);
+                return typeKey !== null ? t(typeKey) : note.type;
+              })()}
             </span>
           ) : null}
         </button>

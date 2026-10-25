@@ -34,6 +34,7 @@ interface RunResult {
 function childEnv(overrides: Record<string, string> = {}): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env };
   delete env.GAVETA_VAULT;
+  env.GAVETA_LANG ??= 'es';
   for (const [key, value] of Object.entries(overrides)) {
     env[key] = value;
   }

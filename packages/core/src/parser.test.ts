@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DIAGNOSTICS,
   MAX_NOTE_DEPTH,
   MAX_NOTE_HTML_CHARS,
+  formatDiagnostic,
   parseNote,
   type NoteModel,
   type ParseResult,
@@ -424,8 +424,8 @@ describe('parseNote metadata', () => {
         expect.objectContaining({
           code: 'E_META_MISSING',
           severity: 'error',
-          message: DIAGNOSTICS.E_META_MISSING.message,
-          hint: DIAGNOSTICS.E_META_MISSING.hint,
+          message: formatDiagnostic('E_META_MISSING').message,
+          hint: formatDiagnostic('E_META_MISSING').hint,
           details: { field },
         }),
       );
@@ -568,8 +568,8 @@ describe('parseNote security', () => {
     });
     expect(result.diagnostics[1]).toMatchObject({
       code: 'E_UNSAFE_SCRIPT',
-      message: DIAGNOSTICS.E_UNSAFE_SCRIPT.message,
-      hint: DIAGNOSTICS.E_UNSAFE_SCRIPT.hint,
+      message: formatDiagnostic('E_UNSAFE_SCRIPT').message,
+      hint: formatDiagnostic('E_UNSAFE_SCRIPT').hint,
       details: { element: 'script' },
     });
     expect(result.diagnostics[2]).toMatchObject({
@@ -634,7 +634,7 @@ describe('parseNote adversarial input', () => {
       expect(result.diagnostics).toEqual([
         expect.objectContaining({
           code: 'E_HTML_INVALID',
-          message: DIAGNOSTICS.E_HTML_INVALID.message,
+          message: formatDiagnostic('E_HTML_INVALID').message,
           details: { reason: 'input' },
         }),
       ]);

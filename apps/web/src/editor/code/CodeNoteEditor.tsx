@@ -5,6 +5,7 @@ import { EditorView, lineNumbers, highlightActiveLineGutter } from '@codemirror/
 import { useEffect, useRef, type ReactElement } from 'react';
 import { fetchNoteValidation } from '../../api/note-validate.ts';
 import { createNoteLinter } from './note-linter.ts';
+import { useI18n } from '../../i18n/useI18n.ts';
 
 export interface CodeNoteEditorProps {
   readonly initialValue: string;
@@ -19,6 +20,7 @@ export function CodeNoteEditor({
   onChange,
   readOnly = false,
 }: CodeNoteEditorProps): ReactElement {
+  const { t } = useI18n();
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -64,7 +66,7 @@ export function CodeNoteEditor({
     <div
       className="code-editor"
       ref={hostRef}
-      aria-label="Editor de código HTML"
+      aria-label={t('web.editor.code.aria')}
       data-testid="code-note-editor"
     />
   );

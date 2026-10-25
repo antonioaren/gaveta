@@ -8,7 +8,7 @@ import { vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
-import { GAVETA_BIN, parseJson, type JsonEnvelope } from './helpers.ts';
+import { GAVETA_BIN, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
 import { requestLocal } from './serve-http.ts';
 import { wsMessageText } from './ws-message.ts';
 
@@ -117,7 +117,7 @@ describe('T2.10 malicious fixture in the viewer shell', () => {
     const vault = copyMaliciousVault();
     const started = await startServe(vault);
     const { url, token } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     const dialogs: string[] = [];
     const remoteUrls: string[] = [];
     page.on('dialog', (dialog) => {
@@ -179,7 +179,7 @@ describe('T2.10 malicious fixture in the viewer shell', () => {
     const vault = copyMaliciousVault();
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     await openMaliciousShell(page, url, 'URL javascript');
     const frame = page.frameLocator('[data-testid="note-render-frame"]');
     const html = await frame.locator('body').innerHTML();
@@ -433,7 +433,7 @@ describe('T2.10 XSS surfaces in the shell UI', () => {
     const vault = copyMaliciousVault();
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     page.on('dialog', (dialog) => {
       void dialog.dismiss();
       throw new Error(`unexpected dialog: ${dialog.message()}`);
@@ -479,7 +479,7 @@ describe('T2.10 XSS surfaces in the shell UI', () => {
     const vault = copyProblemsVault();
     const started = await startServe(vault);
     const { url } = started.json.data;
-    const page = await browser.newPage();
+    const page = await newWebPage(browser);
     page.on('dialog', (dialog) => {
       void dialog.dismiss();
       throw new Error(`unexpected dialog: ${dialog.message()}`);

@@ -11,6 +11,7 @@ import {
   readVaultConfig,
   type VaultLocation,
 } from '@gaveta/core';
+import { resolveCliLocale, setActiveLocale } from '@gaveta/i18n';
 import { Command, CommanderError, Option } from 'commander';
 import type { Readable } from 'node:stream';
 import { firstPositional, normalizeArgv } from './argv.ts';
@@ -27,6 +28,8 @@ import {
 } from './envelope.ts';
 import { CliFailure } from './failure.ts';
 import { renderHelp } from './help.ts';
+import { getActiveLocale, t } from '@gaveta/i18n';
+import { localizeDetails, m } from './messages.ts';
 import { readCommandInput } from './input.ts';
 import { commands } from './registry.ts';
 import {
@@ -73,9 +76,11 @@ export async function runCli(argv: readonly string[], io: CliIo = {}): Promise<n
   };
   const registry = io.registry ?? commands;
   const cwd = io.cwd ?? process.cwd();
-  const env = io.env ?? process.env;
+  const env = { ...process.env, ...(io.env ?? {}) };
   const stdin = io.stdin ?? process.stdin;
-  const userArgs = normalizeArgv(argv.slice(2));
+  const normalized = normalizeArgv(argv.slice(2));
+  const { args: userArgs, langFlag } = peelLangFlag(normalized);
+  setActiveLocale(resolveCliLocale({ langFlag, env }));
   const jsonRequested = userArgs.includes('--json');
   const commandName = firstPositional(userArgs);
 
@@ -168,7 +173,11 @@ async function execute(
   const inputMode = commandInputMode(spec, subcommand);
   const args = commandArgs(spec, subcommand);
   if (inputMode === 'none' && globals.from !== undefined) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Este comando no admite contenido.' });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: 'cli.auto.este_comando_no_admite_contenido' },
+    );
   }
   const allowedPositionals = (args?.length ?? 0) + (spec.contentArgument === undefined ? 0 : 1);
   if (inputMode === 'none' && positionals.length > allowedPositionals) {
@@ -177,7 +186,9 @@ async function execute(
       {},
       {
         problem:
-          allowedPositionals === 0 ? 'Este comando no admite contenido.' : 'Sobran argumentos.',
+          allowedPositionals === 0
+            ? 'cli.auto.este_comando_no_admite_contenido'
+            : 'Sobran argumentos.',
       },
     );
   }
@@ -232,7 +243,7 @@ async function execute(
     } else if (spec.run !== undefined) {
       result = await spec.run(context);
     } else {
-      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Falta el subcomando.' });
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'cli.auto.falta_el_subcomando' });
     }
   } catch (error) {
     return reportCaught(io.writers, io.json, spec.name, error, strictRel);
@@ -277,8 +288,8 @@ function reportCaught(
     commandName,
     {
       code: INTERNAL_ERROR_CODE,
-      message: INTERNAL_ERROR_MESSAGE,
-      hint: INTERNAL_ERROR_HINT,
+      message: m(INTERNAL_ERROR_MESSAGE),
+      hint: m(INTERNAL_ERROR_HINT),
     },
     { exitCode: EXIT_CODES.internal },
   );
@@ -313,7 +324,8 @@ function errorBody(error: GavetaError): JsonErrorBody {
     hint: error.hint,
   };
   if (error instanceof CliFailure && error.details !== undefined) {
-    return { ...body, details: error.details };
+    const details = localizeDetails(error.details);
+    return details === undefined ? body : { ...body, details };
   }
   if (error instanceof GavetaOperationError) {
     return { ...body, details: error.details };
@@ -389,21 +401,21 @@ function knownCommand(registry: readonly CommandSpec[], name: string): string | 
 function usageProblem(code: string): string {
   switch (code) {
     case 'commander.unknownCommand':
-      return 'El comando no existe.';
+      return 'cli.usage.unknownCommand';
     case 'commander.unknownOption':
-      return 'La opción no existe.';
+      return 'cli.auto.la_opcion_no_existe';
     case 'commander.missingArgument':
     case 'commander.optionMissingArgument':
     case 'commander.missingMandatoryOptionValue':
-      return 'Falta un argumento.';
+      return 'cli.usage.missingArgument';
     case 'commander.excessArguments':
-      return 'Sobran argumentos.';
+      return 'cli.usage.excessArguments';
     case 'commander.invalidArgument':
-      return 'El argumento no es válido.';
+      return 'cli.auto.el_argumento_no_es_valido';
     case 'commander.help':
-      return 'Falta el comando.';
+      return 'cli.usage.missingCommand';
     default:
-      return 'Los argumentos no son válidos.';
+      return 'cli.auto.los_argumentos_no_son_validos';
   }
 }
 
@@ -414,9 +426,9 @@ function createProgram(
   const program = new Command();
   program
     .name('gaveta')
-    .description('Base de conocimiento local. gv es un alias de este binario.')
+    .description(t('cli.help.commanderDescription', getActiveLocale()))
     .helpCommand(false)
-    .helpOption('-h, --help', 'Muestra la ayuda.')
+    .helpOption('-h, --help', t('cli.help.commanderHelpOption', getActiveLocale()))
     .showHelpAfterError(false)
     .showSuggestionAfterError(false)
     .exitOverride()
@@ -428,12 +440,13 @@ function createProgram(
         return undefined;
       },
     })
-    .option('--json', 'Escribe el sobre JSON versionado en stdout.')
-    .option('--vault <dir>', 'Ruta del vault.')
-    .option('--from <ruta>', 'Contenido desde un archivo, o - para leer stdin.');
+    .option('--json', t('cli.help.commanderJson', getActiveLocale()))
+    .option('--vault <dir>', t('cli.help.commanderVault', getActiveLocale()))
+    .option('--from <ruta>', t('cli.help.commanderFrom', getActiveLocale()))
+    .option('--lang <locale>', t('cli.help.globalLang', getActiveLocale()));
 
   for (const spec of registry) {
-    const parent = program.command(spec.name).description(spec.summary);
+    const parent = program.command(spec.name).description(m(spec.summary));
     if (spec.subcommands !== undefined && spec.subcommands.length > 0) {
       for (const sub of spec.subcommands) {
         registerLeafCommand(parent.command(sub.name), spec, sub, onRun);
@@ -447,9 +460,10 @@ function createProgram(
 
 function attachGlobalOptions(command: Command): void {
   command
-    .option('--json', 'Escribe el sobre JSON versionado en stdout.')
-    .option('--vault <dir>', 'Ruta del vault.')
-    .option('--from <ruta>', 'Contenido desde un archivo, o - para leer stdin.');
+    .option('--json', t('cli.help.commanderJson', getActiveLocale()))
+    .option('--vault <dir>', t('cli.help.commanderVault', getActiveLocale()))
+    .option('--from <ruta>', t('cli.help.commanderFrom', getActiveLocale()))
+    .option('--lang <locale>', t('cli.help.globalLang', getActiveLocale()));
 }
 
 function registerLeafCommand(
@@ -461,20 +475,20 @@ function registerLeafCommand(
   if (subcommand !== undefined) {
     attachGlobalOptions(command);
   }
-  command.description(subcommand?.summary ?? spec.summary);
+  command.description(m(subcommand?.summary ?? spec.summary));
   const args = commandArgs(spec, subcommand);
   for (const arg of args ?? []) {
-    command.argument(arg.required ? `<${arg.name}>` : `[${arg.name}]`, arg.description);
+    command.argument(arg.required ? `<${arg.name}>` : `[${arg.name}]`, m(arg.description));
   }
   if (subcommand === undefined && spec.contentArgument !== undefined) {
     const syntax = spec.contentArgument.required
       ? `<${spec.contentArgument.name}>`
       : `[${spec.contentArgument.name}]`;
-    command.argument(syntax, spec.contentArgument.description);
+    command.argument(syntax, m(spec.contentArgument.description));
   }
   const options = subcommand?.options ?? spec.options ?? [];
   for (const option of options) {
-    const built = new Option(option.flags, option.description);
+    const built = new Option(option.flags, m(option.description));
     if (option.choices !== undefined) {
       built.choices([...option.choices]);
     }
@@ -492,7 +506,11 @@ function registerLeafCommand(
   command.action((...params: unknown[]) => {
     const commandObject = params.at(-1);
     if (!(commandObject instanceof Command)) {
-      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
+      throw new CliFailure(
+        'E_ARG_INVALID',
+        {},
+        { problem: 'cli.auto.los_argumentos_no_son_validos' },
+      );
     }
     onRun({
       spec,
@@ -538,10 +556,18 @@ function readExecutedGlobals(command: Command): Globals {
 
 function readGlobals(value: unknown): Globals {
   if (!isRecord(value)) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: 'cli.auto.los_argumentos_no_son_validos' },
+    );
   }
   if (value.json !== undefined && value.json !== true) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: 'cli.auto.los_argumentos_no_son_validos' },
+    );
   }
   return {
     json: value.json === true,
@@ -555,7 +581,11 @@ function readStringOption(value: unknown): string | undefined {
     return undefined;
   }
   if (typeof value !== 'string' || value.length === 0) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: 'cli.auto.los_argumentos_no_son_validos' },
+    );
   }
   return value;
 }
@@ -572,7 +602,11 @@ function readCommandOptions(
   },
 ): Readonly<Record<string, string>> {
   if (!isRecord(value)) {
-    throw new CliFailure('E_ARG_INVALID', {}, { problem: 'Los argumentos no son válidos.' });
+    throw new CliFailure(
+      'E_ARG_INVALID',
+      {},
+      { problem: 'cli.auto.los_argumentos_no_son_validos' },
+    );
   }
   const kinds = new Map(
     spec.options.map((option) => [option.name, option.kind ?? 'string'] as const),
@@ -583,19 +617,27 @@ function readCommandOptions(
       if (GLOBAL_OPTION_KEYS.has(key)) {
         continue;
       }
-      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'La opción no existe.' });
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'cli.auto.la_opcion_no_existe' });
     }
     if (entry === undefined) {
       continue;
     }
     if (kinds.get(key) === 'stringList') {
       if (!Array.isArray(entry)) {
-        throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });
+        throw new CliFailure(
+          'E_ARG_INVALID',
+          {},
+          { problem: 'cli.auto.el_argumento_no_es_valido' },
+        );
       }
       const values: string[] = [];
       for (const item of entry) {
         if (typeof item !== 'string' || item.length === 0) {
-          throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });
+          throw new CliFailure(
+            'E_ARG_INVALID',
+            {},
+            { problem: 'cli.auto.el_argumento_no_es_valido' },
+          );
         }
         values.push(item);
       }
@@ -612,10 +654,10 @@ function readCommandOptions(
       if (entry === false) {
         continue;
       }
-      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'cli.auto.el_argumento_no_es_valido' });
     }
     if (typeof entry !== 'string' || entry.length === 0) {
-      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'El argumento no es válido.' });
+      throw new CliFailure('E_ARG_INVALID', {}, { problem: 'cli.auto.el_argumento_no_es_valido' });
     }
     options[key] = entry;
   }
@@ -624,6 +666,34 @@ function readCommandOptions(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function peelLangFlag(args: readonly string[]): {
+  readonly args: string[];
+  readonly langFlag?: string;
+} {
+  const out: string[] = [];
+  let langFlag: string | undefined;
+  for (let i = 0; i < args.length; i += 1) {
+    const token = args[i];
+    if (token === undefined) {
+      continue;
+    }
+    if (token === '--lang') {
+      const next = args[i + 1];
+      if (next !== undefined) {
+        langFlag = next;
+        i += 1;
+      }
+      continue;
+    }
+    if (token.startsWith('--lang=')) {
+      langFlag = token.slice('--lang='.length);
+      continue;
+    }
+    out.push(token);
+  }
+  return langFlag === undefined ? { args: out } : { args: out, langFlag };
 }
 
 function finishLine(text: string): string {

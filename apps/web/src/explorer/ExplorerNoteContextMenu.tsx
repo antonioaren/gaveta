@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
+import { useI18n } from '../i18n/useI18n.ts';
 
 interface ExplorerNoteContextMenuProps {
   readonly open: boolean;
@@ -20,6 +21,7 @@ export function ExplorerNoteContextMenu({
   onSelect,
   onExport,
 }: ExplorerNoteContextMenuProps) {
+  const { t } = useI18n();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function ExplorerNoteContextMenu({
       className="explorer-context-menu"
       style={{ top: y, left: x }}
       role="menu"
-      aria-label="Acciones de la nota"
+      aria-label={t('web.noteOps.aria')}
       data-testid="explorer-context-menu"
     >
       <button
@@ -62,7 +64,7 @@ export function ExplorerNoteContextMenu({
           onClose();
         }}
       >
-        Exportar a Markdown
+        {t('web.common.exportMarkdown')}
       </button>
       {(['rename', 'move', 'delete'] as const).map((kind) => (
         <button
@@ -76,7 +78,11 @@ export function ExplorerNoteContextMenu({
             onClose();
           }}
         >
-          {kind === 'rename' ? 'Renombrar' : kind === 'move' ? 'Mover' : 'Borrar'}
+          {kind === 'rename'
+            ? t('web.common.rename')
+            : kind === 'move'
+              ? t('web.common.move')
+              : t('web.common.delete')}
         </button>
       ))}
     </div>

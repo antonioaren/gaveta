@@ -17,7 +17,7 @@ const CLI_ENTRY = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'bin
 
 export const updateCommand: CommandSpec = {
   name: 'update',
-  summary: 'Actualiza un checkout de git de Gaveta y refresca los assets del vault.',
+  summary: 'cli.auto.actualiza_un_checkout_de_git_de_gaveta_y_refresc',
   example: 'gaveta update --check --json',
   requiresVault: false,
   skipsVaultDiscovery: false,
@@ -26,19 +26,19 @@ export const updateCommand: CommandSpec = {
     {
       name: 'check',
       flags: '--check',
-      description: 'Solo comprueba si hay una actualización disponible, sin modificar nada.',
+      description: 'cli.auto.solo_comprueba_si_hay_una_actualizacion_disponib',
       kind: 'boolean',
     },
     {
       name: 'assetsOnly',
       flags: '--assets-only',
-      description: 'Solo actualiza los assets del vault (sin git pull).',
+      description: 'cli.auto.solo_actualiza_los_assets_del_vault_sin_git_pull',
       kind: 'boolean',
     },
     {
       name: 'channel',
       flags: '--channel <canal>',
-      description: 'Canal stable (último tag v*) o main (rama main).',
+      description: 'cli.auto.canal_stable_ultimo_tag_v_o_main_rama_main',
       choices: ['stable', 'main'],
     },
   ],

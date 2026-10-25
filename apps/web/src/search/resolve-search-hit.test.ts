@@ -2,9 +2,9 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { clearSessionToken, setSessionToken } from '../auth/session-token.ts';
 import {
-  SEARCH_HIT_NOT_INDEXED_MESSAGE,
   resolveSearchHitFromNotes,
   resolveSearchHitOpen,
+  searchHitNotIndexedMessage,
 } from './resolve-search-hit.ts';
 import type { NoteListItem, SearchHitView } from '../api/types.ts';
 
@@ -99,7 +99,7 @@ it('returns a Spanish error when the note has no indexed id', async () => {
   ];
   expect(resolveSearchHitFromNotes(hit, notes)).toEqual({
     ok: false,
-    message: SEARCH_HIT_NOT_INDEXED_MESSAGE,
+    message: searchHitNotIndexedMessage(),
   });
   setSessionToken('t');
   vi.stubGlobal(
@@ -118,5 +118,5 @@ it('returns a Spanish error when the note has no indexed id', async () => {
     ),
   );
   const result = await resolveSearchHitOpen(hit, []);
-  expect(result).toEqual({ ok: false, message: SEARCH_HIT_NOT_INDEXED_MESSAGE });
+  expect(result).toEqual({ ok: false, message: searchHitNotIndexedMessage() });
 });

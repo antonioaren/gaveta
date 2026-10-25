@@ -28,7 +28,7 @@ import {
   GAVETA_TOKEN_HEADER,
 } from './constants.ts';
 import { apiFailure, apiSuccess } from './envelope.ts';
-import { httpStatusForCode, toApiErrorBody } from './http-error.ts';
+import { httpStatusForCode, localeFromRequestHeaders, toApiErrorBody } from './http-error.ts';
 import {
   presentBacklink,
   presentFinding,
@@ -184,8 +184,8 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
     () => boundPort,
   );
 
-  app.setErrorHandler((error, _request, reply) => {
-    sendError(reply, error);
+  app.setErrorHandler((error, request, reply) => {
+    sendError(request, reply, error);
   });
 
   return {
@@ -406,8 +406,8 @@ function readQueryParam(request: FastifyRequest, name: string): string | undefin
   return value;
 }
 
-function sendError(reply: FastifyReply, error: unknown): FastifyReply {
-  const body = toApiErrorBody(error);
+function sendError(request: FastifyRequest, reply: FastifyReply, error: unknown): FastifyReply {
+  const body = toApiErrorBody(error, localeFromRequestHeaders(request.headers));
   const status = httpStatusForCode(body.code);
   if (!reply.sent) {
     return reply.code(status).send(apiFailure(body));
