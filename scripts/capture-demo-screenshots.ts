@@ -9,6 +9,13 @@ import {
   UI_BY_LANG,
   type CaptureLang,
 } from './capture-demo-locale.ts';
+import {
+  countOverlappingGraphLabels,
+  defrayGraphLabels,
+  fitGlobalGraphView,
+  scrollApplicationToTop,
+  waitForGlobalGraphReady,
+} from './capture-demo-graph.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
@@ -94,7 +101,11 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
     });
     const short = language.split('-')[0] ?? language;
     const applyHtmlLang = (): void => {
-      document.documentElement.lang = short;
+      try {
+        document.documentElement.lang = short;
+      } catch {
+        /* subframe or empty document during navigation */
+      }
     };
     applyHtmlLang();
     document.addEventListener('DOMContentLoaded', applyHtmlLang, { once: true });
@@ -112,7 +123,20 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
   await page.getByRole('navigation', { name: ui.explorerNav }).waitFor();
 
   await page.goto(`${origin}/grafo`, { waitUntil: 'networkidle' });
-  await page.getByRole('heading', { name: ui.globalGraphHeading }).waitFor();
+  await waitForGlobalGraphReady(page, ui.globalGraphHeading);
+  await fitGlobalGraphView(page, 0.82);
+  await defrayGraphLabels(page);
+  let overlapPairs = await countOverlappingGraphLabels(page);
+  if (overlapPairs > 0) {
+    await fitGlobalGraphView(page, 0.88);
+    await defrayGraphLabels(page);
+    overlapPairs = await countOverlappingGraphLabels(page);
+  }
+  if (overlapPairs > 0) {
+    await fitGlobalGraphView(page, 0.92);
+    await defrayGraphLabels(page);
+  }
+  await scrollApplicationToTop(page);
   await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-graph.png') });
 
   await page.getByRole('button', { name: ui.notesButton }).click();
@@ -124,13 +148,32 @@ async function captureScreenshots(lang: CaptureLang): Promise<void> {
   await page.locator('[data-testid="note-meta-panel"]').evaluate((el) => {
     el.style.display = 'none';
   });
-  await page.locator('[data-testid="note-render-frame"]').scrollIntoViewIfNeeded();
+  await scrollApplicationToTop(page);
+  await renderFrame.locator('body').evaluate((body) => {
+    const view = body.ownerDocument.defaultView;
+    if (view === null) {
+      return;
+    }
+    view.scrollTo(0, 0);
+    body.querySelector('nav.toc')?.remove();
+    body.querySelector('header.note-header')?.remove();
+    const callouts = body.querySelector('section#callouts');
+    const table = body.querySelector('section#table');
+    if (callouts instanceof HTMLElement && table instanceof HTMLElement) {
+      const blockBottom = table.offsetTop + table.offsetHeight;
+      if (blockBottom > view.innerHeight) {
+        view.scrollTo(0, Math.max(0, callouts.offsetTop - 8));
+      }
+    }
+  });
+  await scrollApplicationToTop(page);
   await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-note.png') });
 
   await page.getByTestId('explorer-note-local-first-knowledge.html').click();
   await page.getByRole('heading', { name: 'Local-First Knowledge', level: 1 }).waitFor();
   await page.getByTestId('note-edit-button').click();
   await page.getByTestId('visual-editor-surface').waitFor({ timeout: 30_000 });
+  await scrollApplicationToTop(page);
   await page.screenshot({ path: join(ASSETS_DIR, 'screenshot-editor.png') });
 
   for (const name of SCREENSHOTS) {
