@@ -6,6 +6,7 @@ import {
   localGraph,
   outgoingLinks,
   readNote,
+  unlinkedMentions,
   readRenderNoteId,
   readVaultConfig,
   resolveRenderNote,
@@ -35,6 +36,7 @@ import {
   presentFix,
   presentGraph,
   presentHit,
+  presentMention,
   presentNoteList,
   presentOutgoing,
   presentRead,
@@ -323,6 +325,15 @@ function registerReadRoutes(
     const { result, warnings } = await vaultSession.withIndex((index) => {
       const incoming = backlinks(index, ref).map(presentBacklink);
       return Promise.resolve({ ref, backlinks: incoming });
+    });
+    return reply.send(apiSuccess(result, warnings));
+  });
+
+  app.get('/api/mentions', async (request, reply) => {
+    const ref = readRefQuery(readQueryParam(request, 'ref'));
+    const { result, warnings } = await vaultSession.withIndex(async (index) => {
+      const mentions = await unlinkedMentions(options.vaultRoot, index, ref);
+      return { ref, mentions: mentions.map(presentMention) };
     });
     return reply.send(apiSuccess(result, warnings));
   });

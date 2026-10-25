@@ -5,6 +5,7 @@ import {
   linkCommand,
   linksCommand,
 } from './commands/connections.ts';
+import { mentionsCommand } from './commands/mentions.ts';
 import { doctorCommand } from './commands/doctor.ts';
 import { exportCommand } from './commands/export.ts';
 import { importCommand } from './commands/import.ts';
@@ -42,6 +43,7 @@ const peerCommands: readonly CommandSpec[] = [
   metaCommand,
   linksCommand,
   backlinksCommand,
+  mentionsCommand,
   linkCommand,
   graphCommand,
   todoCommand,

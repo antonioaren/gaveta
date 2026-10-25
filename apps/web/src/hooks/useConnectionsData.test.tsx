@@ -26,11 +26,24 @@ function bodyForPath(path: string): unknown {
     const ref = path.includes(REF_A) ? REF_A : REF_B;
     return { ok: true, schemaVersion: 1, data: { ref, backlinks: [] } };
   }
+  if (path.includes('/api/mentions')) {
+    const ref = path.includes(REF_A) ? REF_A : REF_B;
+    return { ok: true, schemaVersion: 1, data: { ref, mentions: [] } };
+  }
   const ref = path.includes(REF_A) ? REF_A : REF_B;
   return {
     ok: true,
     schemaVersion: 1,
-    data: { ref, depth: 1, type: null, tag: null, rel: null, nodes: [], edges: [] },
+    data: {
+      ref,
+      depth: 1,
+      type: null,
+      tag: null,
+      rel: null,
+      folder: null,
+      nodes: [],
+      edges: [],
+    },
   };
 }
 

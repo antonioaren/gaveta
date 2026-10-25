@@ -111,6 +111,8 @@
   "cli.auto.lista_los_archivos_que_se_escribirian_sin_modifi": "Lista los archivos que se escribirían sin modificar el disco.",
   "cli.auto.lista_los_enlaces_entrantes_con_el_contexto_dond": "Lista los enlaces entrantes con el contexto donde aparecen.",
   "cli.auto.lista_los_enlaces_salientes_de_una_nota": "Lista los enlaces salientes de una nota.",
+  "cli.auto.lista_menciones_no_enlazadas_y_opcionalmente_las": "Lista menciones no enlazadas de una nota y opcionalmente las enlaza.",
+  "cli.auto.convierte_las_menciones_en_enlaces": "Convierte menciones no enlazadas en enlaces canónicos.",
   "cli.auto.lista_tareas_del_vault_o_de_una_nota": "Lista tareas del vault o de una nota.",
   "cli.auto.los_argumentos_no_son_validos": "Los argumentos no son válidos.",
   "cli.auto.marca_una_tarea_como_hecha": "Marca una tarea como hecha.",
