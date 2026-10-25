@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   review:
-    # Solo PRs abiertos por el dueño del repo.
+    # Solo PRs abiertos por el dueño del repo (forks, Dependabot, etc. se omiten).
     if: github.event.pull_request.user.login == 'antonioaren'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -25,10 +25,23 @@ jobs:
       issues: read
       id-token: write
     steps:
-      - uses: actions/checkout@v7
+      - name: Comprobar secreto
+        id: gate
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Sin CLAUDE_CODE_OAUTH_TOKEN; se omite la revisión."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: steps.gate.outputs.enabled == 'true'
         with:
           fetch-depth: 1
-      - uses: anthropics/claude-code-action@v1
+      - uses: anthropics/claude-code-action@925afb53776cf1a2b738c6bdbed37b4d4000ef13 # v1
+        if: steps.gate.outputs.enabled == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
