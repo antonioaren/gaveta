@@ -2,6 +2,7 @@
   "name": "@gaveta/core",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Shared core: authoring contract, error catalog, HTML note parser, note validator, note normalizer, vault I/O, vault init and adopt, the default theme, SQLite index, link resolver, pending-link promotion, graph queries, transactional move and remove, and note create, read, and edit.",
   "type": "module",
   "engines": {

@@ -2,6 +2,7 @@
   "name": "@gaveta/fixtures",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Hand-written vault fixtures and a deterministic generator for performance tests.",
   "type": "module",
   "engines": {

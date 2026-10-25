@@ -2,6 +2,7 @@
   "name": "@gaveta/editor",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "TipTap schema derived from the Gaveta authoring contract, with HTML round-trip helpers.",
   "type": "module",
   "engines": {
