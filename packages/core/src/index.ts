@@ -201,6 +201,26 @@ export { doctorVault } from './doctor.ts';
 
 export type { DoctorFinding, DoctorFix, DoctorReport, DoctorVaultOptions } from './doctor.ts';
 
+export {
+  computeIndexStats,
+  computeLogStats,
+  computeVaultStats,
+  buildVaultCatalog,
+} from './stats.ts';
+
+export type {
+  ComputeLogStatsOptions,
+  ComputeVaultStatsOptions,
+  VaultCatalog,
+  VaultIndexStats,
+  VaultLogStats,
+  VaultStats,
+} from './stats.ts';
+
+export { COMMAND_LOG_RELATIVE, parseCommandLogLine, readCommandLog } from './vault/command-log.ts';
+
+export type { CommandLogEntry } from './vault/command-log.ts';
+
 export { adoptNote } from './adopt.ts';
 
 export { convertClaudeHtml } from './convert/claude.ts';

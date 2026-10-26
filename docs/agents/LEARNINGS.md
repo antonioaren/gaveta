@@ -6,6 +6,7 @@ Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 
 - 2026-10-26 · T4.6 · Per-type templates live only under `.gaveta/templates/<type>.html`; `createNote` must load them when `html` is omitted or blank, without treating templates as shipped assets that `upgradeVaultAssets` overwrites. · `writeDefaultNoteTemplates` on `init` only; explicit `html` still wins.
 - 2026-10-26 · T4.6 · `String.replaceAll` treats `$`, `$&`, `` $` ``, and `$'` in the replacement string as patterns, so titles like `Price $$$` mangled template output. · Use a function replacer: `replaceAll('{{title}}', () => escaped)`.
+- 2026-10-26 · T4.7 · `registry.test.ts` snapshots every CLI command name in registration order; a new command such as `stats` fails CI until that list is updated. · Add the name beside related commands (e.g. after `search`).
 - 2026-10-26 · T3.17 · Vitest resolves `@gaveta/core` to the full package (pulls `node:sqlite`); code-mode contract helpers must import `packages/core/src/contract.ts` directly. · Keep HTML/Emmet completion on the contract path, not the package root.
 - 2026-10-26 · T4.4 · `renderWithI18n(ui, 'en')` is wrong: the second argument is RTL options, so locale stays the default `es`. · Pass `{ locale: 'en' }` when asserting English copy.
 - 2026-10-25 · T4.3 · parse5 `startOffset` on `<body>` is the tag start, not the inner HTML; subtract `startTag.endOffset` when splicing embed replacements in a body fragment. · Use `startTag.endOffset` / `endTag.startOffset` for `gaveta-embed` hit ranges.
