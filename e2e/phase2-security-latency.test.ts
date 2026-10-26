@@ -8,11 +8,10 @@ import { vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
-import { GAVETA_BIN, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
+import { ensureWebBuilt, GAVETA_BIN, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
 import { requestLocal } from './serve-http.ts';
 import { wsMessageText } from './ws-message.ts';
 
-const REPO_ROOT = join(import.meta.dirname, '..');
 const HANDLER_ID = '01M5HGV8800000000000000012';
 const URL_JS_ID = '01M5HGV8800000000000000013';
 const RENDER_ASSET_ID = '01M5HGV8800000000000000022';
@@ -97,8 +96,7 @@ async function openMaliciousShell(page: Page, url: string, noteButton: string): 
 }
 
 beforeAll(async () => {
-  const { execFileSync } = await import('node:child_process');
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  ensureWebBuilt();
   browser = await chromium.launch();
 }, 180_000);
 
@@ -279,12 +277,10 @@ describe('T2.10 auth and path hardening (gaveta serve)', () => {
     });
     expect(forgedOrigin.status).toBe(403);
 
-    const rebindingHost = await requestLocal(
-      port,
-      '/api/notes',
-      headers,
-      `127.0.0.1:${String(port)}.attacker.example`,
-    );
+    const rebindingHost = await requestLocal(port, '/api/notes', {
+      ...headers,
+      host: `127.0.0.1:${String(port)}.attacker.example`,
+    });
     expect(rebindingHost.status).toBe(403);
     rmSync(join(vault, '..'), { recursive: true, force: true });
   });

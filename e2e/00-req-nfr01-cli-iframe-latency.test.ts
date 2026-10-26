@@ -6,7 +6,14 @@ import { performance } from 'node:perf_hooks';
 import { vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope, newWebPage } from './helpers.ts';
+import {
+  ensureWebBuilt,
+  GAVETA_BIN,
+  parseJson,
+  runGaveta,
+  type JsonEnvelope,
+  newWebPage,
+} from './helpers.ts';
 
 /** REQ-NFR-01 product target (p95 &lt; 500 ms on a warm 1000-note vault). */
 const LATENCY_SPEC_P95_MS = 500;
@@ -14,8 +21,6 @@ const LATENCY_SPEC_P95_MS = 500;
 const LATENCY_CI_P95_MS = 4_000;
 /** Fewer samples on CI runners to avoid tail timeouts while preserving p50/p95 logging. */
 const LATENCY_SAMPLES = process.env.CI === 'true' ? 3 : 5;
-
-const REPO_ROOT = join(import.meta.dirname, '..');
 
 const children: ReturnType<typeof spawn>[] = [];
 let browser: Browser;
@@ -119,8 +124,7 @@ function copyBacklinksVault(): string {
 }
 
 beforeAll(async () => {
-  const { execFileSync } = await import('node:child_process');
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  ensureWebBuilt();
   browser = await chromium.launch();
 }, 180_000);
 
