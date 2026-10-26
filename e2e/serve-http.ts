@@ -4,22 +4,28 @@ export function requestLocal(
   port: number,
   path: string,
   headers: Record<string, string> = {},
-  hostHeader?: string,
+  method: 'GET' | 'HEAD' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
+  body?: string,
 ): Promise<{
   status: number;
   body: string;
   headers: http.IncomingHttpHeaders;
 }> {
-  const host = hostHeader ?? `127.0.0.1:${String(port)}`;
   return new Promise((resolve, reject) => {
     const request = http.request(
       {
         host: '127.0.0.1',
         port,
         path,
-        method: 'GET',
+        method,
         headers: {
-          host,
+          host: `127.0.0.1:${String(port)}`,
+          ...(body === undefined
+            ? {}
+            : {
+                'content-type': 'application/json',
+                'content-length': String(Buffer.byteLength(body)),
+              }),
           ...headers,
         },
       },
@@ -38,6 +44,10 @@ export function requestLocal(
       },
     );
     request.on('error', reject);
-    request.end();
+    if (body === undefined) {
+      request.end();
+    } else {
+      request.end(body);
+    }
   });
 }
