@@ -6,16 +6,18 @@ import { wikilinkHtmlCompletionSource } from './wikilink-html-completion.ts';
 
 describe('wikilinkHtmlCompletionSource', () => {
   it('offers note titles when the cursor is inside [[', async () => {
-    const fetchCompletions = vi.fn(async () => [
-      {
-        id: '01M5HGV8800000000000000002',
-        title: 'Destino enlace',
-        path: 'destino-enlace.html',
-        matchedBy: 'title' as const,
-        matchedLabel: 'Destino enlace',
-        score: 1,
-      },
-    ]);
+    const fetchCompletions = vi.fn(() =>
+      Promise.resolve([
+        {
+          id: '01M5HGV8800000000000000002',
+          title: 'Destino enlace',
+          path: 'destino-enlace.html',
+          matchedBy: 'title' as const,
+          matchedLabel: 'Destino enlace',
+          score: 1,
+        },
+      ]),
+    );
     const state = EditorState.create({
       doc: '<p>Ver [[Dest',
     });
