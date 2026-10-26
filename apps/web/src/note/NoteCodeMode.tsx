@@ -138,6 +138,9 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
           {saveError}
         </p>
       ) : null}
+      <p className="note-code-mode__hint" data-testid="code-mode-editor-hint">
+        {t('web.editor.code.hint.emmet')}
+      </p>
       <Suspense
         fallback={
           <p className="note-pane__placeholder" role="status">

@@ -714,6 +714,13 @@ select {
   background: var(--color-surface);
 }
 
+.note-code-mode__hint {
+  margin: 0;
+  padding: 0 0.75rem 0.5rem;
+  color: var(--gaveta-muted-fg, #6b7280);
+  font-size: 0.875rem;
+}
+
 .note-code-mode__error {
   margin: 0;
   padding: var(--space-2) var(--space-4);

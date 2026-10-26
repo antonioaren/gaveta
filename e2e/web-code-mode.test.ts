@@ -270,6 +270,28 @@ it('T3.15: Mod-s saves edits through the API without CSP violations', async () =
   }
 }, 180_000);
 
+it('T3.17: HTML intelligence (contract completion + Emmet) under CSP', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-emmet-'));
+  const vault = join(parent, 'vault');
+  mkdirSync(vault, { recursive: true });
+  initVault(vault);
+  try {
+    const { page, cspGuard } = await openCodeModeForNewNote(vault);
+    await page.getByTestId('code-mode-editor-hint').waitFor({ timeout: 10_000 });
+    const hint = await page.getByTestId('code-mode-editor-hint').innerText();
+    expect(hint.toLowerCase()).toContain('emmet');
+    await page.locator('.code-editor .cm-editor').waitFor({ timeout: 10_000 });
+    const highlightedTokenCount = await page
+      .locator('.code-editor .cm-content .cm-line span')
+      .count();
+    expect(highlightedTokenCount).toBeGreaterThan(0);
+    await cspGuard.assertClean();
+    await page.close();
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 180_000);
+
 it('T3.14: code mode renders with gutters under the app CSP', async () => {
   const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-csp-'));
   const vault = join(parent, 'vault');
