@@ -119,6 +119,7 @@
   "cli.auto.marca_una_tarea_como_pendiente": "Marca una tarea como pendiente.",
   "cli.auto.maximo_de_resultados_entre_1_y_100": "Máximo de resultados, entre 1 y 100.",
   "cli.auto.muestra_el_grafo_global_o_local_de_notas_y_enlac": "Muestra el grafo global o local de notas y enlaces.",
+  "cli.auto.muestra_las_metricas_del_prd_desde_el_indice_y_el": "Muestra las métricas de éxito del PRD desde el índice y el log local opcional.",
   "cli.auto.muestra_la_version_de_gaveta": "Muestra la versión de gaveta.",
   "cli.auto.muestra_solo_el_catalogo_de_errores_y_avisos": "Muestra solo el catálogo de errores y avisos.",
   "cli.auto.mueve_o_renombra_una_nota_y_reescribe_los_enlace": "Mueve o renombra una nota y reescribe los enlaces entrantes.",

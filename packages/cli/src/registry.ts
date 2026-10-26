@@ -20,6 +20,7 @@ import { reindexCommand } from './commands/reindex.ts';
 import { mcpCommand } from './commands/mcp.ts';
 import { serveCommand } from './commands/serve.ts';
 import { searchCommand } from './commands/search.ts';
+import { statsCommand } from './commands/stats.ts';
 import { todoCommand } from './commands/todo.ts';
 import { validateCommand } from './commands/validate.ts';
 import { updateCommand } from './commands/update.ts';
@@ -32,6 +33,7 @@ const peerCommands: readonly CommandSpec[] = [
   initCommand,
   adoptCommand,
   searchCommand,
+  statsCommand,
   newCommand,
   readCommand,
   editCommand,

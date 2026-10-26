@@ -18,6 +18,7 @@ import { commands } from '../packages/cli/src/registry.ts';
 import { describe, expect, it } from 'vitest';
 import {
   GAVETA_BIN,
+  INIT_VAULT_INTERNAL_PATHS,
   REPO_ROOT,
   childEnv,
   hasUnsafeTag,
@@ -46,14 +47,7 @@ describe('phase 1 — agent documentation workflow', () => {
       expect(again.status).toBe(0);
       expect(parseJson(again.stdout).data).toMatchObject({
         created: [],
-        preserved: [
-          '.gaveta/config.json',
-          '.gaveta/theme.css',
-          '.gaveta/mermaid.min.js',
-          '.gaveta/mermaid-boot.js',
-          '.gaveta/MERMAID-LICENSE.txt',
-          '.gaveta/index.sqlite',
-        ],
+        preserved: [...INIT_VAULT_INTERNAL_PATHS],
       });
 
       // REQ-VAULT-02 / REQ-AGENT-03: delimited agent block
@@ -304,14 +298,7 @@ describe('phase 1 — acceptance criteria', () => {
       expect(readFileSync(join(vault, 'legacy.html'), 'utf8')).toBe(legacy);
       expect(parseJson(initVault(vault).stdout).data).toMatchObject({
         created: [],
-        preserved: [
-          '.gaveta/config.json',
-          '.gaveta/theme.css',
-          '.gaveta/mermaid.min.js',
-          '.gaveta/mermaid-boot.js',
-          '.gaveta/MERMAID-LICENSE.txt',
-          '.gaveta/index.sqlite',
-        ],
+        preserved: [...INIT_VAULT_INTERNAL_PATHS],
       });
     } finally {
       rmSync(parent, { recursive: true, force: true });

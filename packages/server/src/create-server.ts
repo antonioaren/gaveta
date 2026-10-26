@@ -221,6 +221,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
         session: vaultSession,
         bus: vaultEvents,
       });
+      await vaultWatcher.whenReady();
       return {
         host,
         port: boundPort,
