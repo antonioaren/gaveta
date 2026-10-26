@@ -153,6 +153,9 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
           notePath={path}
           onChange={handleChange}
           onSaveRequest={handleSave}
+          onFormatError={(messageKey) => {
+            setSaveError(t(messageKey));
+          }}
         />
       </Suspense>
     </div>

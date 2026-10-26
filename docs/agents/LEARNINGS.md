@@ -4,6 +4,7 @@ Short log of pitfalls found while implementing tasks. Read this before starting 
 
 Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 
+- 2026-10-26 · T3.18 · Code-mode palette commands need a host subscription outside React state; register the active `EditorView` on mount and notify listeners so Ctrl+K picks up format/find/replace. · `subscribeCodeEditorHost` + `useCodeEditorPaletteActive` in the palette.
 - 2026-10-26 · T3.17 · Vitest resolves `@gaveta/core` to the full package (pulls `node:sqlite`); code-mode contract helpers must import `packages/core/src/contract.ts` directly. · Keep HTML/Emmet completion on the contract path, not the package root.
 - 2026-10-26 · T4.4 · `renderWithI18n(ui, 'en')` is wrong: the second argument is RTL options, so locale stays the default `es`. · Pass `{ locale: 'en' }` when asserting English copy.
 - 2026-10-25 · T4.3 · parse5 `startOffset` on `<body>` is the tag start, not the inner HTML; subtract `startTag.endOffset` when splicing embed replacements in a body fragment. · Use `startTag.endOffset` / `endTag.startOffset` for `gaveta-embed` hit ranges.

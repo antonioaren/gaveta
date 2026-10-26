@@ -270,6 +270,36 @@ it('T3.15: Mod-s saves edits through the API without CSP violations', async () =
   }
 }, 180_000);
 
+it('T3.18: palette format document normalizes HTML under CSP', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-format-'));
+  const vault = join(parent, 'vault');
+  mkdirSync(vault, { recursive: true });
+  initVault(vault);
+  try {
+    const { page, cspGuard } = await openCodeModeForNewNote(vault);
+    const editor = page.locator('.code-editor .cm-content');
+    await editor.click();
+    await page.keyboard.press(modChord('k'));
+    const paletteInput = page.getByRole('combobox', { name: /Buscar notas o comandos/i });
+    await paletteInput.waitFor({ timeout: 10_000 });
+    await paletteInput.fill('formatear');
+    await page.getByRole('option', { name: /Formatear documento/i }).click();
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/format-note') &&
+        response.request().method() === 'POST' &&
+        response.ok(),
+      { timeout: 15_000 },
+    );
+    const editorText = await editor.evaluate((element) => element.textContent || '');
+    expect(editorText).toContain('  <article>');
+    await cspGuard.assertClean();
+    await page.close();
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 180_000);
+
 it('T3.17: HTML intelligence (contract completion + Emmet) under CSP', async () => {
   const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-emmet-'));
   const vault = join(parent, 'vault');
