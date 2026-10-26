@@ -34,7 +34,18 @@ const CONTENT_HASH = /^sha256:[0-9a-f]{64}$/;
 
 const ADD_KEYS = ['vaultRoot', 'ref', 'text', 'section', 'due', 'priority', 'ifMatch'] as const;
 const CHECK_KEYS = ['vaultRoot', 'ref', 'taskId', 'ifMatch'] as const;
-const LIST_KEYS = ['vaultRoot', 'ref', 'open', 'done', 'type', 'tag'] as const;
+const LIST_KEYS = [
+  'vaultRoot',
+  'ref',
+  'open',
+  'done',
+  'type',
+  'tag',
+  'priority',
+  'dueOn',
+  'dueBefore',
+  'dueAfter',
+] as const;
 
 export interface ListedTask {
   readonly path: string;
@@ -149,6 +160,9 @@ export async function listTasks(options: unknown): Promise<ListTasksResult> {
       if (input.done && !task.checked) {
         continue;
       }
+      if (!matchesListFilters(task, input)) {
+        continue;
+      }
       tasks.push({
         path: task.path,
         noteId: note.id,
@@ -162,13 +176,7 @@ export async function listTasks(options: unknown): Promise<ListTasksResult> {
         sectionId: task.sectionId,
       });
     }
-    tasks.sort((left, right) => {
-      const byPath = left.path.localeCompare(right.path);
-      if (byPath !== 0) {
-        return byPath;
-      }
-      return (left.taskId ?? '').localeCompare(right.taskId ?? '');
-    });
+    tasks.sort(compareListedTasks);
     return Promise.resolve({ tasks, warnings: session.warnings });
   });
 }
@@ -645,6 +653,10 @@ function readList(options: unknown): {
   readonly done: boolean;
   readonly type: NoteType | null;
   readonly tag: string | null;
+  readonly priority: string | null;
+  readonly dueOn: string | null;
+  readonly dueBefore: string | null;
+  readonly dueAfter: string | null;
 } {
   const record = readRecord(options, LIST_KEYS);
   const open = record.open === true;
@@ -661,6 +673,10 @@ function readList(options: unknown): {
     throw new GavetaError('E_ARG_INVALID');
   }
   const ref = optionalString(record.ref) ?? null;
+  const priority = readOptionalTaskPriority(record.priority);
+  const dueOn = readOptionalDueDate(record.dueOn);
+  const dueBefore = readOptionalDueDate(record.dueBefore);
+  const dueAfter = readOptionalDueDate(record.dueAfter);
   return {
     vaultRoot: requiredString(record.vaultRoot),
     ref,
@@ -668,7 +684,110 @@ function readList(options: unknown): {
     done,
     type: typeValue ?? null,
     tag,
+    priority,
+    dueOn,
+    dueBefore,
+    dueAfter,
   };
+}
+
+function readOptionalTaskPriority(value: unknown): string | null {
+  const raw = optionalString(value) ?? null;
+  if (raw === null) {
+    return null;
+  }
+  if (!isTaskPriority(raw)) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return raw;
+}
+
+function readOptionalDueDate(value: unknown): string | null {
+  const raw = optionalString(value) ?? null;
+  if (raw === null) {
+    return null;
+  }
+  if (!isIso8601(raw)) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return raw.length >= 10 ? raw.slice(0, 10) : raw;
+}
+
+function taskDueDay(due: string | null): string | null {
+  if (due === null) {
+    return null;
+  }
+  return due.length >= 10 ? due.slice(0, 10) : due;
+}
+
+function matchesListFilters(
+  task: {
+    readonly due: string | null;
+    readonly priority: string | null;
+  },
+  input: {
+    readonly priority: string | null;
+    readonly dueOn: string | null;
+    readonly dueBefore: string | null;
+    readonly dueAfter: string | null;
+  },
+): boolean {
+  if (input.priority !== null && task.priority !== input.priority) {
+    return false;
+  }
+  const dueDay = taskDueDay(task.due);
+  if (input.dueOn !== null && dueDay !== input.dueOn) {
+    return false;
+  }
+  if (input.dueBefore !== null && (dueDay === null || dueDay > input.dueBefore)) {
+    return false;
+  }
+  if (input.dueAfter !== null && (dueDay === null || dueDay < input.dueAfter)) {
+    return false;
+  }
+  return true;
+}
+
+function priorityRank(priority: string | null): number {
+  if (priority === 'high') {
+    return 0;
+  }
+  if (priority === 'medium') {
+    return 1;
+  }
+  if (priority === 'low') {
+    return 2;
+  }
+  return 3;
+}
+
+function compareListedTasks(left: ListedTask, right: ListedTask): number {
+  if (left.checked !== right.checked) {
+    return left.checked ? 1 : -1;
+  }
+  const leftDue = taskDueDay(left.due);
+  const rightDue = taskDueDay(right.due);
+  if (leftDue === null && rightDue !== null) {
+    return 1;
+  }
+  if (leftDue !== null && rightDue === null) {
+    return -1;
+  }
+  if (leftDue !== null && rightDue !== null) {
+    const byDue = leftDue.localeCompare(rightDue);
+    if (byDue !== 0) {
+      return byDue;
+    }
+  }
+  const byPriority = priorityRank(left.priority) - priorityRank(right.priority);
+  if (byPriority !== 0) {
+    return byPriority;
+  }
+  const byPath = left.path.localeCompare(right.path);
+  if (byPath !== 0) {
+    return byPath;
+  }
+  return (left.taskId ?? '').localeCompare(right.taskId ?? '');
 }
 
 function readRecord(value: unknown, allowed: readonly string[]): Record<string, unknown> {

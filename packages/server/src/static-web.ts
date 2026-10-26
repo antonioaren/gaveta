@@ -17,6 +17,7 @@ export async function registerWebApp(app: FastifyInstance, webRoot: string): Pro
 
   app.get('/', sendShell);
   app.get('/grafo', sendShell);
+  app.get('/tareas', sendShell);
   app.get('/nota', sendShell);
   app.get('/nota/*', sendShell);
 

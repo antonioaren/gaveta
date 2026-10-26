@@ -7,7 +7,12 @@ it('pairs add with a recent unlink that shares the same note id across folders',
   expect(from).toBe('notes/old.html');
 });
 
-it('does not pair when the unlink is too old', () => {
+it('does not pair when the buffered path has a different note id', () => {
+  const recent = new Map([['notes/old.html', { id: '01OTHER', at: 1000 }]]);
+  expect(pairMoveByNoteId('01NOTE', recent, 9_000_000, 200)).toBeNull();
+});
+
+it('pairs across long FSEvents gaps when the note id still matches', () => {
   const recent = new Map([['notes/old.html', { id: '01NOTE', at: 1000 }]]);
-  expect(pairMoveByNoteId('01NOTE', recent, 1500, 200)).toBeNull();
+  expect(pairMoveByNoteId('01NOTE', recent, 9_000_000, 200)).toBe('notes/old.html');
 });

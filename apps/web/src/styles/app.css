@@ -879,6 +879,34 @@ select {
   gap: var(--space-4);
 }
 
+.connections__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.connections__link-action {
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--gaveta-border);
+  background: var(--gaveta-surface);
+  color: var(--gaveta-text);
+  cursor: pointer;
+}
+
+.connections__link-action:hover:not(:disabled) {
+  background: var(--gaveta-surface-hover);
+}
+
+.connections__link-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .connections__section-title {
   margin: 0 0 var(--space-2);
   font-size: var(--font-size-sm);
@@ -1249,6 +1277,85 @@ select {
 .shell__main--graph {
   min-height: 0;
   overflow: hidden;
+}
+
+.shell__main--tasks {
+  min-height: 0;
+  overflow: auto;
+}
+
+.tasks-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  height: 100%;
+  min-height: 0;
+}
+
+.tasks-view__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.tasks-view__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.tasks-view__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.tasks-view__filters label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+.tasks-view__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.tasks-view__table th,
+.tasks-view__table td {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tasks-view__note-link {
+  background: none;
+  border: none;
+  color: var(--color-link);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.tasks-view__task--done {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
+.tasks-view__status {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.tasks-view__status--error {
+  color: var(--color-danger);
 }
 
 .graph-view {

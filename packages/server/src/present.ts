@@ -6,11 +6,13 @@ import {
   type Graph,
   type GraphFilters,
   type IndexedNote,
+  type ListedTask,
   type NoteOutline,
   type NoteType,
   type OutgoingLink,
   type ReadNoteResult,
   type SearchHit,
+  type UnlinkedMention,
 } from '@gaveta/core';
 
 export interface NoteListItem {
@@ -44,6 +46,16 @@ export interface BacklinkView {
   readonly context: string;
 }
 
+export interface MentionView {
+  readonly sourcePath: string;
+  readonly sourceId: string | null;
+  readonly sourceTitle: string;
+  readonly text: string;
+  readonly phrase: string;
+  readonly matchedBy: 'title' | 'alias';
+  readonly context: string;
+}
+
 export interface GraphNodeView {
   readonly id: string | null;
   readonly title: string;
@@ -66,6 +78,19 @@ export interface SearchHitView {
   readonly type: NoteType | null;
   readonly tags: readonly string[];
   readonly snippet: string;
+}
+
+export interface ListedTaskView {
+  readonly path: string;
+  readonly noteId: string | null;
+  readonly noteTitle: string;
+  readonly noteType: NoteType | null;
+  readonly taskId: string | null;
+  readonly text: string;
+  readonly checked: boolean;
+  readonly due: string | null;
+  readonly priority: string | null;
+  readonly sectionId: string | null;
 }
 
 export interface FindingView {
@@ -128,6 +153,18 @@ export function presentOutgoing(link: OutgoingLink): OutgoingLinkView {
   };
 }
 
+export function presentMention(mention: UnlinkedMention): MentionView {
+  return {
+    sourcePath: mention.sourcePath,
+    sourceId: mention.sourceId,
+    sourceTitle: mention.sourceTitle,
+    text: mention.text,
+    phrase: mention.phrase,
+    matchedBy: mention.matchedBy,
+    context: mention.context,
+  };
+}
+
 export function presentBacklink(link: Backlink): BacklinkView {
   return {
     sourcePath: link.sourcePath,
@@ -175,6 +212,21 @@ export function presentGraph(
       to: edge.target,
       rel: edge.rel,
     })),
+  };
+}
+
+export function presentListedTask(task: ListedTask): ListedTaskView {
+  return {
+    path: task.path,
+    noteId: task.noteId,
+    noteTitle: task.noteTitle,
+    noteType: task.noteType,
+    taskId: task.taskId,
+    text: task.text,
+    checked: task.checked,
+    due: task.due,
+    priority: task.priority,
+    sectionId: task.sectionId,
   };
 }
 

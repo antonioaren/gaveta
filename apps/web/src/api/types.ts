@@ -65,6 +65,21 @@ export interface BacklinksResponse {
   readonly backlinks: readonly BacklinkView[];
 }
 
+export interface MentionView {
+  readonly sourcePath: string;
+  readonly sourceId: string | null;
+  readonly sourceTitle: string;
+  readonly text: string;
+  readonly phrase: string;
+  readonly matchedBy: 'title' | 'alias';
+  readonly context: string;
+}
+
+export interface MentionsResponse {
+  readonly ref: string;
+  readonly mentions: readonly MentionView[];
+}
+
 export interface GraphResponse {
   readonly ref: string | null;
   readonly depth: number | null;
@@ -91,4 +106,21 @@ export interface SearchResponse {
   readonly tag: string | null;
   readonly limit: number;
   readonly hits: readonly SearchHitView[];
+}
+
+export interface ListedTaskView {
+  readonly path: string;
+  readonly noteId: string | null;
+  readonly noteTitle: string;
+  readonly noteType: NoteListItem['type'];
+  readonly taskId: string | null;
+  readonly text: string;
+  readonly checked: boolean;
+  readonly due: string | null;
+  readonly priority: string | null;
+  readonly sectionId: string | null;
+}
+
+export interface TasksResponse {
+  readonly tasks: readonly ListedTaskView[];
 }

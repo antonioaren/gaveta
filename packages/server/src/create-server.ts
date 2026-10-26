@@ -5,7 +5,9 @@ import {
   globalGraph,
   localGraph,
   outgoingLinks,
+  listTasks,
   readNote,
+  unlinkedMentions,
   readRenderNoteId,
   readVaultConfig,
   resolveRenderNote,
@@ -35,6 +37,8 @@ import {
   presentFix,
   presentGraph,
   presentHit,
+  presentListedTask,
+  presentMention,
   presentNoteList,
   presentOutgoing,
   presentRead,
@@ -50,6 +54,7 @@ import {
   readSearchQuery,
   readSearchTag,
   readSearchType,
+  readTaskListQuery,
   rejectDepthWithoutRef,
   toSearchOptions,
 } from './query.ts';
@@ -305,8 +310,26 @@ function registerReadRoutes(
   app.get('/api/read', async (request, reply) => {
     const ref = readRefQuery(readQueryParam(request, 'ref'));
     const as = readReadAs(readQueryParam(request, 'as'));
-    const note = await readNote({ vaultRoot: options.vaultRoot, ref, as });
+    const note = await readNote({
+      vaultRoot: options.vaultRoot,
+      ref,
+      as,
+      locale: localeFromRequestHeaders(request.headers),
+    });
     return reply.send(apiSuccess(presentRead(note)));
+  });
+
+  app.get('/api/tasks', async (request, reply) => {
+    const filters = readTaskListQuery(request.query as Record<string, string | undefined>);
+    const listed = await listTasks({
+      vaultRoot: options.vaultRoot,
+      ...filters,
+    });
+    return reply.send(
+      apiSuccess({
+        tasks: listed.tasks.map(presentListedTask),
+      }),
+    );
   });
 
   app.get('/api/links', async (request, reply) => {
@@ -323,6 +346,15 @@ function registerReadRoutes(
     const { result, warnings } = await vaultSession.withIndex((index) => {
       const incoming = backlinks(index, ref).map(presentBacklink);
       return Promise.resolve({ ref, backlinks: incoming });
+    });
+    return reply.send(apiSuccess(result, warnings));
+  });
+
+  app.get('/api/mentions', async (request, reply) => {
+    const ref = readRefQuery(readQueryParam(request, 'ref'));
+    const { result, warnings } = await vaultSession.withIndex(async (index) => {
+      const mentions = await unlinkedMentions(options.vaultRoot, index, ref);
+      return { ref, mentions: mentions.map(presentMention) };
     });
     return reply.send(apiSuccess(result, warnings));
   });

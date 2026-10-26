@@ -11,8 +11,10 @@ import {
   isIso8601,
   isTaskPriority,
   linkNote,
+  linkUnlinkedMentions,
   moveFolder,
   moveNote,
+  parseNoteContentHash,
   readNote,
   removeFolder,
   removeNote,
@@ -107,6 +109,28 @@ export function registerWriteRoutes(
       throw new GavetaError('E_HTML_INVALID');
     }
     return reply.send(apiSuccess(presentEditedNote(edited), mapNoteWarnings(edited.warnings)));
+  });
+
+  app.post('/api/mentions/link', async (request, reply) => {
+    const body = readJsonObjectBody(request);
+    assertAllowedKeys(body, ['ref', 'sources']);
+    const ref = requiredStringField(body, 'ref');
+    const sources = readMentionLinkSources(body);
+    const ifMatches: Record<string, string> = {};
+    const onlyPaths: string[] = [];
+    for (const source of sources) {
+      const note = await readNote({ vaultRoot: options.vaultRoot, ref: source.from, as: 'html' });
+      requireNoteContentHash(note.hash, source.ifMatch);
+      ifMatches[note.path] = parseNoteContentHash(source.ifMatch);
+      onlyPaths.push(note.path);
+    }
+    const linked = await linkUnlinkedMentions({
+      vaultRoot: options.vaultRoot,
+      ref,
+      onlyPaths,
+      ifMatches,
+    });
+    return reply.send(apiSuccess({ ref, linked: linked.notes }));
   });
 
   app.post('/api/link', async (request, reply) => {
@@ -418,6 +442,27 @@ function readStringListField(body: Record<string, unknown>, key: string): string
     throw new GavetaError('E_ARG_INVALID');
   }
   return items;
+}
+
+function readMentionLinkSources(body: Record<string, unknown>): {
+  readonly from: string;
+  readonly ifMatch: string;
+}[] {
+  const value = body.sources;
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  const sources: { from: string; ifMatch: string }[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    const record = entry as Record<string, unknown>;
+    assertAllowedKeys(record, ['from', 'ifMatch']);
+    const from = requiredStringField(record, 'from');
+    sources.push({ from, ifMatch: parseNoteContentHash(requiredStringField(record, 'ifMatch')) });
+  }
+  return sources;
 }
 
 function presentMovedFolder(moved: {

@@ -20,6 +20,8 @@ import {
   type ErrorCode,
   type WarningCode,
 } from './errors.ts';
+import { getActiveLocale, isLocale, type Locale } from '@gaveta/i18n';
+import { replaceEmbedsWithLinks } from './links/embeds.ts';
 import { escapeAttr, escapeText, inspectVaultPath, relativeNoteHref } from './links/path.ts';
 import { GavetaRefError, notesForId, resolveRef } from './links/ref.ts';
 import { resolveNoteLinks } from './links/rewrite.ts';
@@ -72,7 +74,7 @@ const CREATE_KEYS = [
   'artifactCdn',
 ] as const;
 
-const READ_KEYS = ['vaultRoot', 'ref', 'as'] as const;
+const READ_KEYS = ['vaultRoot', 'ref', 'as', 'locale'] as const;
 const EDIT_KEYS = ['vaultRoot', 'ref', 'html', 'section', 'mode', 'ifMatch', 'scope'] as const;
 const FOLDER_CREATE_KEYS = ['vaultRoot', 'folder'] as const;
 const META_KEYS = ['vaultRoot', 'ref', 'tags', 'aliases', 'ifMatch'] as const;
@@ -309,7 +311,16 @@ export async function readNote(options: unknown): Promise<ReadNoteResult> {
       hash: noteContentHash(html),
     };
     if (input.as === 'html') {
-      return { ...base, as: 'html', html };
+      return {
+        ...base,
+        as: 'html',
+        html: replaceEmbedsWithLinks(
+          html,
+          resolved.path,
+          session.index,
+          input.locale ?? getActiveLocale(),
+        ),
+      };
     }
     if (input.as === 'text') {
       return { ...base, as: 'text', text: parsed.note.plainText };
@@ -1429,16 +1440,26 @@ function readRead(options: unknown): {
   readonly vaultRoot: string;
   readonly ref: string;
   readonly as: ReadAs;
+  readonly locale?: Locale;
 } {
   const record = readRecord(options, READ_KEYS);
   const asValue = requiredString(record.as);
   if (asValue !== 'html' && asValue !== 'text' && asValue !== 'outline') {
     throw new GavetaError('E_ARG_INVALID');
   }
+  const localeValue = record.locale;
+  let locale: Locale | undefined;
+  if (localeValue !== undefined) {
+    if (typeof localeValue !== 'string' || !isLocale(localeValue)) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    locale = localeValue;
+  }
   return {
     vaultRoot: requiredString(record.vaultRoot),
     ref: requiredString(record.ref),
     as: asValue,
+    ...(locale === undefined ? {} : { locale }),
   };
 }
 

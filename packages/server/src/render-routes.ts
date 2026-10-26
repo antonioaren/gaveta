@@ -2,7 +2,7 @@ import {
   GavetaError,
   assertNoteAttachmentPathAllowed,
   buildNoteRenderCsp,
-  buildNoteRenderPage,
+  buildNoteRenderPageWithEmbeds,
   collectNoteAttachmentPaths,
   normalizeNote,
   readRenderNoteId,
@@ -21,6 +21,7 @@ import {
 } from './render-access.ts';
 import { RENDER_FILE_CSP, contentDispositionForVaultFile } from './render-file.ts';
 import { isAllowedRenderStaticName, readRenderStaticFile } from './render-static.ts';
+import { localeFromRequestHeaders } from './http-error.ts';
 import type { VaultIndexSession } from './vault-index.ts';
 
 export interface RegisterRenderRoutesOptions {
@@ -85,13 +86,14 @@ export function registerRenderRoutes(
     const id = readRenderNoteId(readRouteParam(request.params, 'id'));
     assertRenderTicketForNote(secret, ticket, id);
     const config = await readVaultConfig(options.vaultRoot);
+    const locale = localeFromRequestHeaders(request.headers);
     const { result: page } = await vaultSession.withIndex(async (index) => {
       const note = resolveRenderNote(index, id);
       if (note.id === null) {
         throw new GavetaError('E_META_MISSING');
       }
       const sourceHtml = await readVaultText(options.vaultRoot, note.path);
-      return buildNoteRenderPage({
+      return buildNoteRenderPageWithEmbeds({
         noteId: note.id,
         notePath: note.path,
         title: note.title,
@@ -99,6 +101,9 @@ export function registerRenderRoutes(
         port: port(),
         renderTicket: ticket,
         remoteAllowlist: config.remoteAllowlist,
+        vaultRoot: options.vaultRoot,
+        index,
+        locale,
       });
     });
     const csp = buildNoteRenderCsp(port());
