@@ -2,7 +2,8 @@ import '../sqlite/warning.ts';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { setActiveLocale } from '@gaveta/i18n';
+import { afterEach, describe, expect, it } from 'vitest';
 import { openVaultIndex, readNote } from '../index.ts';
 import { MAX_EMBED_DEPTH, expandEmbedsInRenderBody, replaceEmbedsWithLinks } from './embeds.ts';
 
@@ -60,6 +61,80 @@ async function withVault(
 }
 
 const noopRewrite = (html: string): string => html;
+
+const MISSING_TARGET_ID = '01M5HGV8800000000000000099';
+
+afterEach(() => {
+  setActiveLocale('en');
+});
+
+describe('embed fallback locale', () => {
+  it('uses English copy by default in replaceEmbedsWithLinks', async () => {
+    await withVault(
+      {
+        'host.html': noteHtml({
+          id: HOST_ID,
+          title: 'Host',
+          body: `<gaveta-embed data-g-to="${MISSING_TARGET_ID}" data-g-section="resumen"></gaveta-embed>`,
+        }),
+      },
+      (_root, index) => {
+        const html = noteHtml({
+          id: HOST_ID,
+          title: 'Host',
+          body: `<gaveta-embed data-g-to="${MISSING_TARGET_ID}" data-g-section="resumen"></gaveta-embed>`,
+        });
+        const out = replaceEmbedsWithLinks(html, 'host.html', index);
+        expect(out).toContain('Transclusion target');
+        expect(out).toContain('was not found');
+        expect(out).not.toContain('No se encontró');
+        return Promise.resolve();
+      },
+    );
+  });
+
+  it('uses Spanish copy when locale es is passed to replaceEmbedsWithLinks', async () => {
+    await withVault(
+      {
+        'host.html': noteHtml({
+          id: HOST_ID,
+          title: 'Host',
+          body: `<gaveta-embed data-g-to="${MISSING_TARGET_ID}" data-g-section="resumen"></gaveta-embed>`,
+        }),
+      },
+      (_root, index) => {
+        const html = noteHtml({
+          id: HOST_ID,
+          title: 'Host',
+          body: `<gaveta-embed data-g-to="${MISSING_TARGET_ID}" data-g-section="resumen"></gaveta-embed>`,
+        });
+        const out = replaceEmbedsWithLinks(html, 'host.html', index, 'es');
+        expect(out).toContain('No se encontró la nota de transclusión');
+        return Promise.resolve();
+      },
+    );
+  });
+
+  it('localizes embed link fallbacks through readNote using the active locale', async () => {
+    setActiveLocale('es');
+    await withVault(
+      {
+        'host.html': noteHtml({
+          id: HOST_ID,
+          title: 'Host',
+          body: `<gaveta-embed data-g-to="${MISSING_TARGET_ID}" data-g-section="resumen"></gaveta-embed>`,
+        }),
+      },
+      async (root) => {
+        const note = await readNote({ vaultRoot: root, ref: HOST_ID, as: 'html' });
+        if (note.as !== 'html') {
+          throw new Error('expected html');
+        }
+        expect(note.html).toContain('No se encontró la nota de transclusión');
+      },
+    );
+  });
+});
 
 describe('replaceEmbedsWithLinks', () => {
   it('replaces gaveta-embed with a canonical link to the target section', async () => {

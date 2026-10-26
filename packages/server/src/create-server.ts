@@ -307,7 +307,12 @@ function registerReadRoutes(
   app.get('/api/read', async (request, reply) => {
     const ref = readRefQuery(readQueryParam(request, 'ref'));
     const as = readReadAs(readQueryParam(request, 'as'));
-    const note = await readNote({ vaultRoot: options.vaultRoot, ref, as });
+    const note = await readNote({
+      vaultRoot: options.vaultRoot,
+      ref,
+      as,
+      locale: localeFromRequestHeaders(request.headers),
+    });
     return reply.send(apiSuccess(presentRead(note)));
   });
 

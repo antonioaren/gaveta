@@ -1,7 +1,7 @@
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
 import { serializeOuter } from 'parse5';
-import { formatMessage } from '@gaveta/i18n';
+import { DEFAULT_LOCALE, formatMessage, type Locale } from '@gaveta/i18n';
 import { isUlid } from '../contract.ts';
 import { normalizeNote } from '../normalize.ts';
 import {
@@ -20,8 +20,6 @@ type ParseElement = DefaultTreeAdapterMap['element'];
 
 export const MAX_EMBED_DEPTH = 8;
 
-const EMBED_RENDER_LOCALE = 'es';
-
 export interface ExpandEmbedsInRenderBodyOptions {
   readonly hostNoteId: string;
   readonly hostNotePath: string;
@@ -32,9 +30,15 @@ export interface ExpandEmbedsInRenderBodyOptions {
   readonly depth: number;
   readonly rewriteAssets: (bodyHtml: string, noteId: string, notePath: string) => string;
   readonly loadNoteHtml: (notePath: string) => Promise<string>;
+  readonly locale?: Locale;
 }
 
-export function replaceEmbedsWithLinks(html: string, fromPath: string, index: VaultIndex): string {
+export function replaceEmbedsWithLinks(
+  html: string,
+  fromPath: string,
+  index: VaultIndex,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   if (!html.includes('gaveta-embed')) {
     return html;
   }
@@ -63,7 +67,7 @@ export function replaceEmbedsWithLinks(html: string, fromPath: string, index: Va
       replacements.push({
         start: location.startOffset,
         end: location.endOffset,
-        text: embedFallbackMarkup('W_EMBED_SECTION_MISSING', { sectionId: 'invalid' }),
+        text: embedFallbackMarkup('W_EMBED_SECTION_MISSING', { sectionId: 'invalid' }, locale),
       });
       return;
     }
@@ -72,14 +76,14 @@ export function replaceEmbedsWithLinks(html: string, fromPath: string, index: Va
       replacements.push({
         start: location.startOffset,
         end: location.endOffset,
-        text: embedFallbackMarkup('W_EMBED_TARGET_MISSING', { targetId }),
+        text: embedFallbackMarkup('W_EMBED_TARGET_MISSING', { targetId }, locale),
       });
       return;
     }
     replacements.push({
       start: location.startOffset,
       end: location.endOffset,
-      text: embedLinkMarkup(fromPath, target.path, target.id, target.title, sectionId),
+      text: embedLinkMarkup(fromPath, target.path, target.id, target.title, sectionId, locale),
     });
   });
   return applyReplacements(html, replacements);
@@ -116,23 +120,28 @@ async function resolveEmbedReplacement(
   hit: EmbedHit,
   options: ExpandEmbedsInRenderBodyOptions,
 ): Promise<string> {
+  const locale = options.locale ?? DEFAULT_LOCALE;
   if (!isUlid(hit.targetId)) {
     return '';
   }
   if (hit.sectionId !== null && !isSafeSectionId(hit.sectionId)) {
-    return embedFallbackMarkup('W_EMBED_SECTION_MISSING', {
-      sectionId: 'invalid',
-    });
+    return embedFallbackMarkup(
+      'W_EMBED_SECTION_MISSING',
+      {
+        sectionId: 'invalid',
+      },
+      locale,
+    );
   }
   if (options.chain.includes(hit.targetId)) {
-    return embedFallbackMarkup('W_EMBED_CYCLE', { targetId: hit.targetId });
+    return embedFallbackMarkup('W_EMBED_CYCLE', { targetId: hit.targetId }, locale);
   }
   if (options.depth >= MAX_EMBED_DEPTH) {
-    return embedFallbackMarkup('W_EMBED_DEPTH', {});
+    return embedFallbackMarkup('W_EMBED_DEPTH', {}, locale);
   }
   const target = resolveIndexedNote(options.index, hit.targetId);
   if (target === null) {
-    return embedFallbackMarkup('W_EMBED_TARGET_MISSING', { targetId: hit.targetId });
+    return embedFallbackMarkup('W_EMBED_TARGET_MISSING', { targetId: hit.targetId }, locale);
   }
   const sourceHtml = await options.loadNoteHtml(target.path);
   const normalized = normalizeNote(sourceHtml, {
@@ -140,13 +149,17 @@ async function resolveEmbedReplacement(
     remoteAllowlist: options.remoteAllowlist,
   });
   if (!normalized.ok || normalized.html === null) {
-    return embedFallbackMarkup('W_EMBED_TARGET_MISSING', { targetId: hit.targetId });
+    return embedFallbackMarkup('W_EMBED_TARGET_MISSING', { targetId: hit.targetId }, locale);
   }
   const sectionInner = extractSectionInner(normalized.html, hit.sectionId);
   if (sectionInner === null) {
-    return embedFallbackMarkup('W_EMBED_SECTION_MISSING', {
-      sectionId: hit.sectionId ?? '',
-    });
+    return embedFallbackMarkup(
+      'W_EMBED_SECTION_MISSING',
+      {
+        sectionId: hit.sectionId ?? '',
+      },
+      locale,
+    );
   }
   const nested = await expandEmbedsInRenderBody(sectionInner, {
     ...options,
@@ -208,10 +221,11 @@ function embedLinkMarkup(
   toId: string,
   title: string,
   sectionId: string | null,
+  locale: Locale,
 ): string {
   const relative = relativeNoteHref(fromPath, toPath);
   if (relative === null) {
-    return embedFallbackMarkup('W_EMBED_TARGET_MISSING', { targetId: toId });
+    return embedFallbackMarkup('W_EMBED_TARGET_MISSING', { targetId: toId }, locale);
   }
   const href = sectionId === null ? relative : appendFragment(relative, sectionId);
   return `<p><a href="${escapeAttr(href)}" data-g-to="${escapeAttr(toId)}">${escapeText(title)}</a></p>`;
@@ -220,8 +234,9 @@ function embedLinkMarkup(
 function embedFallbackMarkup(
   code: 'W_EMBED_CYCLE' | 'W_EMBED_DEPTH' | 'W_EMBED_TARGET_MISSING' | 'W_EMBED_SECTION_MISSING',
   params: Record<string, string>,
+  locale: Locale,
 ): string {
-  const message = formatMessage(`diagnostics.${code}.message`, EMBED_RENDER_LOCALE, params);
+  const message = formatMessage(`diagnostics.${code}.message`, locale, params);
   return `<aside class="callout gaveta-embed-fallback" data-kind="warn" data-g-code="${code}"><p>${escapeText(message)}</p></aside>`;
 }
 

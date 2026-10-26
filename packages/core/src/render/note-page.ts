@@ -19,6 +19,7 @@ import type { DefaultTreeAdapterMap } from 'parse5';
 import { serializeOuter } from 'parse5';
 import { expandEmbedsInRenderBody } from '../links/embeds.ts';
 import { readVaultText } from '../vault/paths.ts';
+import type { Locale } from '@gaveta/i18n';
 import type { IndexedNote, VaultIndex } from '../sqlite/store.ts';
 
 type ParseDocument = DefaultTreeAdapterMap['document'];
@@ -47,6 +48,7 @@ export interface BuildNoteRenderPageInput {
 export interface BuildNoteRenderPageWithEmbedsInput extends BuildNoteRenderPageInput {
   readonly vaultRoot: string;
   readonly index: VaultIndex;
+  readonly locale: Locale;
 }
 
 export function appendRenderTicketQuery(path: string, ticket: string): string {
@@ -120,6 +122,7 @@ export async function buildNoteRenderPageWithEmbeds(
     depth: 0,
     rewriteAssets: (html, noteId, notePath) => rewriteAssetUrls(html, noteId, notePath, ticket),
     loadNoteHtml: (path) => readVaultText(input.vaultRoot, path),
+    locale: input.locale,
   });
   const rewritten = rewriteAssetUrls(expanded, input.noteId, input.notePath, ticket);
   return assembleNoteRenderPage(input, normalized.html, rewritten);
