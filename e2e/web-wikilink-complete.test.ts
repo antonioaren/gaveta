@@ -105,8 +105,19 @@ it('REQ-APP-12: completes [[ wikilinks in visual and code editors', async () => 
     const response = await completeResponse;
     const body = (await response.json()) as { data: { hits: { title: string }[] } };
     expect(body.data.hits.some((hit) => hit.title === 'Formas de enlace')).toBe(true);
-    await codeHost.click();
-    await page.keyboard.press(modChord('End'));
+    await codeHost.evaluate((host) => {
+      const surface = host.shadowRoot?.querySelector('.cm-content');
+      if (!(surface instanceof HTMLElement)) {
+        return;
+      }
+      surface.focus();
+      const range = document.createRange();
+      range.selectNodeContents(surface);
+      range.collapse(false);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    });
     await page.keyboard.insertText('as de enlace]]');
     const editorText = await codeHost.locator('.cm-content').innerText();
     expect(editorText).toContain('[[Formas de enlace]]');
