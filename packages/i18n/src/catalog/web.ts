@@ -218,6 +218,15 @@ export const webMessagesEs = {
   'web.note.code.openInVsCodeFailed': 'No se pudo abrir la nota en VS Code.',
   'web.note.deleted': 'Esta nota fue eliminada del vault.',
   'web.note.edit': 'Editar',
+  'web.note.externalChange.banner':
+    'La nota cambió fuera del editor. Revisa el diff antes de guardar.',
+  'web.note.merge.acceptTheirs': 'Usar versión del disco',
+  'web.note.merge.close': 'Cerrar diff',
+  'web.note.merge.keepMine': 'Guardar mi versión',
+  'web.note.merge.openDiff': 'Ver diff',
+  'web.note.merge.theirs': 'En disco',
+  'web.note.merge.title': 'Conflicto de edición',
+  'web.note.merge.yours': 'Tu borrador',
   'web.note.ghost': 'Esta nota aún no existe en el vault.',
   'web.note.mode.code': 'Modo código',
   'web.note.notIndexedPreview':
@@ -521,6 +530,15 @@ export const webMessagesEn = {
   'web.note.code.openInVsCodeFailed': 'Could not open the note in VS Code.',
   'web.note.deleted': 'This note was removed from the vault.',
   'web.note.edit': 'Edit',
+  'web.note.externalChange.banner':
+    'The note changed outside the editor. Review the diff before saving.',
+  'web.note.merge.acceptTheirs': 'Use disk version',
+  'web.note.merge.close': 'Close diff',
+  'web.note.merge.keepMine': 'Save my version',
+  'web.note.merge.openDiff': 'View diff',
+  'web.note.merge.theirs': 'On disk',
+  'web.note.merge.title': 'Edit conflict',
+  'web.note.merge.yours': 'Your draft',
   'web.note.ghost': 'This note does not exist in the vault yet.',
   'web.note.mode.code': 'Code mode',
   'web.note.notIndexedPreview':

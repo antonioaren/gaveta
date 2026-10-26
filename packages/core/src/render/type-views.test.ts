@@ -36,7 +36,17 @@ it('wraps slides with thumbnails and loads the slides script', () => {
   expect(layout.html).toContain('gaveta-slide-thumbs');
   expect(layout.html).toContain('data-gaveta-slide-thumb="a"');
   expect(layout.html).toContain('data-gaveta-action="present"');
+  expect(layout.html).toContain('data-gaveta-action="export-pdf"');
   expect(layout.scripts).toEqual(['render-slides.js']);
+});
+
+it('localizes slides toolbar copy from the render locale', () => {
+  const en = buildRenderTypeLayout('slides', SLIDES_BODY, 'en');
+  expect(en.html).toContain('>Export PDF<');
+  expect(en.html).toContain('>Present<');
+  const es = buildRenderTypeLayout('slides', SLIDES_BODY, 'es');
+  expect(es.html).toContain('>Exportar PDF<');
+  expect(es.html).toContain('>Presentar<');
 });
 
 it('collects slide ids for thumbnails', () => {
