@@ -5,6 +5,7 @@ import {
   globalGraph,
   localGraph,
   outgoingLinks,
+  listTasks,
   readNote,
   unlinkedMentions,
   readRenderNoteId,
@@ -36,6 +37,7 @@ import {
   presentFix,
   presentGraph,
   presentHit,
+  presentListedTask,
   presentMention,
   presentNoteList,
   presentOutgoing,
@@ -52,6 +54,7 @@ import {
   readSearchQuery,
   readSearchTag,
   readSearchType,
+  readTaskListQuery,
   rejectDepthWithoutRef,
   toSearchOptions,
 } from './query.ts';
@@ -314,6 +317,19 @@ function registerReadRoutes(
       locale: localeFromRequestHeaders(request.headers),
     });
     return reply.send(apiSuccess(presentRead(note)));
+  });
+
+  app.get('/api/tasks', async (request, reply) => {
+    const filters = readTaskListQuery(request.query as Record<string, string | undefined>);
+    const listed = await listTasks({
+      vaultRoot: options.vaultRoot,
+      ...filters,
+    });
+    return reply.send(
+      apiSuccess({
+        tasks: listed.tasks.map(presentListedTask),
+      }),
+    );
   });
 
   app.get('/api/links', async (request, reply) => {

@@ -46,6 +46,9 @@ it('serves read, links, backlinks, graph, search, and doctor', async () => {
     const search = await requestLocal(port, '/api/search?q=Gaveta', headers);
     expect(search.status).toBe(200);
 
+    const tasks = await requestLocal(port, '/api/tasks?open=true', headers);
+    expect(tasks.status).toBe(200);
+
     const doctor = await requestLocal(port, '/api/doctor', headers);
     expect(doctor.status).toBe(200);
     const doctorBody = JSON.parse(doctor.body) as { data: { ok: boolean } };

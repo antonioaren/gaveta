@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GlobalGraphView } from '../graph/GlobalGraphView.tsx';
+import { AggregatedTasksView } from '../tasks/AggregatedTasksView.tsx';
 import { ConnectionsPanel } from '../connections/ConnectionsPanel.tsx';
 import { HealthPanel } from '../health/HealthPanel.tsx';
 import { NoteExplorer } from '../explorer/NoteExplorer.tsx';
@@ -52,6 +53,7 @@ function ShellLayoutBody({
   const navigate = useNavigate();
   const location = useLocation();
   const graphMode = location.pathname === '/grafo';
+  const tasksMode = location.pathname === '/tareas';
   const { t, locale, setLocale } = useI18n();
 
   return (
@@ -108,10 +110,24 @@ function ShellLayoutBody({
                     type="button"
                     className="topbar__button"
                     onClick={() => {
-                      void navigate(graphMode ? '/' : '/grafo');
+                      if (graphMode || tasksMode) {
+                        void navigate('/');
+                        return;
+                      }
+                      void navigate('/grafo');
                     }}
                   >
-                    {graphMode ? t('web.topbar.notes') : t('web.topbar.graph')}
+                    {graphMode || tasksMode ? t('web.topbar.notes') : t('web.topbar.graph')}
+                  </button>
+                  <button
+                    type="button"
+                    className="topbar__button"
+                    data-testid="topbar-tasks"
+                    onClick={() => {
+                      void navigate(tasksMode ? '/' : '/tareas');
+                    }}
+                  >
+                    {tasksMode ? t('web.topbar.notes') : t('web.topbar.tasks')}
                   </button>
                   <button
                     type="button"
@@ -137,6 +153,10 @@ function ShellLayoutBody({
               {graphMode ? (
                 <main className="shell__main shell__main--graph">
                   <GlobalGraphView />
+                </main>
+              ) : tasksMode ? (
+                <main className="shell__main shell__main--tasks">
+                  <AggregatedTasksView />
                 </main>
               ) : (
                 <div className="shell__columns">

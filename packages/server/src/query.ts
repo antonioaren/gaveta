@@ -4,7 +4,9 @@ import {
   GRAPH_DEPTH_MIN,
   SEARCH_DEFAULT_LIMIT,
   SEARCH_MAX_LIMIT,
+  isIso8601,
   isNoteType,
+  isTaskPriority,
   type GraphFilters,
   type NoteType,
   type SearchOptions,
@@ -151,4 +153,100 @@ export function toSearchOptions(
 /** Quote the whole query as one FTS5 phrase (same rule as the CLI search command). */
 export function quoteFtsQuery(query: string): string {
   return `"${query.replaceAll('"', '""')}"`;
+}
+
+export interface TaskListQueryOptions {
+  readonly ref?: string;
+  readonly open?: boolean;
+  readonly done?: boolean;
+  readonly type?: NoteType;
+  readonly tag?: string;
+  readonly priority?: string;
+  readonly dueOn?: string;
+  readonly dueBefore?: string;
+  readonly dueAfter?: string;
+}
+
+export function readTaskListQuery(query: {
+  readonly ref?: string;
+  readonly open?: string;
+  readonly done?: string;
+  readonly type?: string;
+  readonly tag?: string;
+  readonly priority?: string;
+  readonly dueOn?: string;
+  readonly dueBefore?: string;
+  readonly dueAfter?: string;
+}): TaskListQueryOptions {
+  const open = readOptionalBooleanQuery(query.open);
+  const done = readOptionalBooleanQuery(query.done);
+  if (open && done) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  const options: {
+    ref?: string;
+    open?: boolean;
+    done?: boolean;
+    type?: NoteType;
+    tag?: string;
+    priority?: string;
+    dueOn?: string;
+    dueBefore?: string;
+    dueAfter?: string;
+  } = {};
+  if (query.ref !== undefined) {
+    options.ref = readRefQuery(query.ref);
+  }
+  if (open) {
+    options.open = true;
+  }
+  if (done) {
+    options.done = true;
+  }
+  if (query.type !== undefined) {
+    if (!isNoteType(query.type)) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    options.type = query.type;
+  }
+  if (query.tag !== undefined) {
+    const tag = readSearchTag(query.tag);
+    if (tag === null) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    options.tag = tag;
+  }
+  if (query.priority !== undefined) {
+    if (!isTaskPriority(query.priority)) {
+      throw new GavetaError('E_ARG_INVALID');
+    }
+    options.priority = query.priority;
+  }
+  const dueOn = readOptionalDueQuery(query.dueOn);
+  if (dueOn !== undefined) {
+    options.dueOn = dueOn;
+  }
+  const dueBefore = readOptionalDueQuery(query.dueBefore);
+  if (dueBefore !== undefined) {
+    options.dueBefore = dueBefore;
+  }
+  const dueAfter = readOptionalDueQuery(query.dueAfter);
+  if (dueAfter !== undefined) {
+    options.dueAfter = dueAfter;
+  }
+  return options;
+}
+
+function readOptionalBooleanQuery(value: string | undefined): boolean {
+  return value === 'true' || value === '1';
+}
+
+function readOptionalDueQuery(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!isIso8601(value)) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return value.length >= 10 ? value.slice(0, 10) : value;
 }
