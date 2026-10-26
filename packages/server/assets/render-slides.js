@@ -143,6 +143,13 @@
       }
     }
 
+    function exportPdf() {
+      if (presenting) {
+        exitPresentation();
+      }
+      window.print();
+    }
+
     root.addEventListener('click', function (event) {
       var target = event.target;
       if (target === null || typeof target.closest !== 'function') {
@@ -164,6 +171,11 @@
       var present = target.closest('[data-gaveta-action="present"]');
       if (present !== null) {
         enterPresentation();
+        return;
+      }
+      var exportPdfBtn = target.closest('[data-gaveta-action="export-pdf"]');
+      if (exportPdfBtn !== null) {
+        exportPdf();
       }
     });
 
