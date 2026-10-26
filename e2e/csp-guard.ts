@@ -62,7 +62,11 @@ export function attachCspGuard(page: Page): CspGuardHandle {
 
   const onRequest = (request: Request): void => {
     try {
-      const { hostname } = new URL(request.url());
+      const parsed = new URL(request.url());
+      if (parsed.protocol === 'vscode:') {
+        return;
+      }
+      const { hostname } = parsed;
       if (!isLocalServeHost(hostname)) {
         remoteRequestUrls.push(request.url());
       }

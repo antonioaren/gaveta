@@ -706,6 +706,17 @@ select {
   height: 100%;
 }
 
+.note-code-mode__external-editor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.note-code-mode__external-editor-error {
+  color: var(--color-danger, #b91c1c);
+  font-size: 0.875rem;
+}
+
 .note-code-mode__toolbar {
   display: flex;
   gap: var(--space-2);
