@@ -47,6 +47,12 @@ it('creates config, theme, and an empty index without touching existing html', a
       '.gaveta/mermaid-boot.js',
       '.gaveta/MERMAID-LICENSE.txt',
       '.gaveta/index.sqlite',
+      '.gaveta/templates/doc.html',
+      '.gaveta/templates/slides.html',
+      '.gaveta/templates/todo.html',
+      '.gaveta/templates/dashboard.html',
+      '.gaveta/templates/design.html',
+      '.gaveta/templates/artifact.html',
     ]);
     expect(created.preserved).toEqual([]);
     expect(created.agentInstructions).toEqual([]);
@@ -87,6 +93,12 @@ it('creates config, theme, and an empty index without touching existing html', a
       '.gaveta/mermaid-boot.js',
       '.gaveta/MERMAID-LICENSE.txt',
       '.gaveta/index.sqlite',
+      '.gaveta/templates/doc.html',
+      '.gaveta/templates/slides.html',
+      '.gaveta/templates/todo.html',
+      '.gaveta/templates/dashboard.html',
+      '.gaveta/templates/design.html',
+      '.gaveta/templates/artifact.html',
     ]);
     expect(await readFile(join(root, '.gaveta/config.json'))).toEqual(configBytes);
     expect(await readFile(join(root, '.gaveta/theme.css'))).toEqual(themeBytes);
@@ -113,6 +125,12 @@ it('fills only the vault files that are missing and keeps a custom config', asyn
       '.gaveta/mermaid-boot.js',
       '.gaveta/MERMAID-LICENSE.txt',
       '.gaveta/index.sqlite',
+      '.gaveta/templates/doc.html',
+      '.gaveta/templates/slides.html',
+      '.gaveta/templates/todo.html',
+      '.gaveta/templates/dashboard.html',
+      '.gaveta/templates/design.html',
+      '.gaveta/templates/artifact.html',
     ]);
     expect(result.preserved).toEqual(['.gaveta/config.json']);
     const after = await readVaultConfig(root);
@@ -138,6 +156,12 @@ it('leaves an existing index byte-for-byte, even when it is not a database', asy
       '.gaveta/mermaid.min.js',
       '.gaveta/mermaid-boot.js',
       '.gaveta/MERMAID-LICENSE.txt',
+      '.gaveta/templates/doc.html',
+      '.gaveta/templates/slides.html',
+      '.gaveta/templates/todo.html',
+      '.gaveta/templates/dashboard.html',
+      '.gaveta/templates/design.html',
+      '.gaveta/templates/artifact.html',
     ]);
     expect(result.preserved).toEqual([
       '.gaveta/config.json',

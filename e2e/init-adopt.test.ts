@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { expect, it } from 'vitest';
+import { INIT_VAULT_INTERNAL_PATHS } from './helpers.ts';
 
 const root = join(import.meta.dirname, '..');
 const bin = join(root, 'packages/cli/bin/gaveta.js');
@@ -92,14 +93,7 @@ it('initializes a vault from the binary and stays idempotent', () => {
       command: 'init',
       data: {
         root: realpathSync(directory),
-        created: [
-          '.gaveta/config.json',
-          '.gaveta/theme.css',
-          '.gaveta/mermaid.min.js',
-          '.gaveta/mermaid-boot.js',
-          '.gaveta/MERMAID-LICENSE.txt',
-          '.gaveta/index.sqlite',
-        ],
+        created: [...INIT_VAULT_INTERNAL_PATHS],
         preserved: [],
         agentInstructions: [],
       },
@@ -119,14 +113,7 @@ it('initializes a vault from the binary and stays idempotent', () => {
     expect(JSON.parse(again.stdout)).toMatchObject({
       data: {
         created: [],
-        preserved: [
-          '.gaveta/config.json',
-          '.gaveta/theme.css',
-          '.gaveta/mermaid.min.js',
-          '.gaveta/mermaid-boot.js',
-          '.gaveta/MERMAID-LICENSE.txt',
-          '.gaveta/index.sqlite',
-        ],
+        preserved: [...INIT_VAULT_INTERNAL_PATHS],
       },
     });
     expect(readFileSync(join(directory, '.gaveta/config.json'))).toEqual(bytes);

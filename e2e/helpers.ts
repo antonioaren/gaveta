@@ -23,6 +23,22 @@ export async function newWebPage(browser: Browser) {
 export const REPO_ROOT = join(import.meta.dirname, '..');
 export const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
 
+/** Vault-internal paths created on first `gaveta init` (REQ-TYPE-07 templates included). */
+export const INIT_VAULT_INTERNAL_PATHS = [
+  '.gaveta/config.json',
+  '.gaveta/theme.css',
+  '.gaveta/mermaid.min.js',
+  '.gaveta/mermaid-boot.js',
+  '.gaveta/MERMAID-LICENSE.txt',
+  '.gaveta/index.sqlite',
+  '.gaveta/templates/doc.html',
+  '.gaveta/templates/slides.html',
+  '.gaveta/templates/todo.html',
+  '.gaveta/templates/dashboard.html',
+  '.gaveta/templates/design.html',
+  '.gaveta/templates/artifact.html',
+] as const;
+
 /** Writable directory for Playwright screenshots (cloud artifacts or temp). */
 export function resolveScreenshotDir(fallbackName: string): string {
   const cloud = '/opt/cursor/artifacts';
