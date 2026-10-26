@@ -1,4 +1,5 @@
 import type { NoteType } from '../contract.ts';
+import { fillTemplate, formatMessage, type Locale } from '@gaveta/i18n';
 import { escapeAttr, escapeText } from '../links/path.ts';
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
@@ -19,10 +20,14 @@ export interface SlideThumbTarget {
   readonly label: string;
 }
 
-export function buildRenderTypeLayout(noteType: NoteType, bodyInner: string): RenderTypeLayout {
+export function buildRenderTypeLayout(
+  noteType: NoteType,
+  bodyInner: string,
+  locale: Locale = 'en',
+): RenderTypeLayout {
   switch (noteType) {
     case 'slides':
-      return layoutSlides(bodyInner);
+      return layoutSlides(bodyInner, locale);
     case 'todo':
       return layoutTodo(bodyInner);
     case 'dashboard':
@@ -61,23 +66,31 @@ function layoutWideArtifact(
   return { html, scripts: [] };
 }
 
-function layoutSlides(bodyInner: string): RenderTypeLayout {
+function layoutSlides(bodyInner: string, locale: Locale): RenderTypeLayout {
   const thumbs = collectSlideThumbTargets(bodyInner);
   const thumbButtons = thumbs
-    .map(
-      (slide, index) =>
-        `<button type="button" class="gaveta-slide-thumb" data-gaveta-slide-thumb="${escapeAttr(slide.id)}" aria-label="${escapeAttr(`Diapositiva ${String(index + 1)}: ${slide.label}`)}"><span class="gaveta-slide-thumb__label">${escapeText(slide.label)}</span></button>`,
-    )
+    .map((slide, index) => {
+      const aria = fillTemplate(formatMessage('render.slides.thumbAria', locale), {
+        index: index + 1,
+        label: slide.label,
+      });
+      return `<button type="button" class="gaveta-slide-thumb" data-gaveta-slide-thumb="${escapeAttr(slide.id)}" aria-label="${escapeAttr(aria)}"><span class="gaveta-slide-thumb__label">${escapeText(slide.label)}</span></button>`;
+    })
     .join('');
+  const presentLabel = escapeText(formatMessage('render.slides.present', locale));
+  const exportLabel = escapeText(formatMessage('render.slides.exportPdf', locale));
+  const hint = escapeText(formatMessage('render.slides.hint', locale));
+  const thumbsLabel = escapeAttr(formatMessage('render.slides.thumbs', locale));
   const html = [
     '<div class="gaveta-render gaveta-render--slides">',
     '<div class="gaveta-slides-toolbar">',
-    '<button type="button" class="gaveta-slides-present" data-gaveta-action="present">Presentar</button>',
-    '<p class="gaveta-slides-hint">Flechas para navegar · Esc para salir</p>',
+    `<button type="button" class="gaveta-slides-present" data-gaveta-action="present">${presentLabel}</button>`,
+    `<button type="button" class="gaveta-slides-export" data-gaveta-action="export-pdf">${exportLabel}</button>`,
+    `<p class="gaveta-slides-hint">${hint}</p>`,
     '</div>',
-    `<nav class="gaveta-slide-thumbs" aria-label="Miniaturas">${thumbButtons}</nav>`,
+    `<nav class="gaveta-slide-thumbs" aria-label="${thumbsLabel}">${thumbButtons}</nav>`,
     `<div class="gaveta-slides-deck">${bodyInner}</div>`,
-    '<div id="gaveta-slide-live" class="gaveta-visually-hidden" aria-live="polite"></div>',
+    '<div id="gaveta-slide-live" class="gaveta-slide-live gaveta-visually-hidden" aria-live="polite"></div>',
     '</div>',
   ].join('');
   return { html, scripts: ['render-slides.js'] };
