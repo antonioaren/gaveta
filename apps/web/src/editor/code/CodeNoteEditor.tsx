@@ -74,6 +74,40 @@ export function CodeNoteEditor({
       root: shadowRoot,
     });
     viewRef.current = view;
+    const focusView = (): void => {
+      view.focus();
+    };
+    const focusEnd = (): void => {
+      const end = view.state.doc.length;
+      view.dispatch({ selection: { anchor: end, head: end } });
+      view.focus();
+    };
+    const appendAtEnd = (event: Event): void => {
+      if (!(event instanceof CustomEvent) || typeof event.detail !== 'string') {
+        return;
+      }
+      const text = event.detail;
+      if (text.length === 0) {
+        return;
+      }
+      const end = view.state.doc.length;
+      view.dispatch({
+        changes: { from: end, insert: text },
+        selection: { anchor: end + text.length, head: end + text.length },
+      });
+      view.focus();
+    };
+    const pointerDown = (event: Event): void => {
+      if (!(event instanceof PointerEvent) || event.button !== 0) {
+        return;
+      }
+      focusView();
+    };
+    host.addEventListener('focus', focusView);
+    host.addEventListener('gaveta-code-focus-end', focusEnd);
+    host.addEventListener('gaveta-code-append-at-end', appendAtEnd);
+    host.addEventListener('pointerdown', pointerDown, { capture: true });
+    shadowRoot.addEventListener('pointerdown', pointerDown, { capture: true });
     setActiveCodeEditorHost({
       notePath,
       view,
@@ -92,11 +126,18 @@ export function CodeNoteEditor({
       },
     });
     return () => {
+      host.removeEventListener('focus', focusView);
+      host.removeEventListener('gaveta-code-focus-end', focusEnd);
+      host.removeEventListener('gaveta-code-append-at-end', appendAtEnd);
+      host.removeEventListener('pointerdown', pointerDown, { capture: true });
+      shadowRoot.removeEventListener('pointerdown', pointerDown, { capture: true });
       setActiveCodeEditorHost(null);
       view.destroy();
       viewRef.current = null;
     };
-  }, [initialValue, locale, notePath, readOnly]);
+    // `initialValue` is only the document at mount time. Parent updates from `onChange` must not
+    // recreate the view (that raced e2e and macOS CI). `NoteCodeMode` bumps `key` to remount.
+  }, [locale, notePath, readOnly]);
 
   return (
     <div

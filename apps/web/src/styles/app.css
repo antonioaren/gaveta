@@ -1239,6 +1239,19 @@ select {
   font-size: var(--font-size-sm);
 }
 
+.wikilink-completion {
+  background: var(--gaveta-surface-raised);
+  border: 1px solid var(--gaveta-border);
+  border-radius: var(--gaveta-radius-sm);
+  box-shadow: var(--gaveta-shadow-md);
+  padding: 0.25rem 0;
+}
+
+.wikilink-completion__option {
+  width: 100%;
+  text-align: left;
+}
+
 .palette__error {
   padding: var(--space-3);
   color: var(--color-danger);

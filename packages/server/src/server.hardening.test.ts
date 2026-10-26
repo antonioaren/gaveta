@@ -9,6 +9,7 @@ const API_PATHS = [
   '/api/doctor',
   '/api/graph',
   '/api/search?q=test',
+  '/api/wikilink-complete?q=',
 ] as const;
 
 const REQUIRED_SECURITY_HEADERS = [

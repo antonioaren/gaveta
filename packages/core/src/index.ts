@@ -471,12 +471,15 @@ export {
   resolveRef,
   resolveTitle,
   suggestNotes,
+  completeWikilinkTargets,
+  WIKILINK_COMPLETION_DEFAULT_LIMIT,
 } from './links/index.ts';
 
 export type {
   LinkDiagnostic,
   NoteRef,
   NoteSuggestion,
+  WikilinkCompletion,
   RelAssessment,
   RelPolicy,
   ResolveNoteLinksOptions,

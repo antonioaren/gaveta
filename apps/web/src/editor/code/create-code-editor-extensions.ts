@@ -1,4 +1,4 @@
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { autocompletion, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { html, autoCloseTags } from '@codemirror/lang-html';
 import {
   bracketMatching,
@@ -28,7 +28,12 @@ import { formatMessage } from '@gaveta/i18n';
 import { codeEditorEmmetExtensions } from './code-editor-emmet.ts';
 import { codeMirrorPhrasesForLocale } from './code-editor-phrases.ts';
 import { codeEditorProblemsStatus } from './code-editor-problems-status.ts';
-import { contractHtmlAutocomplete } from './contract-html-completion.ts';
+import { fetchWikilinkCompletions } from '../../api/wikilink-complete.ts';
+import { contractHtmlCompletionSource } from './contract-html-completion.ts';
+import {
+  wikilinkHtmlAutocompleteTrigger,
+  wikilinkHtmlCompletionSource,
+} from '../wikilink/wikilink-html-completion.ts';
 import { gavetaCodeEditorTheme } from './code-editor-theme.ts';
 import { openReplacePanel } from './code-editor-panels.ts';
 import { createNoteLinter } from './note-linter.ts';
@@ -71,7 +76,35 @@ export function createCodeEditorExtensions({
     closeBrackets(),
     html(),
     autoCloseTags,
-    contractHtmlAutocomplete(formatMessage('web.editor.code.completion.contract', locale)),
+    autocompletion({
+      activateOnTyping: true,
+      defaultKeymap: true,
+      maxRenderedOptions: 20,
+      override: [
+        wikilinkHtmlCompletionSource(fetchWikilinkCompletions, {
+          section: formatMessage('web.editor.wikilink.completion.section', locale),
+          aliasDetail: (alias) =>
+            formatMessage('web.editor.wikilink.completion.aliasDetail', locale, { alias }),
+        }),
+        (context) => {
+          const result = contractHtmlCompletionSource(context);
+          if (result === null) {
+            return null;
+          }
+          const contractElementDetail = formatMessage(
+            'web.editor.code.completion.contract',
+            locale,
+          );
+          return {
+            ...result,
+            options: result.options.map((option) =>
+              option.type === 'type' ? { ...option, detail: contractElementDetail } : option,
+            ),
+          };
+        },
+      ],
+    }),
+    wikilinkHtmlAutocompleteTrigger(),
     ...codeEditorEmmetExtensions(),
     foldGutter(),
     codeFolding(),
