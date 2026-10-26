@@ -3,14 +3,18 @@ import { EditorView } from '@codemirror/view';
 import { useEffect, useRef, type ReactElement } from 'react';
 import { fetchNoteValidation } from '../../api/note-validate.ts';
 import { ensureCodeEditorShadowMount } from './code-editor-shadow.ts';
+import { runCodeEditorPaletteCommand } from './code-editor-palette-commands.ts';
+import { setActiveCodeEditorHost } from './code-editor-host.ts';
 import { createCodeEditorExtensions } from './create-code-editor-extensions.ts';
 import { useI18n } from '../../i18n/useI18n.ts';
+import type { MessageKey } from '@gaveta/i18n';
 
 export interface CodeNoteEditorProps {
   readonly initialValue: string;
   readonly notePath: string;
   readonly onChange: (value: string) => void;
   readonly onSaveRequest: () => void;
+  readonly onFormatError?: (messageKey: MessageKey) => void;
   readonly readOnly?: boolean;
 }
 
@@ -19,6 +23,7 @@ export function CodeNoteEditor({
   notePath,
   onChange,
   onSaveRequest,
+  onFormatError,
   readOnly = false,
 }: CodeNoteEditorProps): ReactElement {
   const { t, locale } = useI18n();
@@ -26,6 +31,7 @@ export function CodeNoteEditor({
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   const onSaveRef = useRef(onSaveRequest);
+  const onFormatErrorRef = useRef(onFormatError);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -34,6 +40,10 @@ export function CodeNoteEditor({
   useEffect(() => {
     onSaveRef.current = onSaveRequest;
   }, [onSaveRequest]);
+
+  useEffect(() => {
+    onFormatErrorRef.current = onFormatError;
+  }, [onFormatError]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -54,6 +64,9 @@ export function CodeNoteEditor({
           },
           onSaveRequest: () => {
             onSaveRef.current();
+          },
+          onFormatDocument: () => {
+            void runCodeEditorPaletteCommand('code-format-document');
           },
         }),
       }),
@@ -95,16 +108,36 @@ export function CodeNoteEditor({
     host.addEventListener('gaveta-code-append-at-end', appendAtEnd);
     host.addEventListener('pointerdown', pointerDown, { capture: true });
     shadowRoot.addEventListener('pointerdown', pointerDown, { capture: true });
+    setActiveCodeEditorHost({
+      notePath,
+      view,
+      getDoc: () => view.state.doc.toString(),
+      applyDoc: (html) => {
+        view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: html },
+        });
+        onChangeRef.current(html);
+      },
+      onFormatError: (messageKey) => {
+        onFormatErrorRef.current?.(messageKey);
+      },
+      onSaveRequest: () => {
+        onSaveRef.current();
+      },
+    });
     return () => {
       host.removeEventListener('focus', focusView);
       host.removeEventListener('gaveta-code-focus-end', focusEnd);
       host.removeEventListener('gaveta-code-append-at-end', appendAtEnd);
       host.removeEventListener('pointerdown', pointerDown, { capture: true });
       shadowRoot.removeEventListener('pointerdown', pointerDown, { capture: true });
+      setActiveCodeEditorHost(null);
       view.destroy();
       viewRef.current = null;
     };
-  }, [initialValue, locale, notePath, readOnly]);
+    // `initialValue` is only the document at mount time. Parent updates from `onChange` must not
+    // recreate the view (that raced e2e and macOS CI). `NoteCodeMode` bumps `key` to remount.
+  }, [locale, notePath, readOnly]);
 
   return (
     <div

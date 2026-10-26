@@ -106,11 +106,15 @@ it('REQ-APP-12: completes [[ wikilinks in visual and code editors', async () => 
     const response = await completeResponse;
     const body = (await response.json()) as { data: { hits: { title: string }[] } };
     expect(body.data.hits.some((hit) => hit.title === 'Formas de enlace')).toBe(true);
+    await expect
+      .poll(async () => await cmSurface.innerText())
+      .toContain('[[Form');
     await codeHost.evaluate((host) => {
       host.dispatchEvent(new CustomEvent('gaveta-code-append-at-end', { detail: 'as de enlace]]' }));
     });
-    const editorText = await codeHost.locator('.cm-content').innerText();
-    expect(editorText).toContain('[[Formas de enlace]]');
+    await expect
+      .poll(async () => await cmSurface.innerText())
+      .toContain('[[Formas de enlace]]');
 
     await page.close();
   } finally {
