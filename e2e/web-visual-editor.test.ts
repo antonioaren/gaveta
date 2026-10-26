@@ -233,7 +233,32 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
     }
   }, 180_000);
 
-  it('shows a Spanish conflict message on 409 without overwriting', async () => {
+  it('REQ-APP-13: warns when the note changes on disk during visual edit', async () => {
+    const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-external-edit-'));
+    const vault = join(parent, 'vault');
+    cpSync(vaultPath('backlinks'), vault, { recursive: true });
+    const probePath = 'nota-x.html';
+    const original = readFileSync(join(vault, probePath), 'utf8');
+    const noteId = readNoteId(original);
+    expect(noteId).not.toBeNull();
+    try {
+      const started = await startServe(vault);
+      const page = await newWebPage(browser);
+      await openNote(page, started.json.data.url, noteId ?? '');
+      await page.getByTestId('note-edit-button').click();
+      await page.getByTestId('visual-editor-surface').waitFor({ timeout: 15_000 });
+      writeFileSync(join(vault, probePath), original.replace('Nota X', 'Nota X externa'));
+      await page.getByTestId('note-external-change').waitFor({ timeout: 30_000 });
+      await page.getByTestId('note-external-change-diff').click();
+      await page.getByTestId('note-merge-view').waitFor();
+      expect(await page.getByTestId('note-merge-diff').textContent()).toContain('externa');
+      await page.close();
+    } finally {
+      removeTempTree(parent);
+    }
+  }, 120_000);
+
+  it('shows merge view on save conflict without overwriting disk', async () => {
     const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-editor-conflict-'));
     const vault = join(parent, 'vault');
     cpSync(vaultPath('backlinks'), vault, { recursive: true });
@@ -249,11 +274,8 @@ describe('REQ-APP-09/10 visual editor round-trip', () => {
       await page.getByTestId('visual-editor-surface').waitFor();
       writeFileSync(join(vault, probePath), original.replace('Nota X', 'Nota X externa'));
       await page.getByTestId('visual-editor-save').click();
-      await page.getByTestId('visual-editor-feedback').waitFor();
-      const feedback = await page.getByTestId('visual-editor-feedback').textContent();
-      expect(feedback?.toLowerCase()).toMatch(
-        /cambió|cambiado|conflict|otro sitio|fuera|última lectura/,
-      );
+      await page.getByTestId('note-merge-view').waitFor({ timeout: 15_000 });
+      expect(await page.getByTestId('note-merge-diff').textContent()).toContain('externa');
       expect(readFileSync(join(vault, probePath), 'utf8')).toContain('externa');
       await page.screenshot({
         path: join(SCREENSHOT_DIR, 'visual-editor-conflict.png'),

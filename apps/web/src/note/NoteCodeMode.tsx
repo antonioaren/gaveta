@@ -1,9 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type ReactElement } from 'react';
 import { ApiError } from '../api/client.ts';
-import { conflictEditMessage, invalidHtmlMessage, saveNoteDocument } from '../api/note-edit.ts';
+import { invalidHtmlMessage, saveNoteDocument } from '../api/note-edit.ts';
 import { fetchNoteHtml } from '../api/note-read.ts';
 import { validateNoteHtml } from '../editor/code/validate-diagnostics.ts';
 import { useI18n } from '../i18n/useI18n.ts';
+import { NoteMergeView } from './NoteMergeView.tsx';
+import { useExternalNoteRevision } from './useExternalNoteRevision.ts';
 
 const LazyCodeNoteEditor = lazy(async () => {
   const module = await import('../editor/code/CodeNoteEditor.tsx');
@@ -12,12 +14,19 @@ const LazyCodeNoteEditor = lazy(async () => {
 
 export interface NoteCodeModeProps {
   readonly noteRef: string;
+  readonly noteId: string;
   readonly path: string;
   readonly onSaved: (hash: string) => void;
   readonly onExit: () => void;
 }
 
-export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModeProps): ReactElement {
+export function NoteCodeMode({
+  noteRef,
+  noteId,
+  path,
+  onSaved,
+  onExit,
+}: NoteCodeModeProps): ReactElement {
   const { t } = useI18n();
   const [html, setHtml] = useState<string | null>(null);
   const [hash, setHash] = useState<string | null>(null);
@@ -26,6 +35,11 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [editorEpoch, setEditorEpoch] = useState(0);
+  const [mergeOpen, setMergeOpen] = useState(false);
+  const [theirsForMerge, setTheirsForMerge] = useState<{ html: string; hash: string } | null>(null);
+
+  const { external } = useExternalNoteRevision(noteRef, noteId, hash);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,51 +70,71 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
     setSaveError(null);
   }, []);
 
-  const handleSave = useCallback(() => {
-    if (html === null || hash === null || saving) {
-      return;
-    }
-    if (!dirty) {
-      onSaved(hash);
-      return;
-    }
-    setSaving(true);
+  const openMergeWithTheirs = useCallback((disk: { html: string; hash: string }) => {
+    setTheirsForMerge(disk);
+    setMergeOpen(true);
     setSaveError(null);
-    void validateNoteHtml(html, path)
-      .then((validation) => {
-        if (!validation.ok) {
-          setSaving(false);
-          setSaveError(invalidHtmlMessage());
-          return null;
-        }
-        return saveNoteDocument(noteRef, html, hash);
-      })
-      .then((result) => {
-        if (result === null) {
-          return;
-        }
-        setHash(result.hash);
-        setDirty(false);
-        setSaving(false);
-        onSaved(result.hash);
-      })
-      .catch((error: unknown) => {
-        setSaving(false);
-        if (error instanceof ApiError) {
-          if (error.status === 409 || error.code === 'E_CONFLICT') {
-            setSaveError(conflictEditMessage());
+  }, []);
+
+  const handleSave = useCallback(
+    (ifMatchOverride?: string) => {
+      if (html === null || hash === null || saving) {
+        return;
+      }
+      const match = ifMatchOverride ?? hash;
+      if (!dirty) {
+        void fetchNoteHtml(noteRef).then((disk) => {
+          if (disk.hash !== match) {
+            openMergeWithTheirs({ html: disk.html, hash: disk.hash });
             return;
           }
-          if (error.status === 422 || error.code === 'E_HTML_INVALID') {
+          onSaved(match);
+        });
+        return;
+      }
+      setSaving(true);
+      setSaveError(null);
+      void validateNoteHtml(html, path)
+        .then((validation) => {
+          if (!validation.ok) {
+            setSaving(false);
             setSaveError(invalidHtmlMessage());
+            return null;
+          }
+          return saveNoteDocument(noteRef, html, match);
+        })
+        .then((result) => {
+          if (result === null) {
             return;
           }
-          setSaveError(error.message);
-          return;
-        }
-        setSaveError(t('web.api.error.fallbackSaveNoteDot'));
-      });
-  }, [dirty, hash, html, onSaved, noteRef, path, saving, t]);
+          setHash(result.hash);
+          setDirty(false);
+          setSaving(false);
+          setMergeOpen(false);
+          setTheirsForMerge(null);
+          onSaved(result.hash);
+        })
+        .catch((error: unknown) => {
+          setSaving(false);
+          if (error instanceof ApiError) {
+            if (error.status === 409 || error.code === 'E_CONFLICT') {
+              void fetchNoteHtml(noteRef).then((disk) => {
+                openMergeWithTheirs({ html: disk.html, hash: disk.hash });
+              });
+              return;
+            }
+            if (error.status === 422 || error.code === 'E_HTML_INVALID') {
+              setSaveError(invalidHtmlMessage());
+              return;
+            }
+            setSaveError(error.message);
+            return;
+          }
+          setSaveError(t('web.api.error.fallbackSaveNoteDot'));
+        });
+    },
+    [dirty, hash, html, noteRef, onSaved, openMergeWithTheirs, path, saving, t],
+  );
 
   if (loading) {
     return (
@@ -118,6 +152,9 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
     );
   }
 
+  const theirsHtml = theirsForMerge?.html ?? external?.html ?? html;
+  const theirsHash = theirsForMerge?.hash ?? external?.hash ?? hash;
+
   return (
     <div className="note-code-mode">
       <div className="note-code-mode__toolbar">
@@ -127,16 +164,56 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
         <button
           type="button"
           className="note-code-mode__button note-code-mode__button--primary"
-          onClick={handleSave}
+          onClick={() => {
+            handleSave();
+          }}
           disabled={saving}
         >
           {saving ? t('web.common.saving') : t('web.common.save')}
         </button>
       </div>
+      {external !== null && !mergeOpen ? (
+        <div className="note-external-change" role="status" data-testid="note-external-change">
+          <p className="note-external-change__text">{t('web.note.externalChange.banner')}</p>
+          <button
+            type="button"
+            className="note-external-change__button"
+            data-testid="note-external-change-diff"
+            onClick={() => {
+              openMergeWithTheirs({ html: external.html, hash: external.hash });
+            }}
+          >
+            {t('web.note.merge.openDiff')}
+          </button>
+        </div>
+      ) : null}
       {saveError !== null ? (
         <p className="note-code-mode__error" role="alert">
           {saveError}
         </p>
+      ) : null}
+      {mergeOpen ? (
+        <NoteMergeView
+          yoursHtml={html}
+          theirsHtml={theirsHtml}
+          saving={saving}
+          onAcceptTheirs={() => {
+            setHtml(theirsHtml);
+            setHash(theirsHash);
+            setDirty(false);
+            setMergeOpen(false);
+            setTheirsForMerge(null);
+            setEditorEpoch((value) => value + 1);
+          }}
+          onKeepMine={() => {
+            if (theirsHash !== null) {
+              handleSave(theirsHash);
+            }
+          }}
+          onClose={() => {
+            setMergeOpen(false);
+          }}
+        />
       ) : null}
       <p className="note-code-mode__hint" data-testid="code-mode-editor-hint">
         {t('web.editor.code.hint.emmet')}
@@ -149,10 +226,13 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
         }
       >
         <LazyCodeNoteEditor
+          key={`${noteRef}-${String(editorEpoch)}`}
           initialValue={html}
           notePath={path}
           onChange={handleChange}
-          onSaveRequest={handleSave}
+          onSaveRequest={() => {
+            handleSave();
+          }}
         />
       </Suspense>
     </div>
