@@ -80,6 +80,7 @@ import { registerSanitizePasteRoute } from './sanitize-paste-route.ts';
 import { registerWriteRoutes } from './write-routes.ts';
 import { registerMigrationRoutes } from './migration-routes.ts';
 import { registerValidateRoutes } from './validate-route.ts';
+import { registerVsCodeUriRoute } from './vscode-uri-route.ts';
 import { VaultEventBus } from './vault-events.ts';
 import { createVaultWatcher, type VaultWatcher } from './vault-watcher.ts';
 import { VaultIndexSession } from './vault-index.ts';
@@ -181,6 +182,7 @@ export function createGavetaServer(options: CreateGavetaServerOptions): GavetaSe
   });
 
   registerReadRoutes(app, options, vaultSession, () => boundPort, renderTicketSecret);
+  registerVsCodeUriRoute(app, options, vaultSession);
   registerWriteRoutes(app, options, vaultSession);
   registerValidateRoutes(app);
   registerSanitizePasteRoute(app, options);

@@ -133,6 +133,7 @@ export {
 } from './vault/discover.ts';
 
 export { readVaultText, resolveInsideVault, writeVaultText } from './vault/paths.ts';
+export { buildVsCodeFileUri } from './vscode-file-uri.ts';
 
 export { writeAtomic, writeAtomicBuffer } from './vault/atomic.ts';
 
@@ -200,6 +201,26 @@ export {
 export { doctorVault } from './doctor.ts';
 
 export type { DoctorFinding, DoctorFix, DoctorReport, DoctorVaultOptions } from './doctor.ts';
+
+export {
+  computeIndexStats,
+  computeLogStats,
+  computeVaultStats,
+  buildVaultCatalog,
+} from './stats.ts';
+
+export type {
+  ComputeLogStatsOptions,
+  ComputeVaultStatsOptions,
+  VaultCatalog,
+  VaultIndexStats,
+  VaultLogStats,
+  VaultStats,
+} from './stats.ts';
+
+export { COMMAND_LOG_RELATIVE, parseCommandLogLine, readCommandLog } from './vault/command-log.ts';
+
+export type { CommandLogEntry } from './vault/command-log.ts';
 
 export { adoptNote } from './adopt.ts';
 

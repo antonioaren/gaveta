@@ -4,6 +4,7 @@ import { conflictEditMessage, invalidHtmlMessage, saveNoteDocument } from '../ap
 import { fetchNoteHtml } from '../api/note-read.ts';
 import { validateNoteHtml } from '../editor/code/validate-diagnostics.ts';
 import { useI18n } from '../i18n/useI18n.ts';
+import { OpenInVsCodeButton } from './OpenInVsCodeButton.tsx';
 
 const LazyCodeNoteEditor = lazy(async () => {
   const module = await import('../editor/code/CodeNoteEditor.tsx');
@@ -124,6 +125,7 @@ export function NoteCodeMode({ noteRef, path, onSaved, onExit }: NoteCodeModePro
         <button type="button" className="note-code-mode__button" onClick={onExit}>
           {t('web.note.code.readView')}
         </button>
+        <OpenInVsCodeButton noteRef={noteRef} />
         <button
           type="button"
           className="note-code-mode__button note-code-mode__button--primary"

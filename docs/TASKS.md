@@ -153,7 +153,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [x] **T3.16 UX de problemas.** Avisos `W_*`, hover con código y mensaje, F8 / Shift+F8 y barra de estado con recuentos. Cubre: REQ-APP-11. Depende de: T3.14.
 - [x] **T3.17 Inteligencia HTML y Emmet.** Autocompletado acotado al contrato y Emmet (núcleo MIT). Cubre: REQ-APP-11. Depende de: T3.15.
 - [ ] **T3.18 Paleta y «Formatear documento».** Comandos del editor en la paleta (T2.8) y formateo vía el normalizador del núcleo. Cubre: REQ-APP-04, REQ-APP-11. Depende de: T3.15.
-- [ ] **T3.19 Abrir en VS Code.** Enlace `vscode://file/…` con ruta absoluta solo al hacer clic. Cubre: REQ-APP-11. Depende de: T3.5.
+- [x] **T3.19 Abrir en VS Code.** Enlace `vscode://file/…` con ruta absoluta solo al hacer clic. Cubre: REQ-APP-11. Depende de: T3.5.
 - [x] **T3.6 Autocompletado de `[[`** en los dos modos (ítem 5 del plan VS Code / modo código). Cubre: REQ-APP-12. Depende de: T3.4, T3.5, T3.15.
 - [ ] **T3.7 Conflictos.** Aviso y MergeView cuando la nota cambia fuera durante la edición (ítem 6 del plan VS Code). Cubre: REQ-APP-13. Depende de: T3.2, T2.2, T3.14.
 - [x] **T3.8 Renombrar, mover y borrar desde la app**, con diálogo de backlinks. Cubre: REQ-APP-14. Depende de: T3.2.
@@ -171,7 +171,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [x] **T4.4 Vista agregada de tareas.** Cubre: REQ-APP-15.
 - [x] **T4.5 Mermaid y exportación de presentaciones a PDF.** *(Adelantado: render Mermaid offline en `file://`; export PDF queda pendiente.)* Cubre: REQ-TYPE-06, REQ-APP-16.
 - [x] **T4.6 Plantillas por tipo.** Cubre: REQ-TYPE-07.
-- [ ] **T4.7 `gaveta stats`** con un log local opcional. Cubre: REQ-CLI-15.
+- [x] **T4.7 `gaveta stats`** con un log local opcional. Cubre: REQ-CLI-15.
 - [ ] **T4.8 CI en Windows.** Añadir `windows-latest` a la matriz de GitHub Actions (REQ-NFR-05). Aplazado al final del proyecto.
 
 ---
