@@ -6,6 +6,7 @@ import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import {
   GAVETA_BIN,
+  modChord,
   newWebPage,
   parseJson,
   removeTempTree,
@@ -93,13 +94,11 @@ it('REQ-APP-12: completes [[ wikilinks in visual and code editors', async () => 
     await page.getByTestId('visual-editor-cancel').click();
     await page.getByTestId('enter-code-mode').click();
     await page.getByTestId('code-note-editor').click();
-    await page.keyboard.press('Control+End');
-    await page.keyboard.type('\n<p>[[Form');
+    await page.keyboard.press(modChord('End'));
     const completeResponse = page.waitForResponse(
-      (response) =>
-        response.url().includes('/api/wikilink-complete') && response.status() === 200,
+      (response) => response.url().includes('/api/wikilink-complete') && response.status() === 200,
     );
-    await page.keyboard.press('Control-Space');
+    await page.keyboard.type('\n<p>[[Form');
     await completeResponse;
     const codeTooltip = page.locator('.code-editor .cm-tooltip-autocomplete');
     await codeTooltip.getByText('Formas de enlace').waitFor({ state: 'visible' });
