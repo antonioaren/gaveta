@@ -173,6 +173,43 @@ it('REQ-APP-11: unsafe HTML shows inline diagnostics and blocks save', async () 
   }
 }, 180_000);
 
+it('T3.16: W_* warnings, status bar, hover, and F8 navigation', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-problems-'));
+  const vault = join(parent, 'vault');
+  mkdirSync(vault, { recursive: true });
+  initVault(vault);
+  try {
+    const { page, bytesBefore, cspGuard } = await openCodeModeForNewNote(vault);
+    const editor = page.locator('.code-editor .cm-content');
+    await editor.click();
+    await page.keyboard.press(modChord('a'));
+    const withPending = bytesBefore
+      .toString('utf8')
+      .replace('</section>', '<p><a data-g-pending="Roadmap">Roadmap</a></p></section>');
+    await page.keyboard.insertText(withPending);
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/validate') &&
+        response.request().method() === 'POST' &&
+        response.ok(),
+      { timeout: 15_000 },
+    );
+    await page.locator('.code-editor .cm-lintRange-warning').first().waitFor({ timeout: 15_000 });
+    const statusText = await page
+      .locator('.code-editor [data-testid="code-editor-problems-status"]')
+      .innerText();
+    expect(statusText.toLowerCase()).toContain('advertencia');
+    await page.locator('.code-editor .cm-lintRange-warning').first().hover();
+    await page.locator('.code-editor .cm-tooltip-lint').waitFor({ timeout: 10_000 });
+    const tooltipText = await page.locator('.code-editor .cm-tooltip-lint').innerText();
+    expect(tooltipText).toContain('W_LINK_PENDING');
+    await cspGuard.assertClean();
+    await page.close();
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 180_000);
+
 it('T3.15: VS Code layer exposes fold gutter and localized search', async () => {
   const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-vscode-'));
   const vault = join(parent, 'vault');

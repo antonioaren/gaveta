@@ -20,21 +20,26 @@ function diagnosticRange(
   return line;
 }
 
+function shouldSurfaceDiagnostic(diagnostic: NoteDiagnosticView): boolean {
+  if (diagnostic.severity === 'error') {
+    return true;
+  }
+  return diagnostic.code.startsWith('W_');
+}
+
 export function noteDiagnosticsToCodeMirror(
   source: string,
   diagnostics: readonly NoteDiagnosticView[],
 ): Diagnostic[] {
-  return diagnostics
-    .filter((diagnostic) => diagnostic.severity === 'error')
-    .map((diagnostic) => {
-      const { from, to } = diagnosticRange(source, diagnostic);
-      return {
-        from,
-        to,
-        severity: 'error',
-        message: formatDiagnosticLabel(diagnostic),
-      };
-    });
+  return diagnostics.filter(shouldSurfaceDiagnostic).map((diagnostic) => {
+    const { from, to } = diagnosticRange(source, diagnostic);
+    return {
+      from,
+      to,
+      severity: diagnostic.severity === 'error' ? 'error' : 'warning',
+      message: formatDiagnosticLabel(diagnostic),
+    };
+  });
 }
 
 export function createNoteLinter(
