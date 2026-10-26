@@ -104,6 +104,35 @@ it('doc view shows a lateral table of contents', async () => {
   }
 }, 60_000);
 
+it('REQ-APP-16: slides export PDF uses window.print without network', async () => {
+  const vault = showcaseVault();
+  try {
+    const started = await startServe(vault);
+    const ticket = await fetchRenderTicket(started.port, started.token, SLIDES_ID);
+    const page = await openRenderFrame(started.port, SLIDES_ID, ticket);
+    const frame = page.frameLocator('#gaveta-render');
+    await frame.locator('[data-gaveta-action="export-pdf"]').waitFor();
+    const renderFrame = page.frame({ url: /\/render\// });
+    if (renderFrame === null) {
+      throw new Error('render frame missing');
+    }
+    await renderFrame.evaluate(() => {
+      (window as Window & { __gavetaPrintCalled?: boolean }).__gavetaPrintCalled = false;
+      window.print = () => {
+        (window as Window & { __gavetaPrintCalled?: boolean }).__gavetaPrintCalled = true;
+      };
+    });
+    await frame.locator('[data-gaveta-action="export-pdf"]').click();
+    const printCalled = await renderFrame.evaluate(
+      () => (window as Window & { __gavetaPrintCalled?: boolean }).__gavetaPrintCalled === true,
+    );
+    expect(printCalled).toBe(true);
+    await page.close();
+  } finally {
+    rmSync(join(vault, '..'), { recursive: true, force: true });
+  }
+}, 60_000);
+
 it('slides view supports presentation mode and keyboard navigation', async () => {
   const vault = showcaseVault();
   try {

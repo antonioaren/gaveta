@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -15,6 +15,7 @@ import {
   runGaveta,
   type JsonEnvelope,
 } from './helpers.ts';
+import { vaultPath } from '@gaveta/fixtures';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const children: ReturnType<typeof spawn>[] = [];
@@ -344,3 +345,38 @@ it('T3.14: code mode renders with gutters under the app CSP', async () => {
     rmSync(parent, { recursive: true, force: true });
   }
 }, 180_000);
+
+function readNoteId(html: string): string | null {
+  const match = /name="gaveta:id"\s+content="([^"]+)"/.exec(html);
+  return match?.[1] ?? null;
+}
+
+it('REQ-APP-13: code mode hides external-change banner after accepting disk version', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-external-'));
+  const vault = join(parent, 'vault');
+  cpSync(vaultPath('backlinks'), vault, { recursive: true });
+  const probePath = 'nota-x.html';
+  const original = readFileSync(join(vault, probePath), 'utf8');
+  const noteId = readNoteId(original);
+  expect(noteId).not.toBeNull();
+  try {
+    const started = await startServe(vault);
+    const page = await newWebPage(browser);
+    const noteUrl = new URL(started.json.data.url);
+    noteUrl.pathname = `/nota/${noteId ?? ''}`;
+    await page.goto(noteUrl.toString(), { waitUntil: 'networkidle' });
+    await page.getByTestId('enter-code-mode').click();
+    await page.getByText('Cargando modo código').waitFor({ state: 'hidden', timeout: 30_000 });
+    await page.locator('.code-editor .cm-content').waitFor({ timeout: 30_000 });
+    writeFileSync(join(vault, probePath), original.replace('Nota X', 'Nota X externa'));
+    await page.getByTestId('note-external-change').waitFor({ timeout: 30_000 });
+    await page.getByTestId('note-external-change-diff').click();
+    await page.getByTestId('note-merge-view').waitFor();
+    await page.getByTestId('note-merge-accept-theirs').click();
+    await page.getByTestId('note-merge-view').waitFor({ state: 'hidden' });
+    expect(await page.getByTestId('note-external-change').count()).toBe(0);
+    await page.close();
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 120_000);
