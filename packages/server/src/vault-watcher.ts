@@ -12,6 +12,7 @@ import { markChokidar } from './live-pipeline-trace.ts';
 import { createVaultWatcherCore, type VaultWatcherCore } from './vault-watcher-core.ts';
 
 export interface VaultWatcher {
+  whenReady(): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -28,6 +29,11 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
   const core: VaultWatcherCore = createVaultWatcherCore(options);
 
   let closed = false;
+
+  let resolveReady!: () => void;
+  const whenReady = new Promise<void>((resolve) => {
+    resolveReady = resolve;
+  });
 
   const watcher: FSWatcher = chokidar.watch(options.vaultRoot, {
     ignoreInitial: true,
@@ -69,6 +75,10 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
     core.queue({ kind, relativePath: relative });
   };
 
+  watcher.on('ready', () => {
+    resolveReady();
+  });
+
   watcher.on('change', (absolutePath) => {
     onPath('change', absolutePath);
   });
@@ -80,6 +90,9 @@ export function createVaultWatcher(options: CreateVaultWatcherOptions): VaultWat
   });
 
   return {
+    whenReady(): Promise<void> {
+      return whenReady;
+    },
     async close(): Promise<void> {
       closed = true;
       await core.close();

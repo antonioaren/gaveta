@@ -1,10 +1,17 @@
 import { spawn } from 'node:child_process';
-import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, type JsonEnvelope, newWebPage } from './helpers.ts';
+import {
+  GAVETA_BIN,
+  newWebPage,
+  parseJson,
+  removeTempTree,
+  stopServeChildren,
+  type JsonEnvelope,
+} from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = join(REPO_ROOT, 'fixtures/vaults/backlinks');
@@ -97,6 +104,7 @@ it('REQ-APP-01: connections panel lists backlinks and navigates by ULID', async 
 
     await page.close();
   } finally {
-    rmSync(parent, { recursive: true, force: true });
+    await stopServeChildren(children);
+    removeTempTree(parent);
   }
 }, 120_000);
