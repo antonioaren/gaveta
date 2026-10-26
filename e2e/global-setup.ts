@@ -1,5 +1,8 @@
-import { ensureWebBuilt } from './helpers.ts';
+import { prepareWebDistForE2eRun, teardownWebDistForE2eRun } from './helpers.ts';
 
 export default function globalSetup(): void {
-  ensureWebBuilt();
+  prepareWebDistForE2eRun();
+  return () => {
+    teardownWebDistForE2eRun();
+  };
 }

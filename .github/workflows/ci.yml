@@ -88,6 +88,8 @@ jobs:
       - run: pnpm exec playwright install chromium
       - run: pnpm build:web
       - name: e2e
+        env:
+          GAVETA_E2E_WEB_PREBUILT: '1'
         run: |
           start=$(date +%s)
           pnpm test:e2e
@@ -129,6 +131,8 @@ jobs:
       - run: pnpm exec playwright install chromium
       - run: pnpm build:web
       - run: pnpm test:e2e
+        env:
+          GAVETA_E2E_WEB_PREBUILT: '1'
 
   audit:
     name: audit

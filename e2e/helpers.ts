@@ -1,5 +1,5 @@
 import { type ChildProcess, execFileSync, spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Browser } from 'playwright';
@@ -23,20 +23,47 @@ export async function newWebPage(browser: Browser) {
 export const REPO_ROOT = join(import.meta.dirname, '..');
 export const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
 
-const WEB_DIST_INDEX = join(REPO_ROOT, 'apps/web/dist/index.html');
+export const GAVETA_E2E_WEB_PREBUILT_ENV = 'GAVETA_E2E_WEB_PREBUILT';
+
+const E2E_WEB_BUILT_STAMP = join(REPO_ROOT, 'node_modules/.cache/gaveta-e2e-web-built.stamp');
 
 let webBuildEnsured = false;
 
-/** Build `@gaveta/web` once per vitest process (CI pre-builds before `test:e2e`). */
+function isE2eWebPrebuiltInCi(): boolean {
+  return process.env[GAVETA_E2E_WEB_PREBUILT_ENV] === '1';
+}
+
+function runWebBuild(): void {
+  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+}
+
+/** Vitest `globalSetup`: fresh web build once per e2e run (unless CI already built). */
+export function prepareWebDistForE2eRun(): void {
+  if (isE2eWebPrebuiltInCi()) {
+    return;
+  }
+  runWebBuild();
+  mkdirSync(join(REPO_ROOT, 'node_modules/.cache'), { recursive: true });
+  writeFileSync(E2E_WEB_BUILT_STAMP, `${String(Date.now())}\n`, 'utf8');
+}
+
+export function teardownWebDistForE2eRun(): void {
+  rmSync(E2E_WEB_BUILT_STAMP, { force: true });
+}
+
+/**
+ * No-op after the first call in a worker when globalSetup built or CI set
+ * `GAVETA_E2E_WEB_PREBUILT=1`. Playwright suites call this from `beforeAll`.
+ */
 export function ensureWebBuilt(): void {
   if (webBuildEnsured) {
     return;
   }
-  if (existsSync(WEB_DIST_INDEX)) {
+  if (isE2eWebPrebuiltInCi() || existsSync(E2E_WEB_BUILT_STAMP)) {
     webBuildEnsured = true;
     return;
   }
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  runWebBuild();
   webBuildEnsured = true;
 }
 
