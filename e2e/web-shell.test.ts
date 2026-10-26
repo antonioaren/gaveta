@@ -6,6 +6,7 @@ import { initVault as initVaultCore, normalizeNote, writeAtomic } from '@gaveta/
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import {
+  ensureWebBuilt,
   GAVETA_BIN,
   initVault,
   newWebPage,
@@ -14,7 +15,6 @@ import {
   type JsonEnvelope,
 } from './helpers.ts';
 
-const REPO_ROOT = join(import.meta.dirname, '..');
 const LIVE_NOTE_ID = '01JB7Z3K9QX4T5M2N8V6R0WYHE';
 const LIVE_NOTE_CREATED = '2026-10-22T12:00:00.000Z';
 const children: ReturnType<typeof spawn>[] = [];
@@ -36,8 +36,7 @@ function buildLiveShellNoteHtml(bodyParagraph: string): string {
 }
 
 beforeAll(async () => {
-  const { execFileSync } = await import('node:child_process');
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  ensureWebBuilt();
   browser = await chromium.launch();
 }, 180_000);
 

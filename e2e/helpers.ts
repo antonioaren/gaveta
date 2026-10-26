@@ -1,5 +1,5 @@
-import { type ChildProcess, spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { type ChildProcess, execFileSync, spawnSync } from 'node:child_process';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Browser } from 'playwright';
@@ -22,6 +22,23 @@ export async function newWebPage(browser: Browser) {
 
 export const REPO_ROOT = join(import.meta.dirname, '..');
 export const GAVETA_BIN = join(REPO_ROOT, 'packages/cli/bin/gaveta.js');
+
+const WEB_DIST_INDEX = join(REPO_ROOT, 'apps/web/dist/index.html');
+
+let webBuildEnsured = false;
+
+/** Build `@gaveta/web` once per vitest process (CI pre-builds before `test:e2e`). */
+export function ensureWebBuilt(): void {
+  if (webBuildEnsured) {
+    return;
+  }
+  if (existsSync(WEB_DIST_INDEX)) {
+    webBuildEnsured = true;
+    return;
+  }
+  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  webBuildEnsured = true;
+}
 
 /** Vault-internal paths created on first `gaveta init` (REQ-TYPE-07 templates included). */
 export const INIT_VAULT_INTERNAL_PATHS = [

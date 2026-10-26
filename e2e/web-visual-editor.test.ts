@@ -7,6 +7,7 @@ import { FIXTURES_ROOT, markdownVaultPath, vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
+  ensureWebBuilt,
   GAVETA_BIN,
   newWebPage,
   parseJson,
@@ -45,8 +46,7 @@ function readNoteId(html: string): string | null {
 
 beforeAll(async () => {
   mkdirSync(SCREENSHOT_DIR, { recursive: true });
-  const { execFileSync } = await import('node:child_process');
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  ensureWebBuilt();
   browser = await chromium.launch();
 }, 180_000);
 
