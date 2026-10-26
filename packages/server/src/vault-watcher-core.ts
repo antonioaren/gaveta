@@ -5,7 +5,12 @@ import {
   coalescePendingChanges,
   mergePendingFileEvent,
 } from './vault-batch.ts';
-import type { RecentUnlink } from './vault-move.ts';
+import {
+  RECENT_MOVE_PATH_MAX_SIZE,
+  RECENT_MOVE_PATH_TTL_MS,
+  pruneRecentMovePaths,
+  type RecentUnlink,
+} from './vault-move.ts';
 import { shouldIndexVaultRelativePath } from './vault-paths.ts';
 import type { VaultIndexSession } from './vault-index.ts';
 import { markDebounceFlush, markIndexUpdated, takePipelineTrace } from './live-pipeline-trace.ts';
@@ -27,13 +32,10 @@ export interface CreateVaultWatcherCoreOptions {
 
 type PendingChange = import('./vault-batch.ts').PendingFileEvent;
 
-/** macOS FSEvents can deliver unlink/add seconds apart; keep pairing longer than debounce bursts. */
-const DEFAULT_MOVE_PAIR_WINDOW_MS = 3_000;
-
 export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): VaultWatcherCore {
   const debounceMs = options.debounceMs ?? 50;
   const maxWaitMs = options.maxWaitMs ?? 250;
-  const movePairWindowMs = options.movePairWindowMs ?? DEFAULT_MOVE_PAIR_WINDOW_MS;
+  const movePairWindowMs = options.movePairWindowMs ?? RECENT_MOVE_PATH_TTL_MS;
   const pending = new Map<string, PendingChange>();
   const recentUnlinks = new Map<string, RecentUnlink>();
   const recentAdds = new Map<string, RecentUnlink>();
@@ -50,6 +52,9 @@ export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): 
     }
     const epoch = flushEpoch;
     try {
+      const now = Date.now();
+      pruneRecentMovePaths(recentUnlinks, now, movePairWindowMs, RECENT_MOVE_PATH_MAX_SIZE);
+      pruneRecentMovePaths(recentAdds, now, movePairWindowMs, RECENT_MOVE_PATH_MAX_SIZE);
       const deduped = coalescePendingChanges([...pending.values()]);
       pending.clear();
       const flushAt = performance.now();

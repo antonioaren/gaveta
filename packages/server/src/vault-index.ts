@@ -4,7 +4,12 @@ import { openVaultIndex, scanNoteFiles, type VaultIndex } from '@gaveta/core';
 import { warningFromCode, type ApiWarning } from './envelope.ts';
 import type { VaultNoteEvent } from './vault-events.ts';
 import { readNoteUlidFromVaultFile } from './vault-note-id.ts';
-import { pairMoveByNoteId, type RecentUnlink } from './vault-move.ts';
+import {
+  RECENT_MOVE_PATH_MAX_SIZE,
+  pairMoveByNoteId,
+  rememberRecentMovePath,
+  type RecentUnlink,
+} from './vault-move.ts';
 
 export class VaultIndexSession {
   private index: VaultIndex | null = null;
@@ -79,7 +84,14 @@ export class VaultIndexSession {
           const movedId = id ?? noteIdForPath(index, to);
           return { type: 'note:moved', path: to, id: movedId, from: relativePath };
         }
-        recentUnlinks.set(relativePath, { id, at: now });
+        rememberRecentMovePath(
+          recentUnlinks,
+          relativePath,
+          id,
+          now,
+          movePairWindowMs,
+          RECENT_MOVE_PATH_MAX_SIZE,
+        );
         await index.remove(relativePath);
         return { type: 'note:removed', path: relativePath, id };
       }
@@ -98,7 +110,14 @@ export class VaultIndexSession {
           }
           return { type: 'note:moved', path: relativePath, id, from };
         }
-        recentAdds.set(relativePath, { id, at: now });
+        rememberRecentMovePath(
+          recentAdds,
+          relativePath,
+          id,
+          now,
+          movePairWindowMs,
+          RECENT_MOVE_PATH_MAX_SIZE,
+        );
         if (wasIndexed) {
           return { type: 'note:changed', path: relativePath, id };
         }
@@ -122,7 +141,14 @@ export class VaultIndexSession {
           return { type: 'note:moved', path: to, id: movedId, from: relativePath };
         }
         if (id !== null) {
-          recentUnlinks.set(relativePath, { id, at: now });
+          rememberRecentMovePath(
+            recentUnlinks,
+            relativePath,
+            id,
+            now,
+            movePairWindowMs,
+            RECENT_MOVE_PATH_MAX_SIZE,
+          );
           await index.remove(relativePath);
           return { type: 'note:removed', path: relativePath, id };
         }
