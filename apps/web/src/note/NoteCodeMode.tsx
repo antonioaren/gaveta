@@ -4,6 +4,7 @@ import { invalidHtmlMessage, saveNoteDocument } from '../api/note-edit.ts';
 import { fetchNoteHtml } from '../api/note-read.ts';
 import { validateNoteHtml } from '../editor/code/validate-diagnostics.ts';
 import { useI18n } from '../i18n/useI18n.ts';
+import { OpenInVsCodeButton } from './OpenInVsCodeButton.tsx';
 import { NoteMergeView } from './NoteMergeView.tsx';
 import { useExternalNoteRevision } from './useExternalNoteRevision.ts';
 
@@ -39,7 +40,7 @@ export function NoteCodeMode({
   const [mergeOpen, setMergeOpen] = useState(false);
   const [theirsForMerge, setTheirsForMerge] = useState<{ html: string; hash: string } | null>(null);
 
-  const { external } = useExternalNoteRevision(noteRef, noteId, hash);
+  const { external, clearExternal } = useExternalNoteRevision(noteRef, noteId, hash);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +113,7 @@ export function NoteCodeMode({
           setSaving(false);
           setMergeOpen(false);
           setTheirsForMerge(null);
+          clearExternal();
           onSaved(result.hash);
         })
         .catch((error: unknown) => {
@@ -133,7 +135,7 @@ export function NoteCodeMode({
           setSaveError(t('web.api.error.fallbackSaveNoteDot'));
         });
     },
-    [dirty, hash, html, noteRef, onSaved, openMergeWithTheirs, path, saving, t],
+    [clearExternal, dirty, hash, html, noteRef, onSaved, openMergeWithTheirs, path, saving, t],
   );
 
   if (loading) {
@@ -161,6 +163,7 @@ export function NoteCodeMode({
         <button type="button" className="note-code-mode__button" onClick={onExit}>
           {t('web.note.code.readView')}
         </button>
+        <OpenInVsCodeButton noteRef={noteRef} />
         <button
           type="button"
           className="note-code-mode__button note-code-mode__button--primary"
@@ -203,6 +206,7 @@ export function NoteCodeMode({
             setDirty(false);
             setMergeOpen(false);
             setTheirsForMerge(null);
+            clearExternal();
             setEditorEpoch((value) => value + 1);
           }}
           onKeepMine={() => {

@@ -211,6 +211,8 @@ export const webMessagesEs = {
   'web.note.aria': 'Área de nota',
   'web.note.code.loading': 'Cargando modo código…',
   'web.note.code.readView': 'Vista lectura',
+  'web.note.code.openInVsCode': 'Abrir en VS Code',
+  'web.note.code.openInVsCodeFailed': 'No se pudo abrir la nota en VS Code.',
   'web.note.deleted': 'Esta nota fue eliminada del vault.',
   'web.note.edit': 'Editar',
   'web.note.externalChange.banner':
@@ -518,6 +520,8 @@ export const webMessagesEn = {
   'web.note.aria': 'Note area',
   'web.note.code.loading': 'Loading code mode…',
   'web.note.code.readView': 'Read view',
+  'web.note.code.openInVsCode': 'Open in VS Code',
+  'web.note.code.openInVsCodeFailed': 'Could not open the note in VS Code.',
   'web.note.deleted': 'This note was removed from the vault.',
   'web.note.edit': 'Edit',
   'web.note.externalChange.banner':
