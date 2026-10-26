@@ -92,11 +92,16 @@ it('REQ-APP-12: completes [[ wikilinks in visual and code editors', async () => 
 
     await page.getByTestId('visual-editor-cancel').click();
     await page.getByTestId('enter-code-mode').click();
-    const editor = page.getByTestId('code-note-editor');
-    await editor.click();
-    await page.keyboard.press('End');
-    await page.keyboard.type('<p>[[Form');
-    const codeTooltip = page.locator('.cm-tooltip-autocomplete');
+    await page.getByTestId('code-note-editor').click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.type('\n<p>[[Form');
+    const completeResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/wikilink-complete') && response.status() === 200,
+    );
+    await page.keyboard.press('Control-Space');
+    await completeResponse;
+    const codeTooltip = page.locator('.code-editor .cm-tooltip-autocomplete');
     await codeTooltip.getByText('Formas de enlace').waitFor({ state: 'visible' });
     await page.keyboard.press('Enter');
     const codeHost = page.locator('.code-editor');
