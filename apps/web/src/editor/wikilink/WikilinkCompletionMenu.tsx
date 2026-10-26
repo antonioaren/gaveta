@@ -1,6 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import type { ReactElement } from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   fetchWikilinkCompletions,
   type WikilinkCompletionView,
@@ -22,6 +22,7 @@ export function WikilinkCompletionMenu({
   const [hits, setHits] = useState<readonly WikilinkCompletionView[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const applyHit = useCallback(
     (hit: WikilinkCompletionView) => {
@@ -125,24 +126,26 @@ export function WikilinkCompletionMenu({
     };
   }, [activeIndex, applyHit, editor, hits]);
 
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (list === null || coords === null) {
+      return;
+    }
+    list.style.setProperty('--wikilink-menu-top', `${String(coords.top)}px`);
+    list.style.setProperty('--wikilink-menu-left', `${String(coords.left)}px`);
+  }, [coords]);
+
   if (coords === null || hits.length === 0 || contextKey.length === 0) {
     return null;
   }
 
   return (
     <ul
+      ref={listRef}
       className="wikilink-completion palette__list"
       role="listbox"
       aria-label={t('web.editor.wikilink.completion.ariaList')}
       data-testid="wikilink-completion-list"
-      style={{
-        position: 'fixed',
-        top: coords.top,
-        left: coords.left,
-        zIndex: 40,
-        minWidth: '14rem',
-        maxHeight: '12rem',
-      }}
     >
       {hits.map((hit, index) => {
         const alias =

@@ -1240,11 +1240,35 @@ select {
 }
 
 .wikilink-completion {
-  background: var(--gaveta-surface-raised);
-  border: 1px solid var(--gaveta-border);
-  border-radius: var(--gaveta-radius-sm);
-  box-shadow: var(--gaveta-shadow-md);
-  padding: 0.25rem 0;
+  position: fixed;
+  top: var(--wikilink-menu-top, 0);
+  left: var(--wikilink-menu-left, 0);
+  z-index: 50;
+  min-width: 14rem;
+  max-height: 12rem;
+  margin: 0;
+  padding: var(--space-1);
+  overflow: auto;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow:
+    var(--shadow-sm),
+    0 8px 24px color-mix(in srgb, var(--color-text) 12%, transparent);
+}
+
+.wikilink-completion .palette__option {
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+}
+
+.wikilink-completion .palette__option:hover {
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface-elevated));
+}
+
+.wikilink-completion .palette__option--active {
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface-elevated));
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
 }
 
 .wikilink-completion__option {
