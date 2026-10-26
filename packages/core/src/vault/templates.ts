@@ -37,7 +37,7 @@ export function defaultNoteTemplateBody(type: NoteType): string {
 
 export function applyNoteTemplateVariables(template: string, title: string): string {
   const escaped = escapeText(title);
-  return template.replaceAll('{{title}}', escaped);
+  return template.replaceAll('{{title}}', () => escaped);
 }
 
 export async function readNoteTemplateBody(

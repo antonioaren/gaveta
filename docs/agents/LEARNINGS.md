@@ -5,6 +5,7 @@ Short log of pitfalls found while implementing tasks. Read this before starting 
 Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 
 - 2026-10-26 · T4.6 · Per-type templates live only under `.gaveta/templates/<type>.html`; `createNote` must load them when `html` is omitted or blank, without treating templates as shipped assets that `upgradeVaultAssets` overwrites. · `writeDefaultNoteTemplates` on `init` only; explicit `html` still wins.
+- 2026-10-26 · T4.6 · `String.replaceAll` treats `$`, `$&`, `` $` ``, and `$'` in the replacement string as patterns, so titles like `Price $$$` mangled template output. · Use a function replacer: `replaceAll('{{title}}', () => escaped)`.
 - 2026-10-26 · T4.4 · `renderWithI18n(ui, 'en')` is wrong: the second argument is RTL options, so locale stays the default `es`. · Pass `{ locale: 'en' }` when asserting English copy.
 - 2026-10-25 · T4.3 · parse5 `startOffset` on `<body>` is the tag start, not the inner HTML; subtract `startTag.endOffset` when splicing embed replacements in a body fragment. · Use `startTag.endOffset` / `endTag.startOffset` for `gaveta-embed` hit ranges.
 - 2026-10-25 · T4.2 · Unlinked-mention scans must add each parse5 text node’s `startOffset` to match indices; using only the in-node offset sorts mentions wrong and breaks edits. · Pass `bomPrefix + location.startOffset` into mention hit `rawStart`/`rawEnd`.

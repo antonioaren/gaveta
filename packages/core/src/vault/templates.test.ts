@@ -29,6 +29,19 @@ describe('note templates', () => {
     );
   });
 
+  it('does not treat dollar signs in the title as replaceAll replacement patterns', () => {
+    const template = '<h1>{{title}}</h1><p>{{title}}</p>';
+    const cases = [
+      { title: 'Price $$$', expected: '<h1>Price $$$</h1><p>Price $$$</p>' },
+      { title: 'Ref $&', expected: '<h1>Ref $&amp;</h1><p>Ref $&amp;</p>' },
+      { title: "Tail $'", expected: "<h1>Tail $'</h1><p>Tail $'</p>" },
+      { title: 'Back `$', expected: '<h1>Back `$</h1><p>Back `$</p>' },
+    ] as const;
+    for (const { title, expected } of cases) {
+      expect(applyNoteTemplateVariables(template, title)).toBe(expected);
+    }
+  });
+
   it('reads a per-type template from .gaveta/templates', async () => {
     await withTemp(async (parent) => {
       const root = await makeVault(parent);
