@@ -69,6 +69,21 @@ export function CodeNoteEditor({
       view.dispatch({ selection: { anchor: end, head: end } });
       view.focus();
     };
+    const appendAtEnd = (event: Event): void => {
+      if (!(event instanceof CustomEvent) || typeof event.detail !== 'string') {
+        return;
+      }
+      const text = event.detail;
+      if (text.length === 0) {
+        return;
+      }
+      const end = view.state.doc.length;
+      view.dispatch({
+        changes: { from: end, insert: text },
+        selection: { anchor: end + text.length, head: end + text.length },
+      });
+      view.focus();
+    };
     const pointerDown = (event: Event): void => {
       if (!(event instanceof PointerEvent) || event.button !== 0) {
         return;
@@ -77,11 +92,13 @@ export function CodeNoteEditor({
     };
     host.addEventListener('focus', focusView);
     host.addEventListener('gaveta-code-focus-end', focusEnd);
+    host.addEventListener('gaveta-code-append-at-end', appendAtEnd);
     host.addEventListener('pointerdown', pointerDown, { capture: true });
     shadowRoot.addEventListener('pointerdown', pointerDown, { capture: true });
     return () => {
       host.removeEventListener('focus', focusView);
       host.removeEventListener('gaveta-code-focus-end', focusEnd);
+      host.removeEventListener('gaveta-code-append-at-end', appendAtEnd);
       host.removeEventListener('pointerdown', pointerDown, { capture: true });
       shadowRoot.removeEventListener('pointerdown', pointerDown, { capture: true });
       view.destroy();

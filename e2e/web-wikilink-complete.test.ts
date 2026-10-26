@@ -107,9 +107,8 @@ it('REQ-APP-12: completes [[ wikilinks in visual and code editors', async () => 
     const body = (await response.json()) as { data: { hits: { title: string }[] } };
     expect(body.data.hits.some((hit) => hit.title === 'Formas de enlace')).toBe(true);
     await codeHost.evaluate((host) => {
-      host.dispatchEvent(new Event('gaveta-code-focus-end'));
+      host.dispatchEvent(new CustomEvent('gaveta-code-append-at-end', { detail: 'as de enlace]]' }));
     });
-    await page.keyboard.insertText('as de enlace]]');
     const editorText = await codeHost.locator('.cm-content').innerText();
     expect(editorText).toContain('[[Formas de enlace]]');
 
