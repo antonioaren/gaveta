@@ -279,12 +279,10 @@ describe('T2.10 auth and path hardening (gaveta serve)', () => {
     });
     expect(forgedOrigin.status).toBe(403);
 
-    const rebindingHost = await requestLocal(
-      port,
-      '/api/notes',
-      headers,
-      `127.0.0.1:${String(port)}.attacker.example`,
-    );
+    const rebindingHost = await requestLocal(port, '/api/notes', {
+      ...headers,
+      host: `127.0.0.1:${String(port)}.attacker.example`,
+    });
     expect(rebindingHost.status).toBe(403);
     rmSync(join(vault, '..'), { recursive: true, force: true });
   });
