@@ -256,4 +256,36 @@ describe('listTasks', () => {
       expect(listed.tasks[0]?.taskId).toBe('hecha');
     });
   });
+
+  it('filters tasks by priority and due date', async () => {
+    await withTemp(async (parent) => {
+      const root = join(parent, 'backlinks');
+      const fixture = join(import.meta.dirname, '../../../fixtures/vaults/backlinks');
+      await mkdir(join(root, '.gaveta'), { recursive: true });
+      await copyFile(join(fixture, '.gaveta', 'config.json'), join(root, '.gaveta', 'config.json'));
+      await mkdir(join(root, 'enlaces', 'mas'), { recursive: true });
+      await copyFile(
+        join(fixture, 'enlaces', 'mas', 'enlace-20.html'),
+        join(root, 'enlaces', 'mas', 'enlace-20.html'),
+      );
+      const index = await openVaultIndex(root);
+      try {
+        await index.rebuild();
+      } finally {
+        index.close();
+      }
+      const byPriority = await listTasks({ vaultRoot: root, priority: 'medium' });
+      expect(byPriority.tasks.map((task) => task.taskId)).toEqual(['revisar']);
+
+      const byDue = await listTasks({ vaultRoot: root, dueOn: '2026-10-23' });
+      expect(byDue.tasks.map((task) => task.taskId)).toEqual(['hecho']);
+
+      const range = await listTasks({
+        vaultRoot: root,
+        dueAfter: '2026-10-22',
+        dueBefore: '2026-10-22',
+      });
+      expect(range.tasks.map((task) => task.taskId)).toEqual(['revisar']);
+    });
+  });
 });

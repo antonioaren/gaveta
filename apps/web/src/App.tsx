@@ -10,6 +10,7 @@ export function App() {
           <Route path="/" element={<ShellLayout />} />
           <Route path="/nota/:ref" element={<ShellLayout />} />
           <Route path="/grafo" element={<ShellLayout />} />
+          <Route path="/tareas" element={<ShellLayout />} />
         </Routes>
       </BrowserRouter>
     </I18nProvider>

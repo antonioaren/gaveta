@@ -54,6 +54,9 @@ export function isPublicShellRoute(method: string, normalizedPath: string): bool
   if (normalizedPath === '/grafo') {
     return true;
   }
+  if (normalizedPath === '/tareas') {
+    return true;
+  }
   return false;
 }
 

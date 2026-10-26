@@ -6,6 +6,7 @@ import {
   type Graph,
   type GraphFilters,
   type IndexedNote,
+  type ListedTask,
   type NoteOutline,
   type NoteType,
   type OutgoingLink,
@@ -77,6 +78,19 @@ export interface SearchHitView {
   readonly type: NoteType | null;
   readonly tags: readonly string[];
   readonly snippet: string;
+}
+
+export interface ListedTaskView {
+  readonly path: string;
+  readonly noteId: string | null;
+  readonly noteTitle: string;
+  readonly noteType: NoteType | null;
+  readonly taskId: string | null;
+  readonly text: string;
+  readonly checked: boolean;
+  readonly due: string | null;
+  readonly priority: string | null;
+  readonly sectionId: string | null;
 }
 
 export interface FindingView {
@@ -198,6 +212,21 @@ export function presentGraph(
       to: edge.target,
       rel: edge.rel,
     })),
+  };
+}
+
+export function presentListedTask(task: ListedTask): ListedTaskView {
+  return {
+    path: task.path,
+    noteId: task.noteId,
+    noteTitle: task.noteTitle,
+    noteType: task.noteType,
+    taskId: task.taskId,
+    text: task.text,
+    checked: task.checked,
+    due: task.due,
+    priority: task.priority,
+    sectionId: task.sectionId,
   };
 }
 

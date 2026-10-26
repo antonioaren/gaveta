@@ -38,6 +38,10 @@ it('serves the built web shell without a token and applies a strict app CSP', as
     const graph = await requestLocal(port, '/grafo');
     expect(graph.status).toBe(200);
     expect(graph.body).toContain('shell');
+
+    const tasks = await requestLocal(port, '/tareas');
+    expect(tasks.status).toBe(200);
+    expect(tasks.body).toContain('shell');
     const csp = index.headers['content-security-policy'];
     expect(csp).toBeDefined();
     expect(csp).toContain("default-src 'self'");

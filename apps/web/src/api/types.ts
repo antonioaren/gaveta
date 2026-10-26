@@ -107,3 +107,20 @@ export interface SearchResponse {
   readonly limit: number;
   readonly hits: readonly SearchHitView[];
 }
+
+export interface ListedTaskView {
+  readonly path: string;
+  readonly noteId: string | null;
+  readonly noteTitle: string;
+  readonly noteType: NoteListItem['type'];
+  readonly taskId: string | null;
+  readonly text: string;
+  readonly checked: boolean;
+  readonly due: string | null;
+  readonly priority: string | null;
+  readonly sectionId: string | null;
+}
+
+export interface TasksResponse {
+  readonly tasks: readonly ListedTaskView[];
+}
