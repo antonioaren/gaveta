@@ -5,6 +5,7 @@ import {
   GavetaOperationError,
   GavetaRefError,
   assertRuntimeSupported,
+  appendCommandLogEntry,
   discoverVault,
   exitCodeFor,
   formatDiagnostic,
@@ -30,6 +31,7 @@ import { CliFailure } from './failure.ts';
 import { renderHelp } from './help.ts';
 import { getActiveLocale, t } from '@gaveta/i18n';
 import { localizeDetails, m } from './messages.ts';
+import { buildCommandLogEntry, shouldRecordCommandLog } from './command-log.ts';
 import { readCommandInput } from './input.ts';
 import { commands } from './registry.ts';
 import {
@@ -169,6 +171,7 @@ async function execute(
     readonly json: boolean;
   },
 ): Promise<number> {
+  const startedAt = performance.now();
   const { spec, subcommand, positionals } = parsed;
   const inputMode = commandInputMode(spec, subcommand);
   const args = commandArgs(spec, subcommand);
@@ -236,7 +239,7 @@ async function execute(
     emit,
     ...(subcommand === undefined ? {} : { subcommand: subcommand.name }),
   };
-  let result: CommandResult;
+  let result: CommandResult | null = null;
   try {
     if (subcommand !== undefined) {
       result = await subcommand.run(context);
@@ -246,13 +249,17 @@ async function execute(
       throw new CliFailure('E_ARG_INVALID', {}, { problem: 'cli.auto.falta_el_subcomando' });
     }
   } catch (error) {
-    return reportCaught(io.writers, io.json, spec.name, error, strictRel);
+    const exitCode = reportCaught(io.writers, io.json, spec.name, error, strictRel);
+    await recordCommandLog(vault, spec, subcommand, result, exitCode, startedAt);
+    return exitCode;
   }
   const warnings = applyWarnings(result.warnings ?? [], strictRel);
   if (!warnings.ok) {
-    return writeFailure(io.writers, io.json, spec.name, warnings.error, {
+    const exitCode = writeFailure(io.writers, io.json, spec.name, warnings.error, {
       exitCode: warnings.exitCode,
     });
+    await recordCommandLog(vault, spec, subcommand, result, exitCode, startedAt);
+    return exitCode;
   }
   if (result.deferSuccessOutput !== true) {
     if (io.json) {
@@ -266,7 +273,30 @@ async function execute(
       }
     }
   }
-  return result.exitCode ?? EXIT_CODES.ok;
+  const exitCode = result.exitCode ?? EXIT_CODES.ok;
+  await recordCommandLog(vault, spec, subcommand, result, exitCode, startedAt);
+  return exitCode;
+}
+
+async function recordCommandLog(
+  vault: VaultLocation | null,
+  spec: CommandSpec,
+  subcommand: CommandSubSpec | undefined,
+  result: CommandResult | null,
+  exitCode: number,
+  startedAt: number,
+): Promise<void> {
+  if (vault === null || !shouldRecordCommandLog(spec)) {
+    return;
+  }
+  const entry = buildCommandLogEntry(
+    spec,
+    subcommand,
+    result,
+    exitCode,
+    performance.now() - startedAt,
+  );
+  await appendCommandLogEntry(vault.root, entry);
 }
 
 function reportCaught(

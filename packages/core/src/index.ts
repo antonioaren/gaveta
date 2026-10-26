@@ -218,9 +218,15 @@ export type {
   VaultStats,
 } from './stats.ts';
 
-export { COMMAND_LOG_RELATIVE, parseCommandLogLine, readCommandLog } from './vault/command-log.ts';
+export {
+  COMMAND_LOG_RELATIVE,
+  appendCommandLogEntry,
+  isCommandLogEnabled,
+  parseCommandLogLine,
+  readCommandLog,
+} from './vault/command-log.ts';
 
-export type { CommandLogEntry } from './vault/command-log.ts';
+export type { CommandLogEntry, CommandLogWriteEntry } from './vault/command-log.ts';
 
 export { adoptNote } from './adopt.ts';
 
