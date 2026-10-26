@@ -86,6 +86,14 @@ it('REQ-APP-12: completes [[ wikilinks in visual and code editors', async () => 
     await page.keyboard.type(' [[Dest');
     const visualList = page.getByTestId('wikilink-completion-list');
     await visualList.getByRole('option', { name: /Destino enlace/ }).waitFor({ state: 'visible' });
+    const editorBox = await page.getByTestId('visual-editor-surface').boundingBox();
+    const listBox = await visualList.boundingBox();
+    if (editorBox === null || listBox === null) {
+      throw new Error('wikilink completion menu or editor surface has no layout box');
+    }
+    expect(listBox.y).toBeGreaterThan(40);
+    expect(listBox.x).toBeGreaterThan(40);
+    expect(listBox.y).toBeGreaterThanOrEqual(editorBox.y - 8);
     await visualList.getByRole('option', { name: /Destino enlace/ }).click();
     expect(await page.getByTestId('visual-editor-surface').textContent()).toContain(
       '[[Destino enlace]]',
