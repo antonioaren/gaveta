@@ -7,7 +7,7 @@ import {
   foldKeymap,
   indentOnInput,
 } from '@codemirror/language';
-import { linter, lintGutter } from '@codemirror/lint';
+import { linter, lintGutter, previousDiagnostic } from '@codemirror/lint';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 import {
   highlightSelectionMatches,
@@ -31,6 +31,7 @@ import type { Locale } from '@gaveta/i18n';
 import type { NoteDiagnosticView } from '../../api/note-validate.ts';
 import { createNoteLinter } from './note-linter.ts';
 import { codeMirrorPhrasesForLocale } from './code-editor-phrases.ts';
+import { codeEditorProblemsStatus } from './code-editor-problems-status.ts';
 import { gavetaCodeEditorTheme } from './code-editor-theme.ts';
 
 export interface CreateCodeEditorExtensionsOptions {
@@ -87,6 +88,7 @@ export function createCodeEditorExtensions({
     crosshairCursor(),
     lintGutter(),
     linter(noteLinter, { delay: 300 }),
+    codeEditorProblemsStatus(locale),
     EditorView.lineWrapping,
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
@@ -104,6 +106,7 @@ export function createCodeEditorExtensions({
         preventDefault: true,
       },
       { key: 'Mod-h', run: openReplacePanel, preventDefault: true },
+      { key: 'Shift-F8', run: previousDiagnostic, preventDefault: true },
     ]),
     keymap.of([...closeBracketsKeymap, ...searchKeymap, ...foldKeymap, ...vscodeKeymap]),
   ];
