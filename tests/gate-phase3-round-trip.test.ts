@@ -5,12 +5,18 @@ import {
   listPhase3Gate1MarkdownNotes,
   listPhase3StaticFixtureNotes,
   runPhase3RoundTripPipeline,
+  type Phase3VisualRoundTrip,
 } from '@gaveta/core';
-import { editorJsonToNoteHtml, noteHtmlToEditorJson } from '@gaveta/editor';
-
-const visualEditor = {
-  noteHtmlToEditorJson,
+import {
   editorJsonToNoteHtml,
+  noteHtmlToEditorJson,
+  type GavetaEditorDocument,
+} from '@gaveta/editor';
+
+const visualEditor: Phase3VisualRoundTrip = {
+  noteHtmlToEditorJson,
+  editorJsonToNoteHtml: (document: unknown) =>
+    editorJsonToNoteHtml(document as GavetaEditorDocument),
 };
 
 describe('phase 3 gate fixture discovery', () => {

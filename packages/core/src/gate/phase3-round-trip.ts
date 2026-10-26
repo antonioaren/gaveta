@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import { FIXTURES_ROOT, vaultPath, type VaultName } from '@gaveta/fixtures';
+import { FIXTURES_ROOT, vaultPath } from '@gaveta/fixtures';
 import { noteSemanticSnapshot, type NoteSemanticSnapshot } from '../convert/round-trip.ts';
 import { importMarkdownFolder } from '../import/folder.ts';
 import { normalizeNote } from '../normalize.ts';
