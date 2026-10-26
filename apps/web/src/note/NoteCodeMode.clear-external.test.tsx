@@ -46,7 +46,11 @@ describe('NoteCodeMode external revision', () => {
   beforeEach(() => {
     clearExternal.mockClear();
     vi.spyOn(noteRead, 'fetchNoteHtml').mockResolvedValue(baseNote);
-    vi.spyOn(noteEdit, 'saveNoteDocument').mockResolvedValue({ hash: 'sha256:local' });
+    vi.spyOn(noteEdit, 'saveNoteDocument').mockResolvedValue({
+      hash: 'sha256:local',
+      path: 'nota.html',
+      title: 'Nota',
+    });
   });
 
   afterEach(() => {

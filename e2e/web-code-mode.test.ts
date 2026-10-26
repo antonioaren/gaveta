@@ -374,7 +374,7 @@ it('REQ-APP-13: code mode hides external-change banner after accepting disk vers
     await page.getByTestId('note-merge-view').waitFor();
     await page.getByTestId('note-merge-accept-theirs').click();
     await page.getByTestId('note-merge-view').waitFor({ state: 'hidden' });
-    await expect(page.getByTestId('note-external-change')).toHaveCount(0);
+    expect(await page.getByTestId('note-external-change').count()).toBe(0);
     await page.close();
   } finally {
     rmSync(parent, { recursive: true, force: true });
