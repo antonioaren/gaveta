@@ -9,12 +9,7 @@ import {
 } from '@codemirror/language';
 import { linter, lintGutter, previousDiagnostic } from '@codemirror/lint';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
-import {
-  highlightSelectionMatches,
-  openSearchPanel,
-  search,
-  searchKeymap,
-} from '@codemirror/search';
+import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
 import {
   crosshairCursor,
@@ -35,6 +30,7 @@ import { codeMirrorPhrasesForLocale } from './code-editor-phrases.ts';
 import { codeEditorProblemsStatus } from './code-editor-problems-status.ts';
 import { contractHtmlAutocomplete } from './contract-html-completion.ts';
 import { gavetaCodeEditorTheme } from './code-editor-theme.ts';
+import { openReplacePanel } from './code-editor-panels.ts';
 import { createNoteLinter } from './note-linter.ts';
 
 export interface CreateCodeEditorExtensionsOptions {
@@ -47,16 +43,7 @@ export interface CreateCodeEditorExtensionsOptions {
   ) => Promise<{ diagnostics: readonly NoteDiagnosticView[] }>;
   readonly onDocChange: (value: string) => void;
   readonly onSaveRequest: () => void;
-}
-
-function openReplacePanel(view: EditorView): boolean {
-  openSearchPanel(view);
-  const replaceField = view.dom.querySelector<HTMLInputElement>(
-    '.cm-panel.cm-search input[name="replace"]',
-  );
-  replaceField?.focus();
-  replaceField?.select();
-  return true;
+  readonly onFormatDocument?: () => void;
 }
 
 export function createCodeEditorExtensions({
@@ -66,6 +53,7 @@ export function createCodeEditorExtensions({
   fetchValidation,
   onDocChange,
   onSaveRequest,
+  onFormatDocument,
 }: CreateCodeEditorExtensionsOptions): Extension[] {
   const noteLinter = createNoteLinter(notePath, fetchValidation);
   const phrases = codeMirrorPhrasesForLocale(locale);
@@ -111,6 +99,14 @@ export function createCodeEditorExtensions({
         preventDefault: true,
       },
       { key: 'Mod-h', run: openReplacePanel, preventDefault: true },
+      {
+        key: 'Shift-Mod-f',
+        run: () => {
+          onFormatDocument?.();
+          return true;
+        },
+        preventDefault: true,
+      },
       { key: 'Shift-F8', run: previousDiagnostic, preventDefault: true },
     ]),
     keymap.of([...closeBracketsKeymap, ...searchKeymap, ...foldKeymap, ...vscodeKeymap]),

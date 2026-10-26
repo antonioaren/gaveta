@@ -237,6 +237,9 @@ export function NoteCodeMode({
           onSaveRequest={() => {
             handleSave();
           }}
+          onFormatError={(messageKey) => {
+            setSaveError(t(messageKey));
+          }}
         />
       </Suspense>
     </div>

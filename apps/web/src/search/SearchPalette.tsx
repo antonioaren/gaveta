@@ -14,6 +14,11 @@ import { useTabs } from '../tabs/useTabs.ts';
 import { useI18n } from '../i18n/useI18n.ts';
 import { noteTypeMessageKeyForFilter } from '../i18n/note-type-label.ts';
 import {
+  codeEditorPaletteCommands,
+  runCodeEditorPaletteCommand,
+} from '../editor/code/code-editor-palette-commands.ts';
+import { useCodeEditorPaletteActive } from '../editor/code/use-code-editor-palette-active.ts';
+import {
   filterPaletteCommands,
   navigationCommands,
   type PaletteCommand,
@@ -43,8 +48,13 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
   const tabState = useTabs();
   const { t } = useI18n();
   const { hits, loading, error } = usePaletteSearch(query, open);
+  const codeEditorActive = useCodeEditorPaletteActive();
 
-  const commands = useMemo(() => filterPaletteCommands(navigationCommands(t), query), [query, t]);
+  const commands = useMemo(() => {
+    const base = navigationCommands(t);
+    const editor = codeEditorActive ? codeEditorPaletteCommands(t) : [];
+    return filterPaletteCommands([...editor, ...base], query);
+  }, [codeEditorActive, query, t]);
   const items = useMemo((): readonly PaletteItem[] => {
     const commandItems = commands.map((command) => ({ kind: 'command' as const, command }));
     const hitItems = hits.map((hit) => ({ kind: 'hit' as const, hit }));
@@ -82,6 +92,11 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
   const activate = useCallback(
     (item: PaletteItem) => {
       if (item.kind === 'command') {
+        if (item.command.id.startsWith('code-')) {
+          void runCodeEditorPaletteCommand(item.command.id);
+          closePalette();
+          return;
+        }
         if (item.command.id === 'nav-back') {
           void navigate(-1);
         } else if (item.command.id === 'nav-forward') {
