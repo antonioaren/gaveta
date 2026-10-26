@@ -44,8 +44,14 @@ jobs:
           allowed_bots: 'cursor[bot]'
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          # Match code-review@claude-code-plugins allowed-tools (read-only gh + inline comments).
+          # Each trigger is deliberate (no synchronize); do not skip re-reviews because of
+          # earlier shallow "No issues found" comments from step 1 of the upstream plugin.
+          prompt: |
+            /code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+
+            Workflow override (required): This is an intentional review run. In step 1 of the code-review command, ignore the rule that stops when Claude has already commented on this PR. Continue with steps 2–9 unless the PR is closed, is a draft, or is a trivial automated change that clearly needs no review.
+          # Plugin frontmatter lists gh + inline MCP only; the command body also needs Task
+          # (steps 1–5 subagents), TodoWrite (notes), and Read/Grep/Glob (CLAUDE.md + sources).
           claude_args: >-
             --max-turns 30
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Task,Read,Grep,Glob,TodoWrite,Bash(git rev-parse:*)"
