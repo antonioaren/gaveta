@@ -119,6 +119,7 @@
   "cli.auto.marca_una_tarea_como_pendiente": "Marks a task as open.",
   "cli.auto.maximo_de_resultados_entre_1_y_100": "Maximum results, between 1 and 100.",
   "cli.auto.muestra_el_grafo_global_o_local_de_notas_y_enlac": "Shows the global or local graph of notes and links.",
+  "cli.auto.muestra_las_metricas_del_prd_desde_el_indice_y_el": "Shows PRD success metrics from the index and optional local command log.",
   "cli.auto.muestra_la_version_de_gaveta": "Shows the gaveta version.",
   "cli.auto.muestra_solo_el_catalogo_de_errores_y_avisos": "Shows only the error and warning catalog.",
   "cli.auto.mueve_o_renombra_una_nota_y_reescribe_los_enlace": "Moves or renames a note and rewrites incoming links.",
