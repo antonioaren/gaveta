@@ -133,6 +133,7 @@ export {
 } from './vault/discover.ts';
 
 export { readVaultText, resolveInsideVault, writeVaultText } from './vault/paths.ts';
+export { buildVsCodeFileUri } from './vscode-file-uri.ts';
 
 export { writeAtomic, writeAtomicBuffer } from './vault/atomic.ts';
 

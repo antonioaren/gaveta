@@ -270,6 +270,32 @@ it('T3.15: Mod-s saves edits through the API without CSP violations', async () =
   }
 }, 180_000);
 
+it('T3.19: Open in VS Code fetches vscode URI on click without CSP violations', async () => {
+  const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-vscode-'));
+  const vault = join(parent, 'vault');
+  mkdirSync(vault, { recursive: true });
+  initVault(vault);
+  try {
+    const { page, cspGuard } = await openCodeModeForNewNote(vault);
+    const responsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/note/vscode-uri') &&
+        response.request().method() === 'GET' &&
+        response.ok(),
+      { timeout: 15_000 },
+    );
+    await page.getByTestId('open-in-vscode').click();
+    const response = await responsePromise;
+    const body = (await response.json()) as { data: { uri: string } };
+    expect(body.data.uri).toMatch(/^vscode:\/\/file\//);
+    expect(body.data.uri.toLowerCase()).toContain('.html');
+    await cspGuard.assertClean();
+    await page.close();
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+}, 180_000);
+
 it('T3.17: HTML intelligence (contract completion + Emmet) under CSP', async () => {
   const parent = mkdtempSync(join(tmpdir(), 'gaveta-e2e-code-emmet-'));
   const vault = join(parent, 'vault');
