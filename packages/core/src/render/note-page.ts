@@ -43,6 +43,7 @@ export interface BuildNoteRenderPageInput {
   readonly port: number;
   readonly renderTicket: string;
   readonly remoteAllowlist: readonly string[];
+  readonly locale?: Locale;
 }
 
 export interface BuildNoteRenderPageWithEmbedsInput extends BuildNoteRenderPageInput {
@@ -148,7 +149,7 @@ function assembleNoteRenderPage(
   rewrittenBody: string,
 ): string {
   const noteType = readRenderNoteType(normalizedHtml);
-  const layout = buildRenderTypeLayout(noteType, rewrittenBody);
+  const layout = buildRenderTypeLayout(noteType, rewrittenBody, input.locale ?? 'en');
   const csp = buildNoteRenderCsp(input.port);
   const title = escapeText(input.title);
   const ticket = input.renderTicket;
@@ -156,7 +157,7 @@ function assembleNoteRenderPage(
     appendRenderTicketQuery(`${RENDER_STATIC_PREFIX}/${basename}`, ticket);
   const headParts = [
     '<!doctype html>',
-    '<html lang="es">',
+    `<html lang="${escapeAttr(input.locale ?? 'en')}">`,
     '<head>',
     '<meta charset="utf-8">',
     `<meta name="gaveta:type" content="${escapeAttr(noteType)}">`,
