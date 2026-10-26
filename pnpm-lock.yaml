@@ -110,6 +110,9 @@ importers:
       '@codemirror/view':
         specifier: 6.43.15
         version: 6.43.15
+      '@emmetio/codemirror6-plugin':
+        specifier: 0.4.1
+        version: 0.4.1(@codemirror/autocomplete@6.20.0)(@codemirror/commands@6.10.0)(@codemirror/lang-css@6.3.1)(@codemirror/lang-html@6.4.12)(@codemirror/lang-javascript@6.2.5)(@codemirror/language@6.13.1)(@codemirror/state@6.7.6)(@codemirror/view@6.43.15)
       '@gaveta/editor':
         specifier: workspace:*
         version: link:../../packages/editor
@@ -531,6 +534,30 @@ packages:
   '@csstools/css-tokenizer@4.0.2':
     resolution: {integrity: sha512-OoKoR0f76dCY666JlcbhmVTs2drYj1GUXZTYTcbUgJjh9Nv41aFfZ21bPQTERm5+L5cBDo466NltB2lplS5GBw==}
     engines: {node: '>=20.19.0'}
+
+  '@emmetio/abbreviation@2.3.3':
+    resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}
+
+  '@emmetio/codemirror6-plugin@0.4.1':
+    resolution: {integrity: sha512-OwMtvCjYM6XfFREqxNr1rg+MB5FsZh+nLCxsYjFi0ZZTlDJZ2sWAwWHlfJvNJ4H2Q+HQ71tUO0+OUPgUEFG0HQ==}
+    peerDependencies:
+      '@codemirror/autocomplete': ^6.17.0
+      '@codemirror/commands': ^6.6.0
+      '@codemirror/lang-css': ^6.2.1
+      '@codemirror/lang-html': ^6.4.9
+      '@codemirror/lang-javascript': ^6.2.2
+      '@codemirror/language': ^6.10.2
+      '@codemirror/state': ^6.4.1
+      '@codemirror/view': ^6.29.1
+
+  '@emmetio/css-abbreviation@2.1.8':
+    resolution: {integrity: sha512-s9yjhJ6saOO/uk1V74eifykk2CBYi01STTK3WlXWGOepyKa23ymJ053+DNQjpFcy1ingpaO7AxCcwLvHFY9tuw==}
+
+  '@emmetio/math-expression@1.0.5':
+    resolution: {integrity: sha512-qf5SXD/ViS04rXSeDg9CRGM10xLC9dVaKIbMHrrwxYr5LNB/C0rOfokhGSBwnVQKcidLmdRJeNWH1V1tppZ84Q==}
+
+  '@emmetio/scanner@1.0.4':
+    resolution: {integrity: sha512-IqRuJtQff7YHHBk4G8YZ45uB9BaAGcwQeVzgj/zj8/UdOhtQpEIupUhSk8dys6spFIWVZVeK20CzGEnqR5SbqA==}
 
   '@eslint-community/eslint-utils@4.10.1':
     resolution: {integrity: sha512-cuadcxVFE8sDK6iWJbs8Sn0av2Nrh2QSGQhVlBW9AaAHqHwjWsZHT8LJ4hFGPh7ASBV2deFdM7H/DPjulmh8rg==}
@@ -1295,6 +1322,9 @@ packages:
 
   electron-to-chromium@1.5.463:
     resolution: {integrity: sha512-nVWNU6ltFjopvOdD44J4zoBkgO0M+WZiFKKFV7EjebOH9z0KNphk6bCEjplXtJofL21ARIuuwWOCsFkBVklm6w==}
+
+  emmet@2.4.11:
+    resolution: {integrity: sha512-23QPJB3moh/U9sT4rQzGgeyyGIrcM+GH5uVYg2C6wZIxAIJq7Ng3QLT79tl8FUwDXhyq9SusfknOrofAKqvgyQ==}
 
   encodeurl@2.0.0:
     resolution: {integrity: sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==}
@@ -3044,6 +3074,33 @@ snapshots:
 
   '@csstools/css-tokenizer@4.0.2': {}
 
+  '@emmetio/abbreviation@2.3.3':
+    dependencies:
+      '@emmetio/scanner': 1.0.4
+
+  '@emmetio/codemirror6-plugin@0.4.1(@codemirror/autocomplete@6.20.0)(@codemirror/commands@6.10.0)(@codemirror/lang-css@6.3.1)(@codemirror/lang-html@6.4.12)(@codemirror/lang-javascript@6.2.5)(@codemirror/language@6.13.1)(@codemirror/state@6.7.6)(@codemirror/view@6.43.15)':
+    dependencies:
+      '@codemirror/autocomplete': 6.20.0
+      '@codemirror/commands': 6.10.0
+      '@codemirror/lang-css': 6.3.1
+      '@codemirror/lang-html': 6.4.12
+      '@codemirror/lang-javascript': 6.2.5
+      '@codemirror/language': 6.13.1
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.15
+      '@emmetio/math-expression': 1.0.5
+      emmet: 2.4.11
+
+  '@emmetio/css-abbreviation@2.1.8':
+    dependencies:
+      '@emmetio/scanner': 1.0.4
+
+  '@emmetio/math-expression@1.0.5':
+    dependencies:
+      '@emmetio/scanner': 1.0.4
+
+  '@emmetio/scanner@1.0.4': {}
+
   '@eslint-community/eslint-utils@4.10.1(eslint@10.13.0)':
     dependencies:
       eslint: 10.13.0
@@ -3829,6 +3886,11 @@ snapshots:
   ee-first@1.1.1: {}
 
   electron-to-chromium@1.5.463: {}
+
+  emmet@2.4.11:
+    dependencies:
+      '@emmetio/abbreviation': 2.3.3
+      '@emmetio/css-abbreviation': 2.1.8
 
   encodeurl@2.0.0: {}
 

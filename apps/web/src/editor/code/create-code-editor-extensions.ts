@@ -29,10 +29,13 @@ import {
 } from '@codemirror/view';
 import type { Locale } from '@gaveta/i18n';
 import type { NoteDiagnosticView } from '../../api/note-validate.ts';
-import { createNoteLinter } from './note-linter.ts';
+import { formatMessage } from '@gaveta/i18n';
+import { codeEditorEmmetExtensions } from './code-editor-emmet.ts';
 import { codeMirrorPhrasesForLocale } from './code-editor-phrases.ts';
 import { codeEditorProblemsStatus } from './code-editor-problems-status.ts';
+import { contractHtmlAutocomplete } from './contract-html-completion.ts';
 import { gavetaCodeEditorTheme } from './code-editor-theme.ts';
+import { createNoteLinter } from './note-linter.ts';
 
 export interface CreateCodeEditorExtensionsOptions {
   readonly locale: Locale;
@@ -80,6 +83,8 @@ export function createCodeEditorExtensions({
     closeBrackets(),
     html(),
     autoCloseTags,
+    contractHtmlAutocomplete(formatMessage('web.editor.code.completion.contract', locale)),
+    ...codeEditorEmmetExtensions(),
     foldGutter(),
     codeFolding(),
     search({ top: true }),
