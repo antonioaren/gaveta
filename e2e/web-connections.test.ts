@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import {
+  ensureWebBuilt,
   GAVETA_BIN,
   newWebPage,
   parseJson,
@@ -22,8 +23,7 @@ const children: ReturnType<typeof spawn>[] = [];
 let browser: Browser;
 
 beforeAll(async () => {
-  const { execFileSync } = await import('node:child_process');
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  ensureWebBuilt();
   browser = await chromium.launch();
 }, 180_000);
 

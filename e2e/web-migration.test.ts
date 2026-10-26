@@ -6,6 +6,7 @@ import { NOTE_X, vaultPath } from '@gaveta/fixtures';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import {
+  ensureWebBuilt,
   GAVETA_BIN,
   initVault,
   parseJson,
@@ -14,7 +15,6 @@ import {
   newWebPage,
 } from './helpers.ts';
 
-const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = vaultPath('backlinks');
 
 const children: ReturnType<typeof spawn>[] = [];
@@ -22,8 +22,7 @@ let browser: Browser;
 let screenshotDir: string;
 
 beforeAll(async () => {
-  const { execFileSync } = await import('node:child_process');
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  ensureWebBuilt();
   browser = await chromium.launch();
   screenshotDir = resolveScreenshotDir('gaveta-e2e-web-migration');
 }, 180_000);

@@ -6,7 +6,7 @@ import { vaultPath } from '@gaveta/fixtures';
 import { parseGavetaTaskToggleMessage } from '@gaveta/core';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope } from './helpers.ts';
+import { ensureWebBuilt, GAVETA_BIN, parseJson, runGaveta, type JsonEnvelope } from './helpers.ts';
 import { requestLocal } from './serve-http.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
@@ -96,8 +96,7 @@ async function openNoteById(
 }
 
 beforeAll(async () => {
-  const { execFileSync } = await import('node:child_process');
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  ensureWebBuilt();
   browser = await chromium.launch();
 }, 180_000);
 

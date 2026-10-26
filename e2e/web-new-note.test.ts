@@ -6,6 +6,7 @@ import { createNote, parseNote } from '@gaveta/core';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 import {
+  ensureWebBuilt,
   GAVETA_BIN,
   initVault,
   newWebPage,
@@ -26,8 +27,7 @@ let browser: Browser;
 let screenshotDir: string;
 
 beforeAll(async () => {
-  const { execFileSync } = await import('node:child_process');
-  execFileSync('pnpm', ['build:web'], { cwd: REPO_ROOT, stdio: 'inherit' });
+  ensureWebBuilt();
   screenshotDir = resolveScreenshotDir('gaveta-e2e-new-note');
   browser = await chromium.launch();
 }, 180_000);
