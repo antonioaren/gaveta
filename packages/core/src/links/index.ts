@@ -1,5 +1,7 @@
 export { SUGGESTION_LIMIT } from './types.ts';
 export { relativeNoteHref } from './path.ts';
+export { completeWikilinkTargets, WIKILINK_COMPLETION_DEFAULT_LIMIT } from './wikilink-complete.ts';
+export type { WikilinkCompletion } from './wikilink-complete.ts';
 export { suggestNotes } from './suggest.ts';
 export { GavetaRefError, resolveRef, resolveTitle } from './ref.ts';
 export { assessRel } from './rel.ts';

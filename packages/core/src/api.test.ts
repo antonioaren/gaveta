@@ -36,6 +36,7 @@ import {
   readNote,
   resolveNoteLinks,
   suggestNotes,
+  completeWikilinkTargets,
   relativeNoteHref,
   assessRel,
   GavetaRefError,
@@ -83,6 +84,7 @@ it('exports vault I/O and the shared slug helper from the package entry', () => 
   );
   expect(typeof resolveNoteLinks).toBe('function');
   expect(typeof suggestNotes).toBe('function');
+  expect(typeof completeWikilinkTargets).toBe('function');
   expect(typeof relativeNoteHref).toBe('function');
   expect(typeof assessRel).toBe('function');
   expect(GavetaRefError.prototype).toBeInstanceOf(GavetaError);

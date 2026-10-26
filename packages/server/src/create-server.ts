@@ -8,6 +8,7 @@ import {
   listTasks,
   readNote,
   unlinkedMentions,
+  completeWikilinkTargets,
   readRenderNoteId,
   readVaultConfig,
   resolveRenderNote,
@@ -42,6 +43,7 @@ import {
   presentNoteList,
   presentOutgoing,
   presentRead,
+  presentWikilinkCompletion,
 } from './present.ts';
 import {
   quoteFtsQuery,
@@ -52,6 +54,7 @@ import {
   readRefQuery,
   readSearchLimit,
   readSearchQuery,
+  readWikilinkCompleteQuery,
   readSearchTag,
   readSearchType,
   readTaskListQuery,
@@ -403,6 +406,16 @@ function registerReadRoutes(
     const { result, warnings } = await vaultSession.withIndex((index) => {
       const hits = index.search(quoteFtsQuery(query), search).map(presentHit);
       return Promise.resolve({ query, type, tag, limit, hits });
+    });
+    return reply.send(apiSuccess(result, warnings));
+  });
+
+  app.get('/api/wikilink-complete', async (request, reply) => {
+    const query = readWikilinkCompleteQuery(readQueryParam(request, 'q'));
+    const limit = readSearchLimit(readQueryParam(request, 'limit'));
+    const { result, warnings } = await vaultSession.withIndex((index) => {
+      const hits = completeWikilinkTargets(index, query, limit).map(presentWikilinkCompletion);
+      return Promise.resolve({ query, limit, hits });
     });
     return reply.send(apiSuccess(result, warnings));
   });

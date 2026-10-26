@@ -6,6 +6,7 @@ import { buildVisualEditorExtensions } from './build-extensions.ts';
 import { useI18n } from '../i18n/useI18n.ts';
 import { formatMessage } from '@gaveta/i18n';
 import { readWebLocale } from '../i18n/read-web-locale.ts';
+import { WikilinkCompletionMenu } from './wikilink/WikilinkCompletionMenu.tsx';
 
 export interface VisualNoteEditorProps {
   readonly noteRef: string;
@@ -128,6 +129,7 @@ export function VisualNoteEditor({
         </p>
       ) : null}
       <EditorContent editor={editor} className="visual-editor__content" />
+      <WikilinkCompletionMenu editor={editor} />
     </div>
   );
 }

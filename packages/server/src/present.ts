@@ -13,6 +13,7 @@ import {
   type ReadNoteResult,
   type SearchHit,
   type UnlinkedMention,
+  type WikilinkCompletion,
 } from '@gaveta/core';
 
 export interface NoteListItem {
@@ -69,6 +70,26 @@ export interface GraphEdgeView {
   readonly from: string;
   readonly to: string;
   readonly rel: string | null;
+}
+
+export interface WikilinkCompletionView {
+  readonly id: string | null;
+  readonly title: string;
+  readonly path: string;
+  readonly matchedBy: 'title' | 'alias';
+  readonly matchedLabel: string;
+  readonly score: number;
+}
+
+export function presentWikilinkCompletion(hit: WikilinkCompletion): WikilinkCompletionView {
+  return {
+    id: hit.id,
+    title: hit.title,
+    path: hit.path,
+    matchedBy: hit.matchedBy,
+    matchedLabel: hit.matchedLabel,
+    score: hit.score,
+  };
 }
 
 export interface SearchHitView {

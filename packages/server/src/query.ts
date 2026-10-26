@@ -94,6 +94,18 @@ export function rejectDepthWithoutRef(depth: string | undefined, ref: string | u
   }
 }
 
+const WIKILINK_COMPLETE_QUERY_MAX = 200;
+
+export function readWikilinkCompleteQuery(value: string | undefined): string {
+  if (value === undefined) {
+    return '';
+  }
+  if (value.includes('\0') || value.length > WIKILINK_COMPLETE_QUERY_MAX) {
+    throw new GavetaError('E_ARG_INVALID');
+  }
+  return value;
+}
+
 export function readSearchQuery(value: string | undefined): string {
   if (value === undefined || value.includes('\0') || value.trim().length === 0) {
     throw new GavetaError('E_ARG_INVALID');
