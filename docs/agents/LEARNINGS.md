@@ -4,6 +4,7 @@ Short log of pitfalls found while implementing tasks. Read this before starting 
 
 Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 
+- 2026-10-26 · T3.6 · CodeMirror wikilink completion returned a `Promise` as `options` (autocomplete never opened; Linux e2e timed out on `/api/wikilink-complete`). Playwright `keyboard.type` does not reach CodeMirror in an open shadow root; use `insertText` and click the `code-note-editor` host so `pointerdown` calls `view.focus()`. · Async `CompletionSource`, `wikilinkHtmlAutocompleteTrigger`, shadow/host `pointerdown` → `view.focus()`, `wikilink-query` stops at `<`/`>` after the title; code e2e asserts the API hit then finishes the link text.
 - 2026-10-26 · T3.19 · Raw vault paths in `vscode://file/…` must encode `#`, `?`, `%`, spaces, and non-ASCII per segment or the browser truncates at `#` and VS Code opens the wrong file. · `encodeURIComponent` each path segment; keep `/` and `C:` drive segments literal.
 - 2026-10-26 · T3.19 · `vaultSession.withIndex` returns `{ result, warnings }`, not the callback value directly — assigning the whole object to a path string yields `E_INTERNAL` on `resolveInsideVault`. · Destructure `{ result: notePath }` like other API routes.
 - 2026-10-26 · T3.19 · Playwright records `location.assign('vscode://…')` as a non-local request; that is not a CSP violation. · `attachCspGuard` ignores `vscode:` protocol URLs.

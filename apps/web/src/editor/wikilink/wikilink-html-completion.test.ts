@@ -22,16 +22,15 @@ describe('wikilinkHtmlCompletionSource', () => {
       doc: '<p>Ver [[Dest',
     });
     const context = new CompletionContext(state, state.doc.length, true);
-    const raw = wikilinkHtmlCompletionSource(fetchCompletions, {
+    const result = await wikilinkHtmlCompletionSource(fetchCompletions, {
       section: 'Notes',
       aliasDetail: (alias) => `Alias: ${alias}`,
     })(context);
-    const result = await Promise.resolve(raw);
     expect(result).not.toBeNull();
     if (result === null) {
       return;
     }
-    const options = await Promise.resolve(result.options);
+    const options = result.options;
     expect(fetchCompletions).toHaveBeenCalledWith('Dest');
     expect(options[0]?.label).toBe('Destino enlace');
     expect(options[0]?.apply).toBe('Destino enlace]]');

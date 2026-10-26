@@ -35,7 +35,10 @@ import { codeMirrorPhrasesForLocale } from './code-editor-phrases.ts';
 import { codeEditorProblemsStatus } from './code-editor-problems-status.ts';
 import { fetchWikilinkCompletions } from '../../api/wikilink-complete.ts';
 import { contractHtmlCompletionSource } from './contract-html-completion.ts';
-import { wikilinkHtmlCompletionSource } from '../wikilink/wikilink-html-completion.ts';
+import {
+  wikilinkHtmlAutocompleteTrigger,
+  wikilinkHtmlCompletionSource,
+} from '../wikilink/wikilink-html-completion.ts';
 import { gavetaCodeEditorTheme } from './code-editor-theme.ts';
 import { createNoteLinter } from './note-linter.ts';
 
@@ -113,6 +116,7 @@ export function createCodeEditorExtensions({
         },
       ],
     }),
+    wikilinkHtmlAutocompleteTrigger(),
     ...codeEditorEmmetExtensions(),
     foldGutter(),
     codeFolding(),

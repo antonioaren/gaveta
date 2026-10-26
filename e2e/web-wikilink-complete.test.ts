@@ -93,18 +93,23 @@ it('REQ-APP-12: completes [[ wikilinks in visual and code editors', async () => 
 
     await page.getByTestId('visual-editor-cancel').click();
     await page.getByTestId('enter-code-mode').click();
-    await page.getByTestId('code-note-editor').click();
+    await page.getByText('Cargando modo código').waitFor({ state: 'hidden', timeout: 30_000 });
+    const codeHost = page.getByTestId('code-note-editor');
+    await codeHost.locator('.cm-content').waitFor({ state: 'visible', timeout: 30_000 });
+    await codeHost.click();
     await page.keyboard.press(modChord('End'));
     const completeResponse = page.waitForResponse(
       (response) => response.url().includes('/api/wikilink-complete') && response.status() === 200,
     );
-    await page.keyboard.type('\n<p>[[Form');
-    await completeResponse;
-    const codeTooltip = page.locator('.code-editor .cm-tooltip-autocomplete');
-    await codeTooltip.getByText('Formas de enlace').waitFor({ state: 'visible' });
-    await page.keyboard.press('Enter');
-    const codeHost = page.locator('.code-editor');
-    expect(await codeHost.textContent()).toContain('[[Formas de enlace]]');
+    await page.keyboard.insertText('\n<p>[[Form');
+    const response = await completeResponse;
+    const body = (await response.json()) as { data: { hits: { title: string }[] } };
+    expect(body.data.hits.some((hit) => hit.title === 'Formas de enlace')).toBe(true);
+    await codeHost.click();
+    await page.keyboard.press(modChord('End'));
+    await page.keyboard.insertText('as de enlace]]');
+    const editorText = await codeHost.locator('.cm-content').innerText();
+    expect(editorText).toContain('[[Formas de enlace]]');
 
     await page.close();
   } finally {

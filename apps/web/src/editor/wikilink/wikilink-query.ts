@@ -27,12 +27,15 @@ export function wikilinkCompletionContextBefore(
   if (pipe >= 0) {
     return null;
   }
-  if (segment.includes('<') || segment.includes('>')) {
+  const tagBreak = segment.search(/[<>]/);
+  if (tagBreak === 0) {
     return null;
   }
+  const query = tagBreak < 0 ? segment : segment.slice(0, tagBreak);
+  const to = tagBreak < 0 ? cursor : open + 2 + tagBreak;
   return {
     from: open + 2,
-    to: cursor,
-    query: segment,
+    to,
+    query,
   };
 }

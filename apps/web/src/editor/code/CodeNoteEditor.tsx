@@ -61,7 +61,22 @@ export function CodeNoteEditor({
       root: shadowRoot,
     });
     viewRef.current = view;
+    const focusView = (): void => {
+      view.focus();
+    };
+    const pointerDown = (event: Event): void => {
+      if (!(event instanceof PointerEvent) || event.button !== 0) {
+        return;
+      }
+      focusView();
+    };
+    host.addEventListener('focus', focusView);
+    host.addEventListener('pointerdown', pointerDown, { capture: true });
+    shadowRoot.addEventListener('pointerdown', pointerDown, { capture: true });
     return () => {
+      host.removeEventListener('focus', focusView);
+      host.removeEventListener('pointerdown', pointerDown, { capture: true });
+      shadowRoot.removeEventListener('pointerdown', pointerDown, { capture: true });
       view.destroy();
       viewRef.current = null;
     };

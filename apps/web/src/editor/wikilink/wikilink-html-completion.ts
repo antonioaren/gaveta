@@ -1,11 +1,13 @@
 import {
   autocompletion,
+  startCompletion,
   type Completion,
   type CompletionContext,
   type CompletionResult,
   type CompletionSource,
 } from '@codemirror/autocomplete';
 import type { Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import type { WikilinkCompletionView } from '../../api/wikilink-complete.ts';
 import { wikilinkCompletionContextBefore } from './wikilink-query.ts';
 
@@ -18,22 +20,18 @@ export function wikilinkHtmlCompletionSource(
   fetchCompletions: (query: string) => Promise<readonly WikilinkCompletionView[]>,
   labels: WikilinkHtmlAutocompleteLabels,
 ): CompletionSource {
-  return (context: CompletionContext): CompletionResult | null => {
+  return async (context: CompletionContext): Promise<CompletionResult | null> => {
     const match = wikilinkCompletionContextBefore(context.state.doc.toString(), context.pos);
     if (match === null) {
       return null;
     }
-    const from = match.from;
-    const query = match.query;
-    const pending = fetchCompletions(query).then((hits) =>
-      hits.map((hit) => toCompletion(hit, labels)),
-    );
+    const hits = await fetchCompletions(match.query);
     return {
-      from,
+      from: match.from,
       to: match.to,
       filter: false,
       validFor: () => false,
-      options: pending as unknown as CompletionResult['options'],
+      options: hits.map((hit) => toCompletion(hit, labels)),
     };
   };
 }
@@ -61,5 +59,19 @@ export function wikilinkHtmlAutocomplete(
     override: [wikilinkHtmlCompletionSource(fetchCompletions, labels)],
     activateOnTyping: true,
     maxRenderedOptions: 20,
+  });
+}
+
+/** Opens completion after edits that `activateOnTyping` may miss (for example Playwright `insertText`). */
+export function wikilinkHtmlAutocompleteTrigger(): Extension {
+  return EditorView.updateListener.of((update) => {
+    if (!update.docChanged) {
+      return;
+    }
+    const head = update.state.selection.main.head;
+    if (wikilinkCompletionContextBefore(update.state.doc.toString(), head) === null) {
+      return;
+    }
+    startCompletion(update.view);
   });
 }

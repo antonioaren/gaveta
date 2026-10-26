@@ -17,4 +17,13 @@ describe('wikilinkCompletionContextBefore', () => {
     expect(wikilinkCompletionContextBefore('[[a|b', 5)).toBeNull();
     expect(wikilinkCompletionContextBefore('[[<tag', 7)).toBeNull();
   });
+
+  it('stops the query before auto-closed markup after the title', () => {
+    const text = '<p>[[Form</p>';
+    expect(wikilinkCompletionContextBefore(text, text.length)).toEqual({
+      from: 5,
+      to: 9,
+      query: 'Form',
+    });
+  });
 });
