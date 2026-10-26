@@ -25,6 +25,7 @@ import { GAVETA_DIRECTORY, VAULT_CONFIG_PATH } from './constants.ts';
 import { pathOutsideVault } from './errors.ts';
 import { hasNodeErrorCode } from './node-error.ts';
 import { isInsideVault, readVaultText, writeVaultText } from './paths.ts';
+import { writeDefaultNoteTemplates } from './templates.ts';
 
 const THEME_RELATIVE_PATH = `${GAVETA_DIRECTORY}/theme.css`;
 const INDEX_RELATIVE_PATH = `${GAVETA_DIRECTORY}/index.sqlite`;
@@ -82,6 +83,9 @@ export async function initVault(options: InitVaultOptions): Promise<InitVaultRes
     await writeMissing(root, plan.relative);
     created.push(plan.relative);
   }
+  const templates = await writeDefaultNoteTemplates(root);
+  created.push(...templates.created);
+  preserved.push(...templates.preserved);
   const agentInstructions =
     target === null ? [] : await writeAgentFiles(root, expandAgentInstructionTargets(target));
   await maybeUpgradeVaultAssets(root);

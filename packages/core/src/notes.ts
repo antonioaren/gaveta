@@ -49,6 +49,11 @@ import { createVaultFolder } from './ops/folder.ts';
 import { normalizeVaultFolder } from './ops/folder-path.ts';
 import { patchOptionalMeta } from './ops/meta-patch.ts';
 import { readVaultText, resolveInsideVault, writeVaultText } from './vault/paths.ts';
+import {
+  applyNoteTemplateVariables,
+  defaultNoteTemplateBody,
+  resolveCreateNoteBodyHtml,
+} from './vault/templates.ts';
 
 type ParseChild = DefaultTreeAdapterMap['childNode'];
 type ParseDocument = DefaultTreeAdapterMap['document'];
@@ -233,7 +238,13 @@ export async function createNote(options: unknown): Promise<CreateNoteResult> {
       throw new GavetaError('E_ID_DUPLICATE');
     }
     const notePath = await allocateNotePath(session.root, input.folder, input.title);
-    const composed = composeDocument(input);
+    const bodyHtml = await resolveCreateNoteBodyHtml(
+      session.root,
+      input.type,
+      input.title,
+      input.html,
+    );
+    const composed = composeDocument({ ...input, html: bodyHtml });
     const normalized = normalizeNote(composed, {
       notePath,
       remoteAllowlist: session.config.remoteAllowlist,
@@ -677,23 +688,7 @@ function composeBody(html: string | null, title: string, type: NoteType): string
 }
 
 function defaultBody(title: string, type: NoteType): string {
-  const heading = escapeText(title);
-  if (type === 'slides') {
-    return `<section class="slide"><h2>${heading}</h2></section>`;
-  }
-  if (type === 'todo') {
-    return `<h1>${heading}</h1>`;
-  }
-  if (type === 'dashboard') {
-    return `<article class="g-dashboard"><h1>${heading}</h1></article>`;
-  }
-  if (type === 'design') {
-    return `<section class="g-frame" data-device="desktop" id="pantalla"><h2>${heading}</h2></section>`;
-  }
-  if (type === 'artifact') {
-    return `<article><h1>${heading}</h1><section id="descripcion"><p>${heading}</p></section><iframe sandbox="allow-scripts" title="${heading}" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &apos;none&apos;; script-src &apos;unsafe-inline&apos;; style-src &apos;unsafe-inline&apos;; connect-src &apos;none&apos;&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;p&gt;Vacío&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></article>`;
-  }
-  return `<article><h1>${heading}</h1></article>`;
+  return applyNoteTemplateVariables(defaultNoteTemplateBody(type), title);
 }
 
 type Piece =
