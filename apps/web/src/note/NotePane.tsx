@@ -225,6 +225,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
         <NoteCodeMode
           key={activeTab.ref}
           noteRef={activeTab.ref}
+          noteId={noteId}
           path={activeTab.path}
           onExit={() => {
             setCodeModeForRef(null);
@@ -236,6 +237,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
       ) : activeDraft !== null ? (
         <VisualNoteEditor
           noteRef={activeTab.ref}
+          noteId={noteId}
           notePath={activeTab.path}
           initialHtml={activeDraft.html}
           ifMatch={activeDraft.hash}
@@ -243,6 +245,9 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
           onSaved={() => {
             setEditTargetRef(null);
             setDraft(null);
+          }}
+          onReload={(html, hash) => {
+            setDraft({ html, hash });
           }}
         />
       ) : (
