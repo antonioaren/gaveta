@@ -234,5 +234,21 @@
   "W_WEB_VIEWER_MISSING": {
     "message": "El visor web no está compilado; solo corre la API de lectura.",
     "hint": "En la raíz del repositorio ejecuta `pnpm build:web` y vuelve a arrancar gaveta serve."
+  },
+  "W_EMBED_CYCLE": {
+    "message": "Transclusión detenida: la nota {targetId} ya está en la cadena de embeds.",
+    "hint": "Elimina la referencia circular en gaveta-embed."
+  },
+  "W_EMBED_DEPTH": {
+    "message": "Se alcanzó el límite de profundidad de transclusión.",
+    "hint": "Reduce el número de gaveta-embed anidados."
+  },
+  "W_EMBED_TARGET_MISSING": {
+    "message": "No se encontró la nota de transclusión {targetId}.",
+    "hint": "Corrige data-g-to o restaura la nota destino."
+  },
+  "W_EMBED_SECTION_MISSING": {
+    "message": "No se encontró la sección {sectionId} en la nota embebida.",
+    "hint": "Corrige data-g-section o añade la sección en la nota destino."
   }
 }

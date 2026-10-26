@@ -167,7 +167,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 
 - [x] **T4.1 `gaveta mcp`.** Servidor MCP por stdio con los mismos comandos (incluidos `import` y `export`) y el mismo sobre JSON. Se registra con `claude mcp add gaveta -- gaveta mcp`. Cubre: REQ-CLI-14, REQ-MIG-13.
 - [x] **T4.2 Menciones no enlazadas** en la CLI y en la app ("Enlazar"). Cubre: REQ-LINK-12.
-- [ ] **T4.3 Transclusión con `<gaveta-embed>`.** Cubre: REQ-LINK-13.
+- [x] **T4.3 Transclusión con `<gaveta-embed>`.** Cubre: REQ-LINK-13.
 - [ ] **T4.4 Vista agregada de tareas.** Cubre: REQ-APP-15.
 - [x] **T4.5 Mermaid y exportación de presentaciones a PDF.** *(Adelantado: render Mermaid offline en `file://`; export PDF queda pendiente.)* Cubre: REQ-TYPE-06, REQ-APP-16.
 - [ ] **T4.6 Plantillas por tipo.** Cubre: REQ-TYPE-07.

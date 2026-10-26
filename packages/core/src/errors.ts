@@ -196,6 +196,26 @@ export const DIAGNOSTICS = {
     exitCode: null,
     escalatesToError: false,
   },
+  W_EMBED_CYCLE: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+  },
+  W_EMBED_DEPTH: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+  },
+  W_EMBED_TARGET_MISSING: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+  },
+  W_EMBED_SECTION_MISSING: {
+    severity: 'warning',
+    exitCode: null,
+    escalatesToError: false,
+  },
   W_REL_UNKNOWN: {
     severity: 'warning',
     exitCode: null,

@@ -184,6 +184,7 @@ export {
   appendRenderTicketQuery,
   buildNoteRenderCsp,
   buildNoteRenderPage,
+  buildNoteRenderPageWithEmbeds,
   readRenderNoteId,
   resolveRenderNote,
   RENDER_STATIC_PREFIX,
@@ -420,6 +421,12 @@ export {
   unlinkedMentions,
 } from './links/mentions.ts';
 export type { MentionTarget, UnlinkedMention } from './links/mentions.ts';
+
+export {
+  MAX_EMBED_DEPTH,
+  expandEmbedsInRenderBody,
+  replaceEmbedsWithLinks,
+} from './links/embeds.ts';
 
 export type {
   Backlink,

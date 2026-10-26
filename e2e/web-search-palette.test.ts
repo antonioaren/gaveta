@@ -1,10 +1,17 @@
 import { spawn } from 'node:child_process';
-import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
-import { GAVETA_BIN, newWebPage, parseJson, type JsonEnvelope } from './helpers.ts';
+import {
+  GAVETA_BIN,
+  newWebPage,
+  parseJson,
+  removeTempTree,
+  stopServeChildren,
+  type JsonEnvelope,
+} from './helpers.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const BACKLINKS = join(REPO_ROOT, 'fixtures/vaults/backlinks');
@@ -90,6 +97,7 @@ it('REQ-APP-04: opens the palette with Ctrl+K, searches, and opens a note by ULI
     expect(page.url()).toContain(DESTINO_ID);
     await page.close();
   } finally {
-    rmSync(parent, { recursive: true, force: true });
+    await stopServeChildren(children);
+    removeTempTree(parent);
   }
 }, 120_000);
