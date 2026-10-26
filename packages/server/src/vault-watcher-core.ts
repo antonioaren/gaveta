@@ -36,6 +36,7 @@ export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): 
   const movePairWindowMs = options.movePairWindowMs ?? DEFAULT_MOVE_PAIR_WINDOW_MS;
   const pending = new Map<string, PendingChange>();
   const recentUnlinks = new Map<string, RecentUnlink>();
+  const recentAdds = new Map<string, RecentUnlink>();
   const lifecycle = { closed: false };
   let flushEpoch = 0;
 
@@ -65,6 +66,7 @@ export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): 
         const event = await options.session.applyFileChange(
           change,
           recentUnlinks,
+          recentAdds,
           movePairWindowMs,
         );
         if (epoch !== flushEpoch) {
@@ -76,11 +78,11 @@ export function createVaultWatcherCore(options: CreateVaultWatcherCoreOptions): 
           options.bus.emitNote(pipeline === undefined ? event : { ...event, pipeline });
         }
       }
-    } catch {
+    } catch (error) {
       if (epoch !== flushEpoch) {
         return;
       }
-      throw new Error('E_VAULT_WATCHER_FLUSH_FAILED');
+      throw new Error('E_VAULT_WATCHER_FLUSH_FAILED', { cause: error });
     }
   };
 
