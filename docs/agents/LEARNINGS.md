@@ -4,6 +4,7 @@ Short log of pitfalls found while implementing tasks. Read this before starting 
 
 Format: `YYYY-MM-DD · T<id> · what went wrong · how it was fixed`
 
+- 2026-10-26 · T3.19 · Raw vault paths in `vscode://file/…` must encode `#`, `?`, `%`, spaces, and non-ASCII per segment or the browser truncates at `#` and VS Code opens the wrong file. · `encodeURIComponent` each path segment; keep `/` and `C:` drive segments literal.
 - 2026-10-26 · T3.19 · `vaultSession.withIndex` returns `{ result, warnings }`, not the callback value directly — assigning the whole object to a path string yields `E_INTERNAL` on `resolveInsideVault`. · Destructure `{ result: notePath }` like other API routes.
 - 2026-10-26 · T3.19 · Playwright records `location.assign('vscode://…')` as a non-local request; that is not a CSP violation. · `attachCspGuard` ignores `vscode:` protocol URLs.
 - 2026-10-26 · T3.19 · Never embed vault absolute paths in the code-mode shell; resolve `ref` → `resolveInsideVault` on `GET /api/note/vscode-uri` and open `vscode://file/…` only after the user clicks. · Button + `buildVsCodeFileUri`; no shell spawn.
