@@ -220,8 +220,7 @@ function FolderBranch({
         <button
           key={note.path}
           type="button"
-          className={`explorer__note explorer__note--${note.type ?? 'unknown'}${activeRef === note.path ? ' explorer__note--active' : ''}`}
-          style={{ paddingLeft: `${String(12 + depth * 14)}px` }}
+          className={`explorer__note explorer__note--${note.type ?? 'unknown'} explorer__note--depth-${String(Math.min(depth, 12))}${activeRef === note.path ? ' explorer__note--active' : ''}`}
           onClick={() => {
             onOpen(note);
           }}
@@ -245,8 +244,7 @@ function FolderBranch({
       {node.children.map((child) => (
         <div key={child.path} className="explorer__folder">
           <div
-            className="explorer__folder-label"
-            style={{ paddingLeft: `${String(12 + depth * 14)}px` }}
+            className={`explorer__folder-label explorer__folder-label--depth-${String(Math.min(depth, 12))}`}
             onContextMenu={(event) => {
               onFolderContextMenu(event, child.path);
             }}

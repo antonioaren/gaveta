@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { FolderOpKind } from '../folder-ops/folder-op-kind.ts';
 import { useI18n } from '../i18n/useI18n.ts';
+import { useFixedPositionStyle } from './use-fixed-position.ts';
 
 interface ExplorerFolderContextMenuProps {
   readonly open: boolean;
@@ -23,6 +24,7 @@ export function ExplorerFolderContextMenu({
 }: ExplorerFolderContextMenuProps) {
   const { t } = useI18n();
   const menuRef = useRef<HTMLDivElement>(null);
+  useFixedPositionStyle(menuRef, open, x, y);
 
   useEffect(() => {
     if (!open) {
@@ -49,7 +51,6 @@ export function ExplorerFolderContextMenu({
     <div
       ref={menuRef}
       className="explorer-context-menu"
-      style={{ top: y, left: x }}
       role="menu"
       aria-label={t('web.folder.context.aria')}
       data-testid="explorer-folder-context-menu"

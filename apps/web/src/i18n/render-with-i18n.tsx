@@ -2,6 +2,7 @@
 import { render, type RenderOptions } from '@testing-library/react';
 import { useEffect, type ReactElement, type ReactNode } from 'react';
 import { I18nProvider } from './I18nProvider.tsx';
+import { ThemeProvider } from '../theme/ThemeProvider.tsx';
 import { useI18n } from './useI18n.ts';
 import type { Locale } from '@gaveta/i18n';
 
@@ -31,9 +32,11 @@ function I18nTestWrapper({
   readonly locale?: Locale;
 }): ReactElement {
   return (
-    <I18nProvider>
-      <PinLocale locale={locale}>{children}</PinLocale>
-    </I18nProvider>
+    <ThemeProvider>
+      <I18nProvider>
+        <PinLocale locale={locale}>{children}</PinLocale>
+      </I18nProvider>
+    </ThemeProvider>
   );
 }
 

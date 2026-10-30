@@ -26,6 +26,13 @@
     if (data === null || typeof data !== 'object') {
       return;
     }
+    if (data.type === 'gaveta:theme') {
+      var theme = data.theme;
+      if (theme === 'light' || theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      return;
+    }
     if (data.type !== 'gaveta:task-checked') {
       return;
     }

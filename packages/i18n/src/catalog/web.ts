@@ -316,6 +316,10 @@ export const webMessagesEs = {
   'web.language.select.aria': 'Idioma',
   'web.language.en': 'English',
   'web.language.es': 'Español',
+  'web.theme.select.aria': 'Tema',
+  'web.theme.system': 'Sistema',
+  'web.theme.light': 'Claro',
+  'web.theme.dark': 'Oscuro',
 } as const;
 
 export const webMessagesEn = {
@@ -633,4 +637,8 @@ export const webMessagesEn = {
   'web.language.select.aria': 'Language',
   'web.language.en': 'English',
   'web.language.es': 'Español',
+  'web.theme.select.aria': 'Theme',
+  'web.theme.system': 'System',
+  'web.theme.light': 'Light',
+  'web.theme.dark': 'Dark',
 } satisfies Record<keyof typeof webMessagesEs, string>;
