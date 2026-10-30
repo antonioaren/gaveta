@@ -28,7 +28,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - uses: ./.github/actions/shellcheck-install
+      - name: ShellCheck
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            if [ "${{ runner.os }}" = "Linux" ]; then
+              sudo apt-get update
+              sudo apt-get install -y shellcheck
+            else
+              brew install shellcheck
+            fi
+          fi
+          shellcheck install.sh
       - name: Run installer from checkout (--source)
         env:
           HOME: ${{ runner.temp }}/gaveta-install-home
