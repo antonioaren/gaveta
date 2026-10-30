@@ -1,3 +1,4 @@
+import { ArrowUpRight } from 'lucide-react';
 import { useState } from 'react';
 import { linkAllMentions } from '../api/mentions-link.ts';
 import { useActiveViewerRef } from '../hooks/useActiveViewerRef.ts';
@@ -79,7 +80,15 @@ export function ConnectionsPanel() {
                             );
                           }}
                         >
-                          <span className="connections__link-title">{link.target.title}</span>
+                          <span className="connections__link-layout">
+                            <ArrowUpRight
+                              className="connections__link-icon"
+                              aria-hidden
+                              size={14}
+                              strokeWidth={2}
+                            />
+                            <span className="connections__link-title">{link.target.title}</span>
+                          </span>
                           {link.rel !== null && link.rel.length > 0 ? (
                             <span className="connections__rel">{link.rel}</span>
                           ) : null}
@@ -123,7 +132,15 @@ export function ConnectionsPanel() {
                             navigateTo(sourceRef, link.sourceTitle, link.sourcePath, noteId);
                           }}
                         >
-                          <span className="connections__link-title">{link.sourceTitle}</span>
+                          <span className="connections__link-layout">
+                            <ArrowUpRight
+                              className="connections__link-icon"
+                              aria-hidden
+                              size={14}
+                              strokeWidth={2}
+                            />
+                            <span className="connections__link-title">{link.sourceTitle}</span>
+                          </span>
                         </button>
                         {context.length > 0 ? (
                           <p className="connections__context">{context}</p>
@@ -195,7 +212,15 @@ export function ConnectionsPanel() {
                             navigateTo(sourceRef, mention.sourceTitle, mention.sourcePath, noteId);
                           }}
                         >
-                          <span className="connections__link-title">{mention.sourceTitle}</span>
+                          <span className="connections__link-layout">
+                            <ArrowUpRight
+                              className="connections__link-icon"
+                              aria-hidden
+                              size={14}
+                              strokeWidth={2}
+                            />
+                            <span className="connections__link-title">{mention.sourceTitle}</span>
+                          </span>
                         </button>
                         {context.length > 0 ? (
                           <p className="connections__context">{context}</p>

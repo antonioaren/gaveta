@@ -141,7 +141,7 @@ export function GlobalGraphView() {
           <label className="field">
             <span className="field__label">{t('web.common.type')}</span>
             <select
-              className="field__control"
+              className="field__control ui-select"
               value={filters.type ?? ''}
               onChange={(event) => {
                 const value = event.target.value;
@@ -159,7 +159,7 @@ export function GlobalGraphView() {
           <label className="field">
             <span className="field__label">{t('web.graph.field.folder')}</span>
             <select
-              className="field__control"
+              className="field__control ui-select"
               value={filters.folder ?? ''}
               onChange={(event) => {
                 const value = event.target.value;
@@ -180,7 +180,7 @@ export function GlobalGraphView() {
           <label className="field">
             <span className="field__label">{t('web.common.tag')}</span>
             <select
-              className="field__control"
+              className="field__control ui-select"
               value={filters.tag ?? ''}
               onChange={(event) => {
                 const value = event.target.value;
@@ -198,7 +198,7 @@ export function GlobalGraphView() {
           <label className="field">
             <span className="field__label">{t('web.graph.field.rel')}</span>
             <select
-              className="field__control"
+              className="field__control ui-select"
               value={filters.rel ?? ''}
               onChange={(event) => {
                 const value = event.target.value;
@@ -382,7 +382,7 @@ export function GlobalGraphView() {
                 <p className="graph-view__ghost-hint">{t('web.graph.ghost.hint')}</p>
                 <button
                   type="button"
-                  className="topbar__button topbar__button--primary"
+                  className="ui-btn ui-btn--primary ui-btn--sm"
                   onClick={() => {
                     openNewNote({
                       title: selectedGhost.title,
@@ -394,7 +394,7 @@ export function GlobalGraphView() {
                 </button>
                 <button
                   type="button"
-                  className="topbar__button"
+                  className="ui-btn ui-btn--ghost ui-btn--sm"
                   onClick={() => void copyGhostCommand()}
                 >
                   {t('web.graph.copyCli')}

@@ -78,17 +78,13 @@ header {
 }
 
 header.note-header {
-  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-3)) var(--space-6);
-  padding: var(--space-6) var(--space-5) var(--space-5);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--note-accent, var(--color-accent)) 12%, var(--color-surface)),
-    var(--color-surface)
-  );
-  box-shadow: var(--shadow-sm);
-  border: 1px solid
-    color-mix(in srgb, var(--note-accent, var(--color-accent)) 25%, var(--color-border));
+  margin: 0 0 var(--space-6);
+  padding: 0 0 var(--space-4);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
 }
 
 header.note-header .note-type {
@@ -142,11 +138,13 @@ nav.toc {
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-1);
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  font-size: var(--font-size-sm);
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-tight);
 }
 
 nav.toc::before {
@@ -161,11 +159,12 @@ nav.toc::before {
 }
 
 nav.toc a {
+  color: var(--color-muted);
   text-decoration: none;
 }
 
 nav.toc a:hover {
-  text-decoration: underline;
+  color: var(--color-text);
 }
 
 h1,
@@ -869,8 +868,8 @@ article > iframe[sandbox] {
 
 .gaveta-render--doc {
   display: grid;
-  grid-template-columns: minmax(11rem, 16rem) minmax(0, 1fr);
-  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 14rem);
+  gap: var(--space-8);
   align-items: start;
 }
 
@@ -881,6 +880,16 @@ article > iframe[sandbox] {
 .gaveta-render__toc {
   position: sticky;
   top: var(--space-4);
+  grid-column: 2;
+  grid-row: 1;
+  padding-inline-start: var(--space-4);
+  border-inline-start: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+}
+
+.gaveta-render__main {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
 }
 
 .gaveta-render__toc nav.toc {
@@ -981,17 +990,18 @@ article > iframe[sandbox] {
 }
 
 .gaveta-todo-filters button {
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-border);
+  padding: var(--space-1) var(--space-3);
+  border: none;
   border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  color: var(--color-muted);
+  font-size: var(--font-size-sm);
   cursor: pointer;
 }
 
 .gaveta-todo-filters button[aria-pressed='true'] {
-  border-color: var(--color-accent-todo);
-  background: color-mix(in srgb, var(--color-accent-todo) 18%, var(--color-bg));
+  background: color-mix(in srgb, var(--color-accent-todo) 16%, transparent);
+  color: var(--color-text);
 }
 
 html.gaveta-presenting body {

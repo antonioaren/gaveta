@@ -551,6 +551,118 @@
   gap: 2px;
 }
 
+.explorer__note-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.explorer__folder {
+  margin: 0;
+}
+
+.explorer__folder-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 28px;
+  padding: var(--space-1) var(--space-2);
+  list-style: none;
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+
+.explorer__folder-row::-webkit-details-marker {
+  display: none;
+}
+
+.explorer__folder-row:hover {
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
+  color: var(--color-text);
+}
+
+.explorer__folder-chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.explorer__folder[open] > .explorer__folder-row .explorer__folder-chevron {
+  transform: rotate(90deg);
+}
+
+.explorer__folder-icon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.explorer__folder-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.explorer__chip--overflow {
+  font-weight: 600;
+}
+
+.explorer__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.explorer__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ui-select,
+.tasks-view__filters select,
+.graph-view__filters select {
+  appearance: none;
+  min-height: 32px;
+  padding: 0 var(--space-6) 0 var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-surface-elevated) 80%, var(--color-bg));
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-muted) 50%),
+    linear-gradient(135deg, var(--color-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) calc(50% - 2px),
+    calc(100% - 9px) calc(50% - 2px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+.connections__link-layout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.connections__link-icon {
+  flex-shrink: 0;
+  color: var(--color-muted);
+}
+
+.note-toolbar__edit-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .palette {
   width: min(40rem, 96vw);
   max-height: min(70vh, 36rem);
