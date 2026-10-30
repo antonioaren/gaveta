@@ -6,7 +6,7 @@ import { VisualNoteEditor } from '../editor/VisualNoteEditor.tsx';
 import { isGhostViewerRef } from '../new-note/ghost-viewer-ref.ts';
 import { useNewNoteDialog } from '../new-note/useNewNoteDialog.ts';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
-import { NoteOpsMenuButtons } from '../note-ops/NoteOpsMenu.tsx';
+import { NoteOpsMenuButtons, NoteToolbarPrimary } from '../note-ops/NoteOpsMenu.tsx';
 import type { NoteOpKind, NoteOpTarget } from '../note-ops/note-op-target.ts';
 import { noteOpTargetFromListItem } from '../note-ops/note-op-target.ts';
 import { useTabs } from '../tabs/useTabs.ts';
@@ -152,41 +152,27 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
 
   return (
     <section className="note-pane" aria-label={t('web.note.aria')}>
-      <header className="note-pane__header">
-        <div className="note-pane__header-main">
-          <h1 className="note-pane__title">{activeTab.title}</h1>
-          <p className="note-pane__path">{activeTab.path}</p>
+      <header className="note-toolbar">
+        <div className="note-toolbar__leading">
+          <h1 className="note-toolbar__title">{activeTab.title}</h1>
+          <p className="note-toolbar__path">{activeTab.path}</p>
           {taskError !== null && !editingAny ? (
             <p className="note-pane__error" role="alert">
               {taskError}
             </p>
           ) : null}
         </div>
-        <div className="note-pane__actions">
+        <div className="note-toolbar__actions">
           {showModeButtons ? (
-            <button
-              type="button"
-              className="note-pane__edit-button"
-              data-testid="note-edit-button"
-              disabled={loadingEdit}
-              onClick={() => {
+            <NoteToolbarPrimary
+              loadingEdit={loadingEdit}
+              onEdit={() => {
                 void startEdit();
               }}
-            >
-              {loadingEdit ? t('web.common.opening') : t('web.note.edit')}
-            </button>
+              onCodeMode={enterCodeMode}
+            />
           ) : null}
-          {showModeButtons ? (
-            <button
-              type="button"
-              className="note-pane__mode-button"
-              data-testid="enter-code-mode"
-              onClick={enterCodeMode}
-            >
-              {t('web.note.mode.code')}
-            </button>
-          ) : null}
-          {opTarget !== null ? (
+          {showModeButtons && opTarget !== null ? (
             <NoteOpsMenuButtons
               target={opTarget}
               onOpen={onNoteOp}
@@ -212,7 +198,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
           {ghostRef !== null ? (
             <button
               type="button"
-              className="topbar__button topbar__button--primary"
+              className="ui-btn ui-btn--primary ui-btn--md"
               onClick={() => {
                 openNewNote({ title: ghostRef, replaceTabRef: ghostRef });
               }}
@@ -252,22 +238,24 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
         />
       ) : (
         <>
-          {listItem !== null ? (
-            <NoteMetaPanel
-              key={activeTab.ref}
-              noteRef={activeTab.ref}
-              initialTags={listItem.tags}
-              initialAliases={listItem.aliases}
+          <div className="note-pane__stage">
+            {listItem !== null ? (
+              <NoteMetaPanel
+                key={activeTab.ref}
+                noteRef={activeTab.ref}
+                initialTags={listItem.tags}
+                initialAliases={listItem.aliases}
+              />
+            ) : null}
+            <NoteRenderFrame
+              noteId={noteId}
+              title={activeTab.title}
+              reloadGeneration={reloadKey}
+              onIframeWindow={(window) => {
+                iframeWindowRef.current = window;
+              }}
             />
-          ) : null}
-          <NoteRenderFrame
-            noteId={noteId}
-            title={activeTab.title}
-            reloadGeneration={reloadKey}
-            onIframeWindow={(window) => {
-              iframeWindowRef.current = window;
-            }}
-          />
+          </div>
         </>
       )}
     </section>

@@ -46,10 +46,10 @@ export function ConnectionsPanel() {
           </p>
         ) : (
           <>
-            <section className="connections__section" aria-labelledby="connections-outgoing">
-              <h3 id="connections-outgoing" className="connections__section-title">
+            <details className="connections__section" open>
+              <summary className="connections__section-summary" id="connections-outgoing">
                 {t('web.connections.outgoing.title')}
-              </h3>
+              </summary>
               {links === null || links.links.length === 0 ? (
                 <p className="connections__empty">{t('web.connections.outgoing.empty')}</p>
               ) : (
@@ -89,12 +89,12 @@ export function ConnectionsPanel() {
                   })}
                 </ul>
               )}
-            </section>
+            </details>
 
-            <section className="connections__section" aria-labelledby="connections-backlinks">
-              <h3 id="connections-backlinks" className="connections__section-title">
+            <details className="connections__section" open>
+              <summary className="connections__section-summary" id="connections-backlinks">
                 {t('web.connections.backlinks.title')}
-              </h3>
+              </summary>
               {backlinks === null || backlinks.backlinks.length === 0 ? (
                 <p className="connections__empty">{t('web.connections.backlinks.empty')}</p>
               ) : (
@@ -133,17 +133,17 @@ export function ConnectionsPanel() {
                   })}
                 </ul>
               )}
-            </section>
+            </details>
 
-            <section className="connections__section" aria-labelledby="connections-mentions">
+            <details className="connections__section" open>
+              <summary className="connections__section-summary" id="connections-mentions">
+                {t('web.connections.mentions.title')}
+              </summary>
               <div className="connections__section-header">
-                <h3 id="connections-mentions" className="connections__section-title">
-                  {t('web.connections.mentions.title')}
-                </h3>
                 {mentions !== null && mentions.mentions.length > 0 ? (
                   <button
                     type="button"
-                    className="connections__link-action"
+                    className="ui-btn ui-btn--ghost ui-btn--sm connections__link-action"
                     disabled={linking}
                     onClick={() => {
                       void (async () => {
@@ -205,12 +205,12 @@ export function ConnectionsPanel() {
                   })}
                 </ul>
               )}
-            </section>
+            </details>
 
-            <section className="connections__section" aria-labelledby="connections-graph">
-              <h3 id="connections-graph" className="connections__section-title">
+            <details className="connections__section" open>
+              <summary className="connections__section-summary" id="connections-graph">
                 {t('web.connections.graph.title')}
-              </h3>
+              </summary>
               {graph === null ? (
                 <p className="connections__empty">{t('web.connections.graph.empty')}</p>
               ) : (
@@ -221,7 +221,7 @@ export function ConnectionsPanel() {
                   onNavigate={navigateTo}
                 />
               )}
-            </section>
+            </details>
           </>
         )}
       </div>

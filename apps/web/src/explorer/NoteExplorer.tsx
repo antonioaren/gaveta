@@ -66,7 +66,7 @@ export function NoteExplorer({
           <div className="explorer__header-actions">
             <button
               type="button"
-              className="explorer__new-note"
+              className="explorer__new-note ui-btn ui-btn--ghost ui-btn--sm"
               onClick={() => {
                 setFolderOp({ kind: 'create', folder: '' });
               }}
@@ -76,7 +76,7 @@ export function NoteExplorer({
             </button>
             <button
               type="button"
-              className="explorer__new-note"
+              className="explorer__new-note ui-btn ui-btn--ghost ui-btn--sm"
               onClick={() => {
                 openNewNote();
               }}
@@ -88,50 +88,56 @@ export function NoteExplorer({
         <p className="explorer__hint">{t('web.explorer.noteCount', { count: notes.length })}</p>
       </header>
 
-      <section className="explorer__filters" aria-label={t('web.explorer.filters.aria')}>
-        <label className="field">
-          <span className="field__label">{t('web.common.type')}</span>
-          <select
-            className="field__control"
-            value={typeFilter ?? ''}
-            onChange={(event) => {
-              const value = event.target.value;
-              setTypeFilter(value.length === 0 ? null : (value as NoteListItem['type']));
+      <section className="explorer__filter-chips" aria-label={t('web.explorer.filters.aria')}>
+        <button
+          type="button"
+          className={`explorer__chip${typeFilter === null ? ' explorer__chip--active' : ''}`}
+          onClick={() => {
+            setTypeFilter(null);
+          }}
+        >
+          {t('web.common.allMasculine')}
+        </button>
+        {types.map((type) => {
+          const typeKey = type === null ? null : noteTypeMessageKeyForFilter(type);
+          const label =
+            type === null ? t('web.explorer.type.noType') : typeKey !== null ? t(typeKey) : type;
+          return (
+            <button
+              key={type ?? 'sin-tipo'}
+              type="button"
+              className={`explorer__chip${typeFilter === type ? ' explorer__chip--active' : ''}`}
+              onClick={() => {
+                setTypeFilter(type);
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+        {tags.slice(0, 8).map((tag) => (
+          <button
+            key={tag}
+            type="button"
+            className={`explorer__chip${tagFilter === tag ? ' explorer__chip--active' : ''}`}
+            onClick={() => {
+              setTagFilter(tagFilter === tag ? null : tag);
             }}
           >
-            <option value="">{t('web.common.allMasculine')}</option>
-            {types.map((type) => {
-              const typeKey = type === null ? null : noteTypeMessageKeyForFilter(type);
-              return (
-                <option key={type ?? 'sin-tipo'} value={type ?? ''}>
-                  {type === null
-                    ? t('web.explorer.type.noType')
-                    : typeKey !== null
-                      ? t(typeKey)
-                      : type}
-                </option>
-              );
-            })}
-          </select>
-        </label>
-        <label className="field">
-          <span className="field__label">{t('web.common.tag')}</span>
-          <select
-            className="field__control"
-            value={tagFilter ?? ''}
-            onChange={(event) => {
-              const value = event.target.value;
-              setTagFilter(value.length === 0 ? null : value);
+            #{tag}
+          </button>
+        ))}
+        {tagFilter !== null && !tags.slice(0, 8).includes(tagFilter) ? (
+          <button
+            type="button"
+            className="explorer__chip explorer__chip--active"
+            onClick={() => {
+              setTagFilter(null);
             }}
           >
-            <option value="">{t('web.common.allFeminine')}</option>
-            {tags.map((tag) => (
-              <option key={tag} value={tag}>
-                {tag}
-              </option>
-            ))}
-          </select>
-        </label>
+            #{tagFilter} ×
+          </button>
+        ) : null}
       </section>
 
       {loading ? <p className="explorer__status">{t('web.explorer.loading')}</p> : null}
@@ -213,7 +219,6 @@ function FolderBranch({
   onContextMenu: (event: MouseEvent, note: NoteListItem) => void;
   onFolderContextMenu: (event: MouseEvent, folderPath: string) => void;
 }) {
-  const { t } = useI18n();
   return (
     <>
       {node.notes.map((note) => (
@@ -230,15 +235,11 @@ function FolderBranch({
           }}
           data-testid={`explorer-note-${note.path}`}
         >
+          <span
+            className={`explorer__type-dot explorer__type-dot--${note.type ?? 'unknown'}`}
+            aria-hidden
+          />
           <span className="explorer__note-title">{note.title}</span>
-          {note.type !== null ? (
-            <span className={`badge badge--${note.type}`}>
-              {(() => {
-                const typeKey = noteTypeMessageKeyForFilter(note.type);
-                return typeKey !== null ? t(typeKey) : note.type;
-              })()}
-            </span>
-          ) : null}
         </button>
       ))}
       {node.children.map((child) => (
