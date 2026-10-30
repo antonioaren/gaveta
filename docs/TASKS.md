@@ -108,6 +108,7 @@ flowchart TB
 ## Mejoras
 
 - [x] **T1.29 Versionado y `gaveta update`.** SemVer 0.1.0, `gaveta version` con commit git y método de instalación, `gaveta update` para checkouts git (fast-forward, assets del vault), `docs/releasing.md` y workflow de release en tag `v*`. Depende de: T1.13, T1.14, T1.20.
+- [x] **T1.30 Instalación con una línea.** `install.sh`, guía rápida, documentación de la skill y reescritura del README. PR #103 (`e19f3ce`). Depende de: T1.23.
 - [x] **T1.27 Refresco visual del tema.** Paleta más rica (acento, acentos por tipo `doc`/`slides`/`todo`, semánticos info/tip/warning/danger/success), tipografía y espaciado, modo oscuro automático y override `data-theme`, componentes pulidos (callouts Obsidian, tablas, código, blockquotes, badges, tareas, enlaces pendientes, cabecera de nota, índice, diapositivas), contrato ampliado en `contract.ts`, contraste AA con test automatizado, vitrina en `fixtures/showcase/` y E2E Playwright en claro/oscuro. Cubre: REQ-VAULT-05, REQ-NFR-10. Depende de: T1.5.
 
 ## Fase 2 — Visor de solo lectura e importación y exportación de Markdown
@@ -150,18 +151,24 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [x] **T3.5 Modo código.** CodeMirror 6 con validación en vivo usando el validador del núcleo. Cubre: REQ-APP-11. Depende de: T3.2.
 - [x] **T3.14 Estilos del modo código bajo CSP.** Montar CodeMirror en un shadow root abierto (`EditorView({ root: shadowRoot })`) para que `style-src 'self'` no bloquee los estilos de la librería. Cubre: REQ-SEC-01, REQ-APP-11. Depende de: T3.5.
 - [x] **T3.15 Capa base tipo VS Code.** Keymap de VS Code, búsqueda y reemplazo, plegado, multicursor, tema desde variables CSS, Ctrl+S y carga diferida del modo código. Cubre: REQ-APP-11. Depende de: T3.14.
-- [x] **T3.16 UX de problemas.** Avisos `W_*`, hover con código y mensaje, F8 / Shift+F8 y barra de estado con recuentos. Cubre: REQ-APP-11. Depende de: T3.14.
-- [x] **T3.17 Inteligencia HTML y Emmet.** Autocompletado acotado al contrato y Emmet (núcleo MIT). Cubre: REQ-APP-11. Depende de: T3.15.
-- [ ] **T3.18 Paleta y «Formatear documento».** Comandos del editor en la paleta (T2.8) y formateo vía el normalizador del núcleo. Cubre: REQ-APP-04, REQ-APP-11. Depende de: T3.15.
-- [x] **T3.19 Abrir en VS Code.** Enlace `vscode://file/…` con ruta absoluta solo al hacer clic. Cubre: REQ-APP-11. Depende de: T3.5.
-- [ ] **T3.6 Autocompletado de `[[`** en los dos modos (ítem 5 del plan VS Code / modo código). Cubre: REQ-APP-12. Depende de: T3.4, T3.5, T3.15.
+- [x] **T3.16 UX de problemas.** Avisos `W_*`, hover con código y mensaje, F8 / Shift+F8 y barra de estado con recuentos. Cubre: REQ-APP-11. PR #78 (`1e823ad`). Depende de: T3.14.
+- [x] **T3.17 Inteligencia HTML y Emmet.** Autocompletado acotado al contrato y Emmet (núcleo MIT). Cubre: REQ-APP-11. PR #87 (`a63c539`). Depende de: T3.15.
+- [x] **T3.18 Paleta y «Formatear documento».** Comandos del editor en la paleta (T2.8) y formateo vía el normalizador del núcleo. Cubre: REQ-APP-04, REQ-APP-11. PR #89 (`227e93e`). Depende de: T3.15.
+- [x] **T3.19 Abrir en VS Code.** Enlace `vscode://file/…` con ruta absoluta solo al hacer clic. Cubre: REQ-APP-11. PR #91 (`0ed5dc3`). Depende de: T3.5.
+- [x] **T3.6 Autocompletado de `[[`** en los dos modos (ítem 5 del plan VS Code / modo código). Cubre: REQ-APP-12. PR #92 (`b5b0ef4`); menú visual opaco #99 (`a50f930`), posición #100 (`15cb14a`). Depende de: T3.4, T3.5, T3.15.
 - [x] **T3.7 Conflictos.** Aviso y MergeView cuando la nota cambia fuera durante la edición (ítem 6 del plan VS Code). Cubre: REQ-APP-13. Depende de: T3.2, T2.2, T3.14.
 - [x] **T3.8 Renombrar, mover y borrar desde la app**, con diálogo de backlinks. Cubre: REQ-APP-14. Depende de: T3.2.
 - [x] **T3.11 Crear notas desde la app.** Botón "Nueva nota" y atajo de teclado, con selección de tipo, carpeta, tags y título. También desde un nodo fantasma o un enlace pendiente, con el título ya rellenado. Cubre: REQ-APP-17. Depende de: T3.2.
 - [x] **T3.12 Carpetas, tags y alias desde la app.** Crear, renombrar y borrar carpetas (reescribiendo los enlaces de las notas que contienen), y editar tags y alias desde el panel de la nota. Cubre: REQ-APP-18. Depende de: T3.8.
-- [~] **T3.13 Paridad entre app y CLI.** Tests que ejecutan cada operación de CRUD desde la API de la app y desde la CLI, y comprueban que producen archivos idénticos. Cubre: REQ-APP-18, DEC-08. Depende de: T3.3 a T3.12, T3.14 a T3.19.
+- [x] **T3.13 Paridad entre app y CLI.** Tests que ejecutan cada operación de CRUD desde la API de la app y desde la CLI, y comprueban que producen archivos idénticos. Cubre: REQ-APP-18, DEC-08. PR #94 (`cdef939`). Depende de: T3.3 a T3.12, T3.14 a T3.19.
 - [x] **T3.10 Importar y exportar desde la app.** Arrastrar y soltar archivos o carpetas `.md` (o el menú "Importar") con una vista previa del `--dry-run` antes de confirmar, y "Exportar a Markdown" en una nota, en una carpeta y en el vault. Cubre: REQ-MIG-12. Depende de: T3.2, T2.17.
 - [ ] **T3.9 Prueba de la puerta 3.** Pruebas de ida y vuelta sobre todas las notas de `fixtures/` y de la puerta 1. Los resultados se guardan en `docs/gates/fase-3.md`. Depende de: T3.3 a T3.8, T3.10 a T3.13, T3.14 a T3.19.
+
+### Mejoras de interfaz (fase 3)
+
+- [x] **T3.20 Tokens de diseño, Geist y conmutador de tema.** `design-tokens.css`, tema del vault y preferencia claro/oscuro/sistema en la app. PR #102 (`8f55a21`). Depende de: T2.4.
+- [x] **T3.21 Rediseño de layout y controles (fase 2).** Barra superior, primitivos `ui/*` y reorganización del shell sin cambiar el contrato del tema del vault. PR #104 (`d4092ed`). Depende de: T3.20.
+- [x] **T3.22 Pulido de UI.** Explorador, contenido de nota, editor visual, conexiones y vistas auxiliares. PR #105 (`819ee3f`). Depende de: T3.21.
 
 ## Fase 4 — P1
 
@@ -169,7 +176,7 @@ Se adelanta a esta fase para poder usar Gaveta a diario con los documentos que y
 - [x] **T4.2 Menciones no enlazadas** en la CLI y en la app ("Enlazar"). Cubre: REQ-LINK-12.
 - [x] **T4.3 Transclusión con `<gaveta-embed>`.** Cubre: REQ-LINK-13.
 - [x] **T4.4 Vista agregada de tareas.** Cubre: REQ-APP-15.
-- [x] **T4.5 Mermaid y exportación de presentaciones a PDF.** Render Mermaid offline en `file://` y exportación a PDF desde la vista `slides` (impresión del navegador con CSS `@media print`, sin dependencias nuevas). Cubre: REQ-TYPE-06, REQ-APP-16.
+- [x] **T4.5 Mermaid y exportación de presentaciones a PDF.** Render Mermaid offline en `file://` (PR #36, `05401d6`) y exportación a PDF desde la vista `slides` vía impresión del navegador con CSS `@media print` (PR #95, `f6789e9`). Cubre: REQ-TYPE-06, REQ-APP-16.
 - [x] **T4.6 Plantillas por tipo.** Cubre: REQ-TYPE-07.
 - [x] **T4.7 `gaveta stats`** con un log local opcional. Cubre: REQ-CLI-15.
 - [ ] **T4.8 CI en Windows.** Añadir `windows-latest` a la matriz de GitHub Actions (REQ-NFR-05). Aplazado al final del proyecto.
