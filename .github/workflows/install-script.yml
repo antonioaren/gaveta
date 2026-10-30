@@ -1,0 +1,90 @@
+name: install-script
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'install.sh'
+      - '.github/workflows/install-script.yml'
+      - 'e2e/install-script.test.ts'
+  pull_request:
+    paths:
+      - 'install.sh'
+      - '.github/workflows/install-script.yml'
+      - 'e2e/install-script.test.ts'
+
+permissions:
+  contents: read
+
+jobs:
+  install-script:
+    name: install-script
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: ShellCheck
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            if [ "${{ runner.os }}" = "Linux" ]; then
+              sudo apt-get update
+              sudo apt-get install -y shellcheck
+            else
+              brew install shellcheck
+            fi
+          fi
+          shellcheck install.sh
+      - name: Run installer from checkout (--source)
+        env:
+          HOME: ${{ runner.temp }}/gaveta-install-home
+        run: |
+          set -euo pipefail
+          rm -rf "$HOME"
+          mkdir -p "$HOME/.local/bin"
+          bash install.sh --source "$GITHUB_WORKSPACE" --yes
+          "$HOME/.local/bin/gaveta" version --json | tee /tmp/gaveta-version.json
+          node -e "
+            const fs = require('node:fs');
+            const body = JSON.parse(fs.readFileSync('/tmp/gaveta-version.json', 'utf8'));
+            if (!body.ok || body.data.install.method !== 'git') {
+              console.error(body);
+              process.exit(1);
+            }
+          "
+          test -f "$HOME/Gaveta/.gaveta/config.json"
+          "$HOME/.local/bin/gaveta" doctor --json --vault "$HOME/Gaveta"
+          "$HOME/.local/bin/gaveta" validate --json --vault "$HOME/Gaveta"
+          custom="$HOME/custom-install-dir"
+          bash install.sh --source "$GITHUB_WORKSPACE" --dir "$custom" --yes
+          test -f "$custom/env.sh"
+          grep -q 'GAVETA_VAULT=' "$custom/env.sh"
+          bash install.sh --source "$GITHUB_WORKSPACE" --yes
+          bash install.sh --uninstall --yes
+          test ! -e "$HOME/.local/bin/gaveta"
+          test -f "$HOME/Gaveta/.gaveta/config.json"
+      - name: Serve smoke
+        env:
+          HOME: ${{ runner.temp }}/gaveta-install-home
+        run: |
+          set -euo pipefail
+          bash install.sh --source "$GITHUB_WORKSPACE" --yes
+          "$HOME/.local/bin/gaveta" serve --json --port 0 --vault "$HOME/Gaveta" > /tmp/serve.json &
+          pid=$!
+          for _ in $(seq 1 60); do
+            if grep -q schemaVersion /tmp/serve.json 2>/dev/null; then
+              break
+            fi
+            sleep 0.5
+          done
+          port=$(node -e "const b=JSON.parse(require('node:fs').readFileSync('/tmp/serve.json','utf8')); process.stdout.write(String(b.data.port));")
+          token=$(node -e "const b=JSON.parse(require('node:fs').readFileSync('/tmp/serve.json','utf8')); process.stdout.write(b.data.token);")
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-gaveta-token: $token" "http://127.0.0.1:${port}/api/notes")
+          test "$code" = "200"
+          kill "$pid" || true

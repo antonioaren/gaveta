@@ -24,7 +24,7 @@ Pushing a tag matching `v*` triggers `.github/workflows/release.yml`. The job:
 3. Extracts the matching `CHANGELOG.md` section.
 4. Creates a GitHub Release with that body.
 
-There is no npm publish yet; distribution remains a git checkout plus `pnpm install` and a symlink to `packages/cli/bin/gaveta.js`.
+There is no npm publish yet; distribution is the bash installer (curl) or a git checkout plus symlink to `packages/cli/bin/gaveta.js`. See `install.sh` and [docs/installation.md](installation.md).
 
 ## After tagging
 

@@ -1,0 +1,475 @@
+#!/usr/bin/env bash
+# Gaveta installer — https://github.com/antonioaren/gaveta
+# Usage: curl -fsSL https://raw.githubusercontent.com/antonioaren/gaveta/main/install.sh | bash
+
+if [ -z "${BASH_VERSION:-}" ]; then
+  echo "gaveta install: run with bash, not sh. Example:" >&2
+  echo "  curl -fsSL https://raw.githubusercontent.com/antonioaren/gaveta/main/install.sh | bash" >&2
+  exit 1
+fi
+
+set -euo pipefail
+
+readonly MIN_NODE_MAJOR=22
+readonly MIN_NODE_MINOR=18
+readonly MIN_NODE_PATCH=0
+readonly DEFAULT_REPO='https://github.com/antonioaren/gaveta.git'
+readonly DEFAULT_REF='main'
+readonly DEFAULT_INSTALL_DIR="${HOME}/.local/share/gaveta"
+readonly DEFAULT_BIN_DIR="${HOME}/.local/bin"
+readonly DEFAULT_VAULT_DIR="${HOME}/Gaveta"
+readonly MARKER_BEGIN='# >>> gaveta >>>'
+readonly MARKER_END='# <<< gaveta <<<'
+
+REPO_URL="$DEFAULT_REPO"
+GIT_REF="$DEFAULT_REF"
+INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+BIN_DIR="$DEFAULT_BIN_DIR"
+VAULT_DIR="$DEFAULT_VAULT_DIR"
+SOURCE_DIR=''
+REPO_ROOT=''
+DRY_RUN=0
+NO_VAULT=0
+NO_SKILL=0
+UNINSTALL=0
+PURGE=0
+ASSUME_YES=0
+
+usage() {
+  cat <<'EOF'
+Gaveta installer
+
+  curl -fsSL https://raw.githubusercontent.com/antonioaren/gaveta/main/install.sh | bash
+
+Options:
+  --dir PATH          Git checkout directory (default: ~/.local/share/gaveta)
+  --ref REF           Git ref to checkout (default: main)
+  --repo URL          Git remote URL (default: github.com/antonioaren/gaveta)
+  --source DIR        Use an existing checkout (CI/dev); skip clone
+  --vault-dir PATH    Starter vault location (default: ~/Gaveta)
+  --no-vault          Do not create a starter vault
+  --no-skill          Do not install the agent skill
+  --uninstall         Remove gaveta/gv symlinks from ~/.local/bin
+  --purge             With --uninstall, also delete the install directory (never vaults)
+  --dry-run           Print actions without changing the system
+  --yes               Non-interactive (required for --purge)
+  -h, --help          Show this help
+
+Vaults are never deleted by this script.
+EOF
+}
+
+log() {
+  printf 'gaveta install: %s\n' "$*" >&2
+}
+
+die() {
+  log "error: $*"
+  exit 1
+}
+
+env_snippet_path() {
+  printf '%s/env.sh' "$INSTALL_DIR"
+}
+
+version_ge() {
+  local ver="$1"
+  local need_major="$2"
+  local need_minor="$3"
+  local need_patch="$4"
+  local major minor patch
+  ver="${ver#v}"
+  IFS=. read -r major minor patch _ <<<"$ver"
+  major="${major:-0}"
+  minor="${minor:-0}"
+  patch="${patch:-0}"
+  if [ "$major" -gt "$need_major" ]; then
+    return 0
+  fi
+  if [ "$major" -lt "$need_major" ]; then
+    return 1
+  fi
+  if [ "$minor" -gt "$need_minor" ]; then
+    return 0
+  fi
+  if [ "$minor" -lt "$need_minor" ]; then
+    return 1
+  fi
+  [ "$patch" -ge "$need_patch" ]
+}
+
+check_node() {
+  if ! command -v node >/dev/null 2>&1; then
+    die "Node.js >= ${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}.${MIN_NODE_PATCH} is required. Install from https://nodejs.org/ (or use fnm/nvm)."
+  fi
+  local version
+  version="$(node -p "process.versions.node" 2>/dev/null || true)"
+  if [ -z "$version" ]; then
+    die "Could not read Node.js version."
+  fi
+  if ! version_ge "$version" "$MIN_NODE_MAJOR" "$MIN_NODE_MINOR" "$MIN_NODE_PATCH"; then
+    die "Node.js $version is too old; need >= ${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}.${MIN_NODE_PATCH}."
+  fi
+}
+
+ensure_corepack_pnpm() {
+  if ! command -v corepack >/dev/null 2>&1; then
+    die "corepack is missing (bundled with Node). Reinstall Node or enable corepack."
+  fi
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would run: corepack enable"
+    return 0
+  fi
+  corepack enable >/dev/null 2>&1 || true
+  if [ -f "${REPO_ROOT}/package.json" ]; then
+    local pm
+    pm="$(node -e "const p=require('${REPO_ROOT}/package.json'); process.stdout.write(p.packageManager||'')" 2>/dev/null || true)"
+    if [ -n "$pm" ] && [[ "$pm" == pnpm@* ]]; then
+      corepack prepare "$pm" --activate
+      return 0
+    fi
+  fi
+  corepack prepare pnpm@10.33.4 --activate
+}
+
+run_pnpm_in_repo() {
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would run in ${REPO_ROOT}: pnpm $*"
+    return 0
+  fi
+  export CI="${CI:-true}"
+  export COREPACK_ENABLE_DOWNLOAD="${COREPACK_ENABLE_DOWNLOAD:-1}"
+  (cd "$REPO_ROOT" && pnpm "$@")
+}
+
+link_binary() {
+  local name="$1"
+  local target="$2"
+  local link_path="${BIN_DIR}/${name}"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would symlink ${link_path} -> ${target}"
+    return 0
+  fi
+  mkdir -p "$BIN_DIR"
+  ln -sf "$target" "$link_path"
+}
+
+remove_symlink_if_ours() {
+  local name="$1"
+  local link_path="${BIN_DIR}/${name}"
+  if [ ! -e "$link_path" ]; then
+    return 0
+  fi
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would remove ${link_path}"
+    return 0
+  fi
+  rm -f "$link_path"
+}
+
+write_env_snippet() {
+  local vault="$1"
+  local snippet
+  snippet="$(env_snippet_path)"
+  if [ "$NO_VAULT" -eq 1 ]; then
+    return 0
+  fi
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would write ${snippet} with GAVETA_VAULT=${vault}"
+    return 0
+  fi
+  mkdir -p "$(dirname "$snippet")"
+  cat >"$snippet" <<EOF
+# Generated by gaveta install.sh — source this file or open a new terminal after install.
+export PATH="${BIN_DIR}:\$PATH"
+export GAVETA_VAULT="${vault}"
+EOF
+}
+
+append_shell_block() {
+  if [ "$NO_VAULT" -eq 1 ]; then
+    return 0
+  fi
+  local snippet
+  snippet="$(env_snippet_path)"
+  local block
+  block="${MARKER_BEGIN}
+if [ -f \"${snippet}\" ]; then
+  # shellcheck source=/dev/null
+  . \"${snippet}\"
+fi
+${MARKER_END}"
+  local files=()
+  [ -f "${HOME}/.zshrc" ] && files+=("${HOME}/.zshrc")
+  [ -f "${HOME}/.bashrc" ] && files+=("${HOME}/.bashrc")
+  if [ "${#files[@]}" -eq 0 ]; then
+    files+=("${HOME}/.profile")
+  fi
+  local f
+  for f in "${files[@]}"; do
+    if [ -f "$f" ] && grep -q "$MARKER_BEGIN" "$f" 2>/dev/null; then
+      continue
+    fi
+    if [ "$DRY_RUN" -eq 1 ]; then
+      log "would append gaveta env block to ${f}"
+      continue
+    fi
+    printf '\n%s\n' "$block" >>"$f"
+  done
+}
+
+path_contains_bin_dir() {
+  case ":${PATH}:" in
+    *":${BIN_DIR}:"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+ensure_repo() {
+  if [ -n "$SOURCE_DIR" ]; then
+    REPO_ROOT="$(cd "$SOURCE_DIR" && pwd)"
+    if [ ! -f "${REPO_ROOT}/packages/cli/bin/gaveta.js" ]; then
+      die "--source ${SOURCE_DIR} is not a Gaveta checkout (missing packages/cli/bin/gaveta.js)."
+    fi
+    if [ ! -d "${REPO_ROOT}/.git" ]; then
+      die "--source ${SOURCE_DIR} must be a git checkout so gaveta update works."
+    fi
+    log "using existing checkout at ${REPO_ROOT}"
+    return 0
+  fi
+
+  if [ -d "${INSTALL_DIR}/.git" ]; then
+    REPO_ROOT="$INSTALL_DIR"
+    log "updating checkout at ${REPO_ROOT}"
+    if [ "$DRY_RUN" -eq 1 ]; then
+      log "would run: git fetch && checkout ${GIT_REF} && pull --ff-only"
+      return 0
+    fi
+    git -C "$REPO_ROOT" fetch origin "$GIT_REF"
+    git -C "$REPO_ROOT" checkout "$GIT_REF"
+    git -C "$REPO_ROOT" pull --ff-only origin "$GIT_REF" 2>/dev/null || git -C "$REPO_ROOT" pull --ff-only
+    return 0
+  fi
+
+  log "cloning ${REPO_URL} (ref ${GIT_REF}) to ${INSTALL_DIR}"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    REPO_ROOT="$INSTALL_DIR"
+    return 0
+  fi
+  mkdir -p "$(dirname "$INSTALL_DIR")"
+  git clone --branch "$GIT_REF" "$REPO_URL" "$INSTALL_DIR"
+  REPO_ROOT="$INSTALL_DIR"
+}
+
+build_and_link() {
+  local cli="${REPO_ROOT}/packages/cli/bin/gaveta.js"
+  ensure_corepack_pnpm
+  run_pnpm_in_repo install --frozen-lockfile
+  run_pnpm_in_repo build:web
+  link_binary gaveta "$cli"
+  link_binary gv "$cli"
+}
+
+gaveta_cmd() {
+  "${BIN_DIR}/gaveta" "$@"
+}
+
+ensure_vault() {
+  if [ "$NO_VAULT" -eq 1 ]; then
+    return 0
+  fi
+  if [ -f "${VAULT_DIR}/.gaveta/config.json" ]; then
+    log "starter vault already exists at ${VAULT_DIR} (skipped)"
+    return 0
+  fi
+  log "creating starter vault at ${VAULT_DIR}"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would run: gaveta init ${VAULT_DIR} --json"
+    return 0
+  fi
+  mkdir -p "$(dirname "$VAULT_DIR")"
+  gaveta_cmd init "$VAULT_DIR" --json >/dev/null
+}
+
+detect_and_install_skills() {
+  if [ "$NO_SKILL" -eq 1 ]; then
+    return 0
+  fi
+  local targets=()
+  if [ -d "${HOME}/.cursor" ]; then
+    targets+=('cursor')
+  fi
+  if [ -d "${HOME}/.claude" ]; then
+    targets+=('claude')
+  fi
+  if [ "${#targets[@]}" -eq 0 ]; then
+    log "no agent config dirs (~/.cursor or ~/.claude); skipping skill install"
+    return 0
+  fi
+  local t
+  for t in "${targets[@]}"; do
+    log "installing agent skill for ${t} (user scope)"
+    if [ "$DRY_RUN" -eq 1 ]; then
+      log "would run: gaveta skill install --target ${t} --scope user --json"
+      continue
+    fi
+    gaveta_cmd skill install --target "$t" --scope user --json >/dev/null
+  done
+}
+
+write_install_meta() {
+  if [ "$DRY_RUN" -eq 1 ] || [ -z "${REPO_ROOT}" ]; then
+    return 0
+  fi
+  local version='unknown'
+  if [ -f "${REPO_ROOT}/VERSION" ]; then
+    version="$(tr -d '\n' <"${REPO_ROOT}/VERSION")"
+  fi
+  local meta_dir="$INSTALL_DIR"
+  mkdir -p "$meta_dir"
+  cat >"${meta_dir}/.install-meta" <<EOF
+repo_root=${REPO_ROOT}
+ref=${GIT_REF}
+version=${version}
+installed_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+EOF
+}
+
+print_success() {
+  local serve_vault="${VAULT_DIR}"
+  local snippet
+  snippet="$(env_snippet_path)"
+  if [ "$NO_VAULT" -eq 1 ]; then
+    serve_vault='<your-vault>'
+  fi
+  cat <<EOF
+
+Gaveta is ready.
+
+  gaveta version
+  gaveta serve --vault ${serve_vault}
+
+After opening a new terminal (or: source ${snippet}), you can run:
+
+  gaveta serve
+
+Then open the URL printed by the command (127.0.0.1 only).
+
+EOF
+  if ! path_contains_bin_dir; then
+    cat <<EOF
+Add ~/.local/bin to your PATH:
+
+  export PATH="${BIN_DIR}:\$PATH"
+
+EOF
+  fi
+}
+
+do_uninstall() {
+  log "removing gaveta and gv symlinks from ${BIN_DIR}"
+  remove_symlink_if_ours gaveta
+  remove_symlink_if_ours gv
+  if [ "$PURGE" -eq 1 ]; then
+    if [ "$ASSUME_YES" -ne 1 ]; then
+      die "refusing --purge without --yes"
+    fi
+    if [ -d "$INSTALL_DIR" ] && [ -z "$SOURCE_DIR" ]; then
+      if [ "$DRY_RUN" -eq 1 ]; then
+        log "would remove directory ${INSTALL_DIR}"
+      else
+        rm -rf "$INSTALL_DIR"
+      fi
+    fi
+  fi
+  log "done (vaults under ${HOME} were not touched)"
+}
+
+parse_args() {
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -h | --help)
+        usage
+        exit 0
+        ;;
+      --dir)
+        INSTALL_DIR="${2:?--dir requires a path}"
+        shift 2
+        ;;
+      --ref)
+        GIT_REF="${2:?--ref requires a value}"
+        shift 2
+        ;;
+      --repo)
+        REPO_URL="${2:?--repo requires a URL}"
+        shift 2
+        ;;
+      --source)
+        SOURCE_DIR="${2:?--source requires a path}"
+        shift 2
+        ;;
+      --vault-dir)
+        VAULT_DIR="${2:?--vault-dir requires a path}"
+        shift 2
+        ;;
+      --no-vault)
+        NO_VAULT=1
+        shift
+        ;;
+      --no-skill)
+        NO_SKILL=1
+        shift
+        ;;
+      --dry-run)
+        DRY_RUN=1
+        shift
+        ;;
+      --yes)
+        ASSUME_YES=1
+        shift
+        ;;
+      --uninstall)
+        UNINSTALL=1
+        shift
+        ;;
+      --purge)
+        PURGE=1
+        shift
+        ;;
+      *)
+        die "unknown option: $1 (try --help)"
+        ;;
+    esac
+  done
+}
+
+main() {
+  parse_args "$@"
+
+  if [ "$UNINSTALL" -eq 1 ]; then
+    do_uninstall
+    exit 0
+  fi
+
+  check_node
+  ensure_repo
+
+  if [ "$DRY_RUN" -eq 0 ]; then
+    build_and_link
+    write_env_snippet "$VAULT_DIR"
+    append_shell_block
+    ensure_vault
+    detect_and_install_skills
+    write_install_meta
+    print_success
+  else
+    log 'dry-run mode (no changes applied)'
+    build_and_link
+    write_env_snippet "$VAULT_DIR"
+    append_shell_block
+    ensure_vault
+    detect_and_install_skills
+  fi
+}
+
+main "$@"

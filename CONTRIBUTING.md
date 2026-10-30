@@ -5,14 +5,24 @@ Thanks for your interest in Gaveta. The project is early and moves quickly; the 
 ## Language
 
 - **Code, comments, commit messages, and identifiers:** English.
-- **User-facing CLI messages** (including JSON `message` and `hint` fields): Spanish, per product convention.
+- **User-facing CLI and web UI copy** (including JSON `message` and `hint`): English and Spanish via `@gaveta/i18n`.
 - **Stable error codes** stay as documented (`E_…`, `W_…`).
 
 ## Setup
 
 Requires **Node.js ≥ 22.18** (see `.nvmrc`) and **pnpm** (version pinned in `packageManager`).
 
+End users can install with:
+
 ```bash
+curl -fsSL https://raw.githubusercontent.com/antonioaren/gaveta/main/install.sh | bash
+```
+
+Contributors clone the repo:
+
+```bash
+git clone https://github.com/antonioaren/gaveta.git
+cd gaveta
 corepack enable
 pnpm install
 ```
