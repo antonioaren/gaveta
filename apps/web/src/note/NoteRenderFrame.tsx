@@ -3,6 +3,8 @@ import { pushLiveE2eLog } from '../live/live-e2e-log.ts';
 import { appendRenderReloadQuery } from './render-frame.ts';
 import { useRenderFrameUrl } from './useRenderFrameUrl.ts';
 import { useI18n } from '../i18n/useI18n.ts';
+import { useTheme } from '../theme/useTheme.ts';
+import { postThemeToRenderIframe } from '../theme/sync-render-theme.ts';
 
 interface NoteRenderFrameProps {
   readonly noteId: string;
@@ -20,6 +22,7 @@ export function NoteRenderFrame({
   onIframeLoad,
 }: NoteRenderFrameProps) {
   const { t } = useI18n();
+  const { resolved } = useTheme();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const renderSrc = useRenderFrameUrl(noteId);
 
@@ -48,6 +51,10 @@ export function NoteRenderFrame({
     });
   }, [frameSrc, noteId, reloadGeneration]);
 
+  useEffect(() => {
+    postThemeToRenderIframe(iframeRef.current?.contentWindow ?? null, resolved);
+  }, [resolved, frameSrc, reloadGeneration]);
+
   return renderSrc === null ? (
     <p className="note-pane__placeholder">{t('web.note.preparingView')}</p>
   ) : (
@@ -61,6 +68,7 @@ export function NoteRenderFrame({
       data-testid="note-render-frame"
       onLoad={() => {
         syncWindow();
+        postThemeToRenderIframe(iframeRef.current?.contentWindow ?? null, resolved);
         onIframeLoad?.();
       }}
     />
