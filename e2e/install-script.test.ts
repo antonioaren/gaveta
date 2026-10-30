@@ -48,6 +48,16 @@ function gitCloneCheckout(home: string, installDir: string): void {
   }
 }
 
+function clonedBranch(installDir: string): string {
+  const result = spawnSync('git', ['-C', installDir, 'rev-parse', '--abbrev-ref', 'HEAD'], {
+    encoding: 'utf8',
+  });
+  if (result.status !== 0 || typeof result.stdout !== 'string') {
+    throw new Error('failed to detect branch in cloned checkout');
+  }
+  return result.stdout.trim();
+}
+
 function envSnippetPath(installDir: string): string {
   return join(installDir, 'env.sh');
 }
@@ -132,11 +142,20 @@ it('T1.30: install.sh --uninstall --purge --yes removes a non-source install dir
   const installDir = join(home, 'gaveta-checkout');
   try {
     gitCloneCheckout(home, installDir);
-    const install = runInstall(home, ['--dir', installDir, '--yes']);
+    const branch = clonedBranch(installDir);
+    const install = runInstall(home, ['--dir', installDir, '--ref', branch, '--yes']);
     expect(install.status, install.stderr).toBe(0);
     expect(existsSync(gavetaBin(home))).toBe(true);
 
-    const uninstall = runInstall(home, ['--dir', installDir, '--uninstall', '--purge', '--yes']);
+    const uninstall = runInstall(home, [
+      '--dir',
+      installDir,
+      '--ref',
+      branch,
+      '--uninstall',
+      '--purge',
+      '--yes',
+    ]);
     expect(uninstall.status, uninstall.stderr).toBe(0);
     expect(existsSync(gavetaBin(home))).toBe(false);
     expect(existsSync(installDir)).toBe(false);
