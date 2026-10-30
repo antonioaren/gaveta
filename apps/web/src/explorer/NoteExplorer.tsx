@@ -1,4 +1,6 @@
+import { FolderPlus, FilePlus, ChevronRight, Folder } from 'lucide-react';
 import { useMemo, useState, type MouseEvent } from 'react';
+import { IconButton } from '../ui/IconButton.tsx';
 import { FolderOpsDialog } from '../folder-ops/FolderOpsDialog.tsx';
 import type { FolderOpKind } from '../folder-ops/folder-op-kind.ts';
 import { ExplorerNoteContextMenu } from './ExplorerNoteContextMenu.tsx';
@@ -57,6 +59,11 @@ export function NoteExplorer({
   const tags = useMemo(() => collectTags(notes), [notes]);
   const types = useMemo(() => collectTypes(notes), [notes]);
   const activeRef = tabState.tabs.find((tab) => tab.id === tabState.activeTabId)?.ref ?? null;
+  const [tagFiltersExpanded, setTagFiltersExpanded] = useState(false);
+  const visibleTagCount = 6;
+  const overflowTagCount = Math.max(0, tags.length - visibleTagCount);
+  const visibleTags =
+    tagFiltersExpanded || overflowTagCount === 0 ? tags : tags.slice(0, visibleTagCount);
 
   return (
     <aside className="explorer" role="navigation" aria-label={t('web.explorer.aria')}>
@@ -64,25 +71,24 @@ export function NoteExplorer({
         <div className="explorer__header-row">
           <h2 className="explorer__title">{t('web.explorer.title')}</h2>
           <div className="explorer__header-actions">
-            <button
-              type="button"
-              className="explorer__new-note ui-btn ui-btn--ghost ui-btn--sm"
+            <IconButton
+              icon={FolderPlus}
+              size="sm"
+              label={t('web.explorer.newFolder')}
+              data-testid="explorer-new-folder"
               onClick={() => {
                 setFolderOp({ kind: 'create', folder: '' });
               }}
-              data-testid="explorer-new-folder"
-            >
-              {t('web.explorer.newFolder')}
-            </button>
-            <button
-              type="button"
-              className="explorer__new-note ui-btn ui-btn--ghost ui-btn--sm"
+            />
+            <IconButton
+              icon={FilePlus}
+              size="sm"
+              label={t('web.explorer.newNote')}
+              data-testid="explorer-new-note"
               onClick={() => {
                 openNewNote();
               }}
-            >
-              {t('web.explorer.newNote')}
-            </button>
+            />
           </div>
         </div>
         <p className="explorer__hint">{t('web.explorer.noteCount', { count: notes.length })}</p>
@@ -115,7 +121,7 @@ export function NoteExplorer({
             </button>
           );
         })}
-        {tags.slice(0, 8).map((tag) => (
+        {visibleTags.map((tag) => (
           <button
             key={tag}
             type="button"
@@ -127,7 +133,19 @@ export function NoteExplorer({
             #{tag}
           </button>
         ))}
-        {tagFilter !== null && !tags.slice(0, 8).includes(tagFilter) ? (
+        {!tagFiltersExpanded && overflowTagCount > 0 ? (
+          <button
+            type="button"
+            className="explorer__chip explorer__chip--overflow"
+            aria-expanded={false}
+            onClick={() => {
+              setTagFiltersExpanded(true);
+            }}
+          >
+            {t('web.explorer.tagsOverflow', { count: overflowTagCount })}
+          </button>
+        ) : null}
+        {tagFilter !== null && !visibleTags.includes(tagFilter) ? (
           <button
             type="button"
             className="explorer__chip explorer__chip--active"
@@ -243,16 +261,27 @@ function FolderBranch({
         </button>
       ))}
       {node.children.map((child) => (
-        <div key={child.path} className="explorer__folder">
-          <div
-            className={`explorer__folder-label explorer__folder-label--depth-${String(Math.min(depth, 12))}`}
+        <details
+          key={child.path}
+          className="explorer__folder"
+          open
+          data-testid={`explorer-folder-${child.path}`}
+        >
+          <summary
+            className={`explorer__folder-row explorer__folder-row--depth-${String(Math.min(depth, 12))}`}
             onContextMenu={(event) => {
               onFolderContextMenu(event, child.path);
             }}
-            data-testid={`explorer-folder-${child.path}`}
           >
-            {child.name}
-          </div>
+            <ChevronRight
+              className="explorer__folder-chevron"
+              aria-hidden
+              size={14}
+              strokeWidth={2}
+            />
+            <Folder className="explorer__folder-icon" aria-hidden size={14} strokeWidth={2} />
+            <span className="explorer__folder-name">{child.name}</span>
+          </summary>
           <FolderBranch
             node={child}
             depth={depth + 1}
@@ -261,7 +290,7 @@ function FolderBranch({
             onContextMenu={onContextMenu}
             onFolderContextMenu={onFolderContextMenu}
           />
-        </div>
+        </details>
       ))}
     </>
   );

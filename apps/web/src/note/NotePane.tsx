@@ -2,7 +2,8 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { NoteListItem } from '../api/types.ts';
 import { fetchNoteHtml } from '../api/note-read.ts';
-import { VisualNoteEditor } from '../editor/VisualNoteEditor.tsx';
+import { VisualNoteEditor, type VisualNoteEditorHandle } from '../editor/VisualNoteEditor.tsx';
+import { Button } from '../ui/Button.tsx';
 import { isGhostViewerRef } from '../new-note/ghost-viewer-ref.ts';
 import { useNewNoteDialog } from '../new-note/useNewNoteDialog.ts';
 import { isNoteUlid } from '../notes/viewer-ref.ts';
@@ -36,6 +37,8 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
   const { openNewNote } = useNewNoteDialog();
   const { tabs, activeTabId } = tabState;
   const iframeWindowRef = useRef<Window | null>(null);
+  const visualEditorRef = useRef<VisualNoteEditorHandle | null>(null);
+  const [visualSaving, setVisualSaving] = useState(false);
   const [codeModeForRef, setCodeModeForRef] = useState<string | null>(null);
   const [editTargetRef, setEditTargetRef] = useState<string | null>(null);
   const [draft, setDraft] = useState<EditDraft | null>(null);
@@ -149,6 +152,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
 
   const canEdit = !deleted && noteId !== null;
   const showModeButtons = canEdit && !editingAny;
+  const showVisualEditActions = inVisualEdit;
 
   return (
     <section className="note-pane" aria-label={t('web.note.aria')}>
@@ -163,6 +167,32 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
           ) : null}
         </div>
         <div className="note-toolbar__actions">
+          {showVisualEditActions ? (
+            <div className="note-toolbar__edit-actions">
+              <Button
+                variant="primary"
+                size="sm"
+                data-testid="visual-editor-save"
+                disabled={visualSaving}
+                onClick={() => {
+                  visualEditorRef.current?.save();
+                }}
+              >
+                {visualSaving ? t('web.common.saving') : t('web.common.save')}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                data-testid="visual-editor-cancel"
+                disabled={visualSaving}
+                onClick={() => {
+                  visualEditorRef.current?.cancel();
+                }}
+              >
+                {t('web.common.cancel')}
+              </Button>
+            </div>
+          ) : null}
           {showModeButtons ? (
             <NoteToolbarPrimary
               loadingEdit={loadingEdit}
@@ -222,6 +252,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
         />
       ) : activeDraft !== null ? (
         <VisualNoteEditor
+          ref={visualEditorRef}
           noteRef={activeTab.ref}
           noteId={noteId}
           notePath={activeTab.path}
@@ -235,6 +266,7 @@ export function NotePane({ notes, onNoteOp, onExportNote }: NotePaneProps) {
           onReload={(html, hash) => {
             setDraft({ html, hash });
           }}
+          onSavingChange={setVisualSaving}
         />
       ) : (
         <>

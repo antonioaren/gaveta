@@ -75,6 +75,7 @@ export function AggregatedTasksView() {
           <label>
             <span>{t('web.tasks.status.label')}</span>
             <select
+              className="ui-select"
               value={filters.status}
               onChange={(event) => {
                 setFilters((current) => ({
@@ -91,6 +92,7 @@ export function AggregatedTasksView() {
           <label>
             <span>{t('web.tasks.priority.label')}</span>
             <select
+              className="ui-select"
               value={filters.priority}
               onChange={(event) => {
                 setFilters((current) => ({

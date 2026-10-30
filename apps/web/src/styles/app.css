@@ -384,7 +384,7 @@ select {
   color: var(--color-danger);
 }
 
-.explorer__folder-label {
+.explorer__folder-row {
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-muted);
@@ -431,53 +431,53 @@ select {
   padding-inline-start: 180px;
 }
 
-.explorer__folder-label--depth-0 {
+.explorer__folder-row--depth-0 {
   padding-inline-start: 12px;
 }
-.explorer__folder-label--depth-1 {
+.explorer__folder-row--depth-1 {
   padding-inline-start: 26px;
 }
-.explorer__folder-label--depth-2 {
+.explorer__folder-row--depth-2 {
   padding-inline-start: 40px;
 }
-.explorer__folder-label--depth-3 {
+.explorer__folder-row--depth-3 {
   padding-inline-start: 54px;
 }
-.explorer__folder-label--depth-4 {
+.explorer__folder-row--depth-4 {
   padding-inline-start: 68px;
 }
-.explorer__folder-label--depth-5 {
+.explorer__folder-row--depth-5 {
   padding-inline-start: 82px;
 }
-.explorer__folder-label--depth-6 {
+.explorer__folder-row--depth-6 {
   padding-inline-start: 96px;
 }
-.explorer__folder-label--depth-7 {
+.explorer__folder-row--depth-7 {
   padding-inline-start: 110px;
 }
-.explorer__folder-label--depth-8 {
+.explorer__folder-row--depth-8 {
   padding-inline-start: 124px;
 }
-.explorer__folder-label--depth-9 {
+.explorer__folder-row--depth-9 {
   padding-inline-start: 138px;
 }
-.explorer__folder-label--depth-10 {
+.explorer__folder-row--depth-10 {
   padding-inline-start: 152px;
 }
-.explorer__folder-label--depth-11 {
+.explorer__folder-row--depth-11 {
   padding-inline-start: 166px;
 }
-.explorer__folder-label--depth-12 {
+.explorer__folder-row--depth-12 {
   padding-inline-start: 180px;
 }
 
 .explorer__note {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-2);
   width: 100%;
-  text-align: left;
+  text-align: start;
   border: none;
   background: transparent;
   color: var(--color-text);
@@ -491,22 +491,10 @@ select {
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
-.explorer__note--doc {
-  border-inline-start: 3px solid var(--color-accent-doc);
-}
-
-.explorer__note--slides {
-  border-inline-start: 3px solid var(--color-accent-slides);
-}
-
-.explorer__note--todo {
-  border-inline-start: 3px solid var(--color-accent-todo);
-}
-
 .explorer__note-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  text-align: start;
 }
 
 .badge {
@@ -1127,20 +1115,20 @@ select {
 .connections__link {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-2);
   width: 100%;
-  text-align: left;
+  text-align: start;
   border: none;
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--color-text);
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-1);
   cursor: pointer;
 }
 
 .connections__link:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
 }
 
 .connections__link:disabled {
@@ -1158,11 +1146,11 @@ select {
 }
 
 .connections__context {
-  margin: var(--space-1) 0 0;
-  padding-inline-start: var(--space-2);
-  border-inline-start: 2px solid var(--color-border);
+  margin: 0;
+  padding: 0 var(--space-1) var(--space-1) calc(var(--space-4) + 14px);
   color: var(--color-muted);
   font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
 }
 
 .connections__empty,
