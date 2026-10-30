@@ -1,7 +1,8 @@
 {
   "rel": {
     "strict": false,
-    "vocabulary": ["related", "depends-on", "part-of", "supersedes", "references"]
+    "vocabulary": ["related", "depends-on", "part-of", "supersedes", "references"],
+    ".gaveta/theme.css": "b4f530942ede8f87ee2729b0caf9ec9b54a74947d730f53800351ec709c15aa0"
   },
   "remoteAllowlist": [],
   "assetsVersion": "0.1.0",

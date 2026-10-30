@@ -37,8 +37,16 @@ export const BUNDLED_VAULT_ASSET_CONTENT: Readonly<Record<string, string>> = {
  * Known content hashes for each bundled vault asset. When a release changes bundled
  * files, append the previous release hash here so upgrades can replace untouched files.
  */
+/** Previous default theme (warm palette) for upgradeVaultAssets. */
+const PREVIOUS_DEFAULT_THEME_SHA256 =
+  'fc18cdf468ef605b7ca823b5fcdc7427734a3c3ce08c18fab1aa5920bd2fcaf5';
+
 export const SHIPPED_VAULT_ASSET_HASHES: Readonly<Record<string, readonly string[]>> = {
-  [THEME_RELATIVE_PATH]: [sha256(DEFAULT_THEME_CSS), sha256(LEGACY_THEME_CSS)],
+  [THEME_RELATIVE_PATH]: [
+    sha256(DEFAULT_THEME_CSS),
+    PREVIOUS_DEFAULT_THEME_SHA256,
+    sha256(LEGACY_THEME_CSS),
+  ],
   [MERMAID_MIN_RELATIVE]: [sha256(DEFAULT_MERMAID_MIN_JS)],
   [MERMAID_BOOT_RELATIVE]: [sha256(DEFAULT_MERMAID_BOOT_JS)],
   [MERMAID_LICENSE_RELATIVE]: [sha256(DEFAULT_MERMAID_LICENSE)],

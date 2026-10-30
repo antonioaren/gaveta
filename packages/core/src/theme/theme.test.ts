@@ -20,6 +20,7 @@ const TEXT_TOKENS = [
 const SURFACE_TOKENS = [
   '--color-bg',
   '--color-surface',
+  '--color-surface-elevated',
   '--color-code-bg',
   '--color-kbd-bg',
   '--color-info-bg',
@@ -696,8 +697,8 @@ describe('default theme', () => {
     const known = [...TEXT_TOKENS, ...SURFACE_TOKENS, ...UI_TOKENS].sort();
     expect([...light.keys()].sort()).toEqual(known);
     expect([...dark.keys()].sort()).toEqual(known);
-    expect(light.get('--color-text')).toBe('#1c1917');
-    expect(light.get('--color-bg')).toBe('#faf8f5');
+    expect(light.get('--color-text')).toBe('#18181b');
+    expect(light.get('--color-bg')).toBe('#f4f4f5');
 
     const failures: string[] = [];
     for (const [scheme, tokens] of [
