@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   applyResolvedTheme,
   readThemePreference,
@@ -16,10 +10,7 @@ import { ThemeContext, type ThemeContextValue } from './theme-context.ts';
 
 export function ThemeProvider({ children }: { readonly children: ReactNode }) {
   const [preference, setPreferenceState] = useState<ThemePreference>(() => readThemePreference());
-  const resolved = useMemo(
-    () => resolveTheme(preference),
-    [preference],
-  );
+  const resolved = useMemo(() => resolveTheme(preference), [preference]);
 
   useEffect(() => {
     applyResolvedTheme(resolved);

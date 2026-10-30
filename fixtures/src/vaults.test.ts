@@ -269,7 +269,7 @@ describe('vault skeleton', () => {
     const configBytes = readFileSync(join(vaultPath('empty'), '.gaveta/config.json'));
     const themeBytes = readFileSync(join(vaultPath('empty'), '.gaveta/theme.css'));
     expect(themeBytes.toString('utf8')).toContain('--color-accent');
-    expect(themeBytes.toString('utf8')).toContain('#faf8f5');
+    expect(themeBytes.toString('utf8')).toContain('#f4f4f5');
 
     for (const name of ['empty', 'backlinks', 'problems', 'malicious'] as const) {
       expect(readFileSync(join(vaultPath(name), '.gaveta/config.json'))).toEqual(configBytes);

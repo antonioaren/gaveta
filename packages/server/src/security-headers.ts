@@ -15,7 +15,7 @@ export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
 
 /** CSP for the React shell (REQ-SEC-06): no remote origins. */
 export const APP_SHELL_CSP =
-  "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'; frame-src 'self'; frame-ancestors 'none'";
+  "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'; frame-src 'self'; frame-ancestors 'none'";
 
 export const APP_SHELL_HEADERS: Readonly<Record<string, string>> = {
   ...SHARED_HEADERS,

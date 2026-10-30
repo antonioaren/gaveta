@@ -40,12 +40,12 @@ describe('theme showcase (file://)', () => {
     await openNote(page, 'light');
 
     const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(bodyBg).toBe('rgb(250, 248, 245)');
+    expect(bodyBg).toBe('rgb(244, 244, 245)');
 
     const calloutBorder = await page
       .locator('aside.callout[data-kind="info"]')
       .evaluate((node) => getComputedStyle(node).borderInlineStartColor);
-    expect(calloutBorder).toBe('rgb(29, 78, 216)');
+    expect(calloutBorder).toBe('rgb(67, 56, 202)');
 
     const pendingColor = await page
       .locator('a[data-g-pending]')
@@ -61,7 +61,7 @@ describe('theme showcase (file://)', () => {
     await openNote(page, 'dark');
 
     const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(bodyBg).toBe('rgb(20, 18, 16)');
+    expect(bodyBg).toBe('rgb(9, 9, 11)');
 
     const linkColor = await page
       .locator('a[data-g-to]')
@@ -96,7 +96,7 @@ describe('theme showcase (file://)', () => {
       document.documentElement.dataset.theme = 'dark';
     });
     const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(bodyBg).toBe('rgb(20, 18, 16)');
+    expect(bodyBg).toBe('rgb(9, 9, 11)');
     await page.close();
   });
 });
