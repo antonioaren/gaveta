@@ -259,6 +259,27 @@ export {
 export type { MarkdownRoundTripResult, NoteSemanticSnapshot } from './convert/round-trip.ts';
 
 export {
+  assertMaliciousSanitized,
+  isMaliciousCorpus,
+  listPhase3Gate1MarkdownNotes,
+  listPhase3StaticFixtureNotes,
+  normalizeFixtureHtml,
+  phase3SemanticSnapshot,
+  runPhase3CodeSave,
+  runPhase3RoundTripPipeline,
+  runPhase3VisualSave,
+  snapshotsEqual,
+} from './gate/phase3-round-trip.ts';
+
+export type {
+  Phase3FixtureNote,
+  Phase3RoundTripFailure,
+  Phase3SemanticSnapshot,
+  Phase3SectionSnapshot,
+  Phase3VisualRoundTrip,
+} from './gate/phase3-round-trip.ts';
+
+export {
   exportMdPathCaseCollisions,
   exportVaultToMarkdown,
   resolveInsideExport,
