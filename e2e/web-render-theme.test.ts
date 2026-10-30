@@ -30,8 +30,8 @@ afterAll(async () => {
   await browser.close();
 });
 
-afterEach(() => {
-  stopServeChildren(children);
+afterEach(async () => {
+  await stopServeChildren(children);
 });
 
 function startServe(vault: string): Promise<{
@@ -96,10 +96,14 @@ it('REQ-APP-02: dark shell preference syncs gaveta:theme to the render iframe', 
     const frame = page.frameLocator('[data-testid="note-render-frame"]');
     await frame.locator('body').waitFor({ timeout: 30_000 });
 
-    const iframeTheme = await frame.locator('html').evaluate((html) => html.getAttribute('data-theme'));
+    const iframeTheme = await frame
+      .locator('html')
+      .evaluate((html) => html.getAttribute('data-theme'));
     expect(iframeTheme).toBe('dark');
 
-    const bodyBg = await frame.locator('body').evaluate((body) => getComputedStyle(body).backgroundColor);
+    const bodyBg = await frame
+      .locator('body')
+      .evaluate((body) => getComputedStyle(body).backgroundColor);
     expect(channelSum(bodyBg)).toBeLessThan(80);
     expect(bodyBg).toBe('rgb(9, 9, 11)');
 
