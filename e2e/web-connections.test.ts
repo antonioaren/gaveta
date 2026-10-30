@@ -90,13 +90,13 @@ it('REQ-APP-01: connections panel lists backlinks and navigates by ULID', async 
     await page.goto(noteUrl.toString(), { waitUntil: 'networkidle' });
 
     const panel = page.getByLabel('Panel de conexiones');
-    await panel.getByRole('heading', { name: 'Backlinks' }).waitFor({ state: 'visible' });
+    await panel.locator('#connections-backlinks').waitFor({ state: 'visible' });
     const backlinkButton = panel
       .locator('.connections__list--backlinks')
       .getByRole('button', { name: 'Formas de enlace' });
     await backlinkButton.waitFor({ state: 'visible' });
-    await panel.getByRole('heading', { name: 'Salientes' }).waitFor({ state: 'visible' });
-    await panel.getByRole('heading', { name: 'Grafo local' }).waitFor({ state: 'visible' });
+    await panel.locator('#connections-outgoing').waitFor({ state: 'visible' });
+    await panel.locator('#connections-graph').waitFor({ state: 'visible' });
 
     await backlinkButton.click();
     await page.waitForURL(`**/nota/${FORMAS_ID}`);

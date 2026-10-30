@@ -68,57 +68,60 @@ export function NoteMetaPanel({ noteRef, initialTags, initialAliases }: NoteMeta
   }, [aliasesInput, hash, noteRef, tagsInput, t]);
 
   return (
-    <section
+    <details
       className="note-meta-panel"
+      open
       aria-label={t('web.noteMeta.aria')}
       data-testid="note-meta-panel"
     >
-      <h2 className="note-meta-panel__title">{t('web.noteMeta.title')}</h2>
-      <label className="field" htmlFor={tagsId}>
-        <span className="field__label">{t('web.noteMeta.tags')}</span>
-        <input
-          id={tagsId}
-          className="field__control"
-          value={tagsInput}
-          onChange={(event) => {
-            setTagsInput(event.target.value);
+      <summary className="note-meta-panel__summary">{t('web.noteMeta.title')}</summary>
+      <div className="note-meta-panel__body">
+        <label className="field" htmlFor={tagsId}>
+          <span className="field__label">{t('web.noteMeta.tags')}</span>
+          <input
+            id={tagsId}
+            className="field__control"
+            value={tagsInput}
+            onChange={(event) => {
+              setTagsInput(event.target.value);
+            }}
+            data-testid="note-meta-tags"
+          />
+        </label>
+        <label className="field" htmlFor={aliasesId}>
+          <span className="field__label">{t('web.noteMeta.aliases')}</span>
+          <input
+            id={aliasesId}
+            className="field__control"
+            value={aliasesInput}
+            onChange={(event) => {
+              setAliasesInput(event.target.value);
+            }}
+            data-testid="note-meta-aliases"
+          />
+        </label>
+        {error !== null ? (
+          <p className="note-meta-panel__error" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {saved ? (
+          <p className="note-meta-panel__ok" data-testid="note-meta-saved">
+            {t('web.noteMeta.saved')}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="ui-btn ui-btn--subtle ui-btn--sm note-meta-panel__save"
+          disabled={saving || hash === null}
+          data-testid="note-meta-save"
+          onClick={() => {
+            void save();
           }}
-          data-testid="note-meta-tags"
-        />
-      </label>
-      <label className="field" htmlFor={aliasesId}>
-        <span className="field__label">{t('web.noteMeta.aliases')}</span>
-        <input
-          id={aliasesId}
-          className="field__control"
-          value={aliasesInput}
-          onChange={(event) => {
-            setAliasesInput(event.target.value);
-          }}
-          data-testid="note-meta-aliases"
-        />
-      </label>
-      {error !== null ? (
-        <p className="note-meta-panel__error" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {saved ? (
-        <p className="note-meta-panel__ok" data-testid="note-meta-saved">
-          {t('web.noteMeta.saved')}
-        </p>
-      ) : null}
-      <button
-        type="button"
-        className="note-meta-panel__save"
-        disabled={saving || hash === null}
-        data-testid="note-meta-save"
-        onClick={() => {
-          void save();
-        }}
-      >
-        {saving ? t('web.common.saving') : t('web.noteMeta.save')}
-      </button>
-    </section>
+        >
+          {saving ? t('web.common.saving') : t('web.noteMeta.save')}
+        </button>
+      </div>
+    </details>
   );
 }

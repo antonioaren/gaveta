@@ -79,6 +79,7 @@ it('shows English chrome when the locale is set to en', async () => {
     });
     await page.goto(url, { waitUntil: 'networkidle' });
 
+    await page.getByTestId('shell-settings-trigger').click();
     expect(await page.getByTestId('vault-import').innerText()).toBe('Import');
     expect(await page.getByTestId('language-select').inputValue()).toBe('en');
     await page.close();

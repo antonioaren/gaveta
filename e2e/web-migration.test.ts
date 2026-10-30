@@ -92,6 +92,7 @@ it('REQ-MIG-12: import preview and export preview in the app', async () => {
     const { url } = started.json.data;
     const page = await newWebPage(browser);
     await openShell(page, url);
+    await page.getByTestId('shell-settings-trigger').click();
     await page.getByTestId('vault-import').click();
     await page.getByTestId('import-file-input').setInputFiles(mdFile);
     await page.getByTestId('import-preview-dialog').waitFor({ state: 'visible' });
@@ -115,6 +116,7 @@ it('REQ-MIG-12: export markdown zip from a note', async () => {
     const page = await newWebPage(browser);
     await openShell(page, url);
     await page.getByTestId(`explorer-note-${NOTE_X.path}`).click();
+    await page.getByTestId('note-actions-menu-trigger').click();
     await page.getByTestId('note-action-export').click();
     await page.getByTestId('export-preview-dialog').waitFor({ state: 'visible' });
     await page.getByTestId('export-preview-summary').waitFor({ state: 'visible' });

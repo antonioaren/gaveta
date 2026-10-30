@@ -1,5 +1,6 @@
 /* Gaveta web shell — imports shared vault tokens */
 @import '../../../../packages/core/src/theme/design-tokens.css';
+@import './shell-chrome.css';
 
 :root {
   --font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;

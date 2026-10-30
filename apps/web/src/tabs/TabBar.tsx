@@ -10,16 +10,19 @@ export function TabBar() {
   }
 
   return (
-    <div className="tab-bar" role="tablist" aria-label={t('web.tabs.aria')}>
+    <div className="tab-strip" role="tablist" aria-label={t('web.tabs.aria')}>
       {tabState.tabs.map((tab) => {
         const selected = tab.id === tabState.activeTabId;
         return (
-          <div key={tab.id} className={`tab-bar__item${selected ? ' tab-bar__item--active' : ''}`}>
+          <div
+            key={tab.id}
+            className={`tab-strip__item${selected ? ' tab-strip__item--active' : ''}`}
+          >
             <button
               type="button"
               role="tab"
               aria-selected={selected}
-              className="tab-bar__tab"
+              className="tab-strip__tab"
               onClick={() => {
                 tabState.activateTab(tab.id);
               }}
@@ -28,7 +31,7 @@ export function TabBar() {
             </button>
             <button
               type="button"
-              className="tab-bar__close"
+              className="tab-strip__close"
               aria-label={t('web.tabs.close', { title: tab.title })}
               onClick={() => {
                 tabState.closeTab(tab.id);

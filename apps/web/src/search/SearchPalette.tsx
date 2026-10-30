@@ -7,6 +7,7 @@ import {
   useState,
   type KeyboardEvent,
 } from 'react';
+import { ArrowLeft, ArrowRight, FileText, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { NoteListItem, SearchHitView } from '../api/types.ts';
 import { useVaultNotes } from '../hooks/useVaultNotes.ts';
@@ -26,6 +27,7 @@ import {
 import { resolveSearchHitOpen } from './resolve-search-hit.ts';
 import { SnippetText } from './SnippetText.tsx';
 import { usePaletteSearch } from './usePaletteSearch.ts';
+import { useSearchPalette } from '../search/useSearchPalette.ts';
 
 type PaletteItem =
   | { readonly kind: 'command'; readonly command: PaletteCommand }
@@ -171,6 +173,16 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
   const activeOptionId =
     items.length > 0 ? `${listboxId}-option-${String(selectedIndex)}` : undefined;
 
+  const commandIcon = (commandId: string) => {
+    if (commandId === 'nav-back') {
+      return ArrowLeft;
+    }
+    if (commandId === 'nav-forward') {
+      return ArrowRight;
+    }
+    return Search;
+  };
+
   return (
     <div
       className="palette-overlay"
@@ -260,8 +272,16 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
                     activate(item);
                   }}
                 >
-                  <span className="palette__option-title">{item.command.label}</span>
-                  <span className="palette__option-meta">{t('web.palette.command.meta')}</span>
+                  <div className="palette__option-layout">
+                    {(() => {
+                      const Icon = commandIcon(item.command.id);
+                      return <Icon className="palette__option-icon" size={18} aria-hidden />;
+                    })()}
+                    <div>
+                      <span className="palette__option-title">{item.command.label}</span>
+                      <span className="palette__option-meta">{t('web.palette.command.meta')}</span>
+                    </div>
+                  </div>
                 </li>
               );
             }
@@ -284,22 +304,28 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
                   activate(item);
                 }}
               >
-                <div className="palette__option-row">
-                  <span className="palette__option-title">{hit.title}</span>
-                  {hit.type !== null ? (
-                    <span className={`badge badge--${typeClass}`}>
-                      {(() => {
-                        const typeKey = noteTypeMessageKeyForFilter(hit.type);
-                        return typeKey !== null ? t(typeKey) : hit.type;
-                      })()}
-                    </span>
-                  ) : null}
+                <div className="palette__option-layout">
+                  <FileText className="palette__option-icon" size={18} aria-hidden />
+                  <div>
+                    <div className="palette__option-row">
+                      <span className="palette__option-title">{hit.title}</span>
+                      {hit.type !== null ? (
+                        <span className={`badge badge--${typeClass}`}>
+                          {(() => {
+                            const typeKey = noteTypeMessageKeyForFilter(hit.type);
+                            return typeKey !== null ? t(typeKey) : hit.type;
+                          })()}
+                        </span>
+                      ) : null}
+                    </div>
+                    <SnippetText snippet={hit.snippet} />
+                  </div>
                 </div>
-                <SnippetText snippet={hit.snippet} />
               </li>
             );
           })}
         </ul>
+        <footer className="palette__footer">{t('web.palette.footer.hint')}</footer>
       </div>
     </div>
   );
@@ -307,20 +333,7 @@ export function SearchPalette({ open, onClose, notes }: SearchPaletteProps) {
 
 export function SearchPaletteHost() {
   const { notes } = useVaultNotes();
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setOpen((current) => !current);
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, []);
+  const { open, setOpen } = useSearchPalette();
 
   return (
     <SearchPalette

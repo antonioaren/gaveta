@@ -82,6 +82,7 @@ function cloneVault(parent: string, name: string): string {
 async function openNoteX(page: Page, baseUrl: string): Promise<void> {
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
   await page.getByTestId(`explorer-note-${NOTE_X.path}`).click();
+  await page.getByTestId('note-actions-menu-trigger').click();
   await page.getByTestId('note-action-rename').waitFor({ state: 'visible' });
 }
 
