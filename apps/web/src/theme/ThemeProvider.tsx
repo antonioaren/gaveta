@@ -2,36 +2,39 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import {
   applyResolvedTheme,
   readThemePreference,
-  resolveTheme,
   writeThemePreference,
+  type ResolvedTheme,
   type ThemePreference,
 } from './theme-preference.ts';
 import { ThemeContext, type ThemeContextValue } from './theme-context.ts';
+import { readPrefersDarkScheme, subscribePrefersDarkScheme } from './match-media-listeners.ts';
+
+function resolveWithSystemScheme(preference: ThemePreference, systemDark: boolean): ResolvedTheme {
+  if (preference === 'light' || preference === 'dark') {
+    return preference;
+  }
+  return systemDark ? 'dark' : 'light';
+}
 
 export function ThemeProvider({ children }: { readonly children: ReactNode }) {
   const [preference, setPreferenceState] = useState<ThemePreference>(() => readThemePreference());
-  const resolved = useMemo(() => resolveTheme(preference), [preference]);
+  const [systemDark, setSystemDark] = useState<boolean>(() => readPrefersDarkScheme());
+  const resolved = useMemo(
+    () => resolveWithSystemScheme(preference, systemDark),
+    [preference, systemDark],
+  );
 
   useEffect(() => {
     applyResolvedTheme(resolved);
   }, [resolved]);
 
   useEffect(() => {
-    if (preference !== 'system') {
-      return;
-    }
-    if (typeof window.matchMedia !== 'function') {
-      return;
-    }
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = (): void => {
-      applyResolvedTheme(resolveTheme('system'));
-    };
-    media.addEventListener('change', onChange);
-    return () => {
-      media.removeEventListener('change', onChange);
-    };
-  }, [preference]);
+    return (
+      subscribePrefersDarkScheme(() => {
+        setSystemDark(readPrefersDarkScheme());
+      }) ?? undefined
+    );
+  }, []);
 
   const setPreference = useCallback((next: ThemePreference) => {
     writeThemePreference(next);
