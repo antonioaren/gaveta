@@ -17,6 +17,7 @@ import { MigrationHost } from '../migration/MigrationHost.tsx';
 import { useMigrationActions } from '../migration/MigrationActionsContext.tsx';
 import type { NoteListItem } from '../api/types.ts';
 import { useI18n } from '../i18n/useI18n.ts';
+import { ThemeToggle } from '../theme/ThemeToggle.tsx';
 import type { Locale } from '@gaveta/i18n';
 
 export function ShellLayout() {
@@ -88,6 +89,7 @@ function ShellLayoutBody({
                       <option value="es">{t('web.language.es')}</option>
                     </select>
                   </label>
+                  <ThemeToggle />
                   <button
                     type="button"
                     className="topbar__button"
