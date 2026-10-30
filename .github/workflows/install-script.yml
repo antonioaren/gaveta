@@ -61,6 +61,10 @@ jobs:
           test -f "$HOME/Gaveta/.gaveta/config.json"
           "$HOME/.local/bin/gaveta" doctor --json --vault "$HOME/Gaveta"
           "$HOME/.local/bin/gaveta" validate --json --vault "$HOME/Gaveta"
+          custom="$HOME/custom-install-dir"
+          bash install.sh --source "$GITHUB_WORKSPACE" --dir "$custom" --yes
+          test -f "$custom/env.sh"
+          grep -q 'GAVETA_VAULT=' "$custom/env.sh"
           bash install.sh --source "$GITHUB_WORKSPACE" --yes
           bash install.sh --uninstall --yes
           test ! -e "$HOME/.local/bin/gaveta"
