@@ -38,11 +38,11 @@ function runInstall(
 
 function gitCloneCheckout(home: string, installDir: string): void {
   const parent = join(installDir, '..');
-  const result = spawnSync(
-    'git',
-    ['clone', '--branch', 'main', `file://${REPO_ROOT}`, installDir],
-    { cwd: parent, env: homeEnv(home), encoding: 'utf8' },
-  );
+  const result = spawnSync('git', ['clone', `file://${REPO_ROOT}`, installDir], {
+    cwd: parent,
+    env: homeEnv(home),
+    encoding: 'utf8',
+  });
   if (result.status !== 0) {
     throw new Error(result.stderr || result.stdout || 'git clone failed');
   }
