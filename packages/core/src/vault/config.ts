@@ -15,6 +15,10 @@ export interface VaultConfig {
   assetsVersion?: string;
   /** sha256 hex of last gaveta-written content per vault asset path */
   assets?: Record<string, string>;
+  /** Optional local command log for `gaveta stats` (`.gaveta/log.jsonl`). */
+  commandLog?: {
+    readonly enabled: boolean;
+  };
 }
 
 export function createDefaultVaultConfig(assetsVersion?: string): VaultConfig {
@@ -35,8 +39,8 @@ export function parseVaultConfig(value: unknown): VaultConfig {
   assertAllowedKeys(
     value,
     ['rel', 'remoteAllowlist'],
-    ['assetsVersion', 'assets'],
-    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion y assets son opcionales)',
+    ['assetsVersion', 'assets', 'commandLog'],
+    'tiene que tener exactamente las claves rel y remoteAllowlist (assetsVersion, assets y commandLog son opcionales)',
   );
   const rel = value.rel;
   if (!isRecord(rel)) {
@@ -61,6 +65,10 @@ export function parseVaultConfig(value: unknown): VaultConfig {
   if ('assets' in value) {
     assets = parseAssetHashes(value.assets);
   }
+  let commandLog: VaultConfig['commandLog'];
+  if ('commandLog' in value) {
+    commandLog = parseCommandLogConfig(value.commandLog);
+  }
   const parsed: VaultConfig = {
     rel: {
       strict: rel.strict,
@@ -78,16 +86,24 @@ export function parseVaultConfig(value: unknown): VaultConfig {
       'remoteAllowlist tiene duplicados',
     ),
   };
-  if (assetsVersion !== undefined && assets !== undefined) {
-    return { ...parsed, assetsVersion, assets };
+  const withOptional = {
+    ...parsed,
+    ...(assetsVersion !== undefined ? { assetsVersion } : {}),
+    ...(assets !== undefined ? { assets } : {}),
+    ...(commandLog !== undefined ? { commandLog } : {}),
+  };
+  return withOptional;
+}
+
+function parseCommandLogConfig(value: unknown): VaultConfig['commandLog'] {
+  if (!isRecord(value)) {
+    throw configInvalid('commandLog tiene que ser un objeto');
   }
-  if (assetsVersion !== undefined) {
-    return { ...parsed, assetsVersion };
+  assertExactKeys(value, ['enabled'], 'commandLog tiene que tener exactamente la clave enabled');
+  if (typeof value.enabled !== 'boolean') {
+    throw configInvalid('commandLog.enabled tiene que ser booleano');
   }
-  if (assets !== undefined) {
-    return { ...parsed, assets };
-  }
-  return parsed;
+  return { enabled: value.enabled };
 }
 
 function parseAssetHashes(value: unknown): Record<string, string> {
@@ -157,6 +173,9 @@ function serializeVaultConfig(config: VaultConfig): string {
   }
   if (config.assets !== undefined && Object.keys(config.assets).length > 0) {
     body.assets = config.assets;
+  }
+  if (config.commandLog !== undefined) {
+    body.commandLog = { enabled: config.commandLog.enabled };
   }
   return `${JSON.stringify(body, null, 2)}\n`;
 }

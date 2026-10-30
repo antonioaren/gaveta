@@ -25,6 +25,7 @@
   "cli.human.stats.index": "Vault: {notes} notas, {connectedRate}% conectadas, {orphans} huérfanas, {broken} enlaces rotos, {pending} pendientes, {avgOutgoing} enlaces salientes/nota (media).",
   "cli.human.stats.log": "Log de comandos: {commands} entradas, {successRate}% éxito, {validationPerNote} errores de validación/nota creada, {avgLinksCreated} enlaces/nota creada (media), p95 {p95Ms} ms, {activeDays}/7 días activos.",
   "cli.human.stats.log_missing": "No hay log de comandos en {path}.",
+  "cli.human.stats.log_opt_in": "Opcional: activa commandLog.enabled en .gaveta/config.json para registrar el uso local de la CLI en estas métricas.",
   "cli.human.export.blocked_preview": "Vista previa bloqueada: {summary}.",
   "cli.human.export.completed": "Exportación completada en {outDir}: {summary}.",
   "cli.human.export.conflicts_heading": "Conflictos:",

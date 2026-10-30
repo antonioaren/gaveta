@@ -67,6 +67,7 @@ function renderHuman(stats: VaultStats): string {
   ];
   if (!stats.log.present) {
     lines.push(hm('cli.human.stats.log_missing', { path: COMMAND_LOG_RELATIVE }));
+    lines.push(hm('cli.human.stats.log_opt_in'));
   } else {
     lines.push(
       hm('cli.human.stats.log', {
