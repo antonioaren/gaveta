@@ -1,0 +1,26 @@
+name: ShellCheck install.sh
+description: Run ShellCheck on the root installer script.
+
+runs:
+  using: composite
+  steps:
+    - name: Install ShellCheck (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ! command -v shellcheck >/dev/null 2>&1; then
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+        fi
+    - name: Install ShellCheck (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ! command -v shellcheck >/dev/null 2>&1; then
+          brew install shellcheck
+        fi
+    - name: ShellCheck
+      shell: bash
+      run: shellcheck install.sh

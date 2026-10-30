@@ -28,11 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - name: ShellCheck
-        uses: ludeeus/action-shellcheck@v2
-        with:
-          additional_files: install.sh
-          severity: error
+      - uses: ./.github/actions/shellcheck-install
       - name: Run installer from checkout (--source)
         env:
           HOME: ${{ runner.temp }}/gaveta-install-home
