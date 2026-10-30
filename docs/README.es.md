@@ -1,129 +1,111 @@
 # Gaveta
 
-Base de conocimiento local, al estilo Obsidian, donde cada nota es un archivo HTML y las conexiones entre notas son el centro del producto. Los agentes LLM (Claude Code, Codex o scripts) escriben en el vault a través de la CLI `gaveta`, y la app lo muestra y permite editarlo.
+Base de conocimiento local al estilo Obsidian: cada nota es un archivo HTML y los enlaces entre notas son el centro del producto.
 
-## Documentación
+![Grafo global de enlaces](assets/screenshot-graph.png)
 
-- [PRD](PRD.md): qué es Gaveta y por qué.
-- [Requisitos](REQUIREMENTS.md): requisitos verificables, decisiones aprobadas y contratos de autoría y de la CLI.
-- [Tareas](TASKS.md): plan de ejecución por fases.
+> **Vista previa temprana (0.1.x)** — Desarrollo activo. La instalación recomendada es el script bash (checkout git, no npm).
 
-## Probar el MVP
+[Documentación en inglés](../README.md) · [Roadmap](../ROADMAP.md) · [Contribuir](../CONTRIBUTING.md) · [Guía para agentes](../AGENTS.md)
 
-Requisito: **Node.js ≥ 22.18** (coincide con `.nvmrc` y `engines` del monorepo). En macOS/Linux:
+## Por qué HTML y no Markdown
+
+- **Documentos ricos** — Callouts, tablas, tareas, diapositivas y componentes de maquetación en el contrato de autoría.
+- **Adecuado para agentes** — El HTML encaja con artefactos de Claude, Cursor y otros.
+- **Notas autocontenidas** — Un archivo por nota: `file://`, git, archivado.
+- **Los agentes escriben con la CLI** — El binario **`gaveta`** y la [skill de agente](#skill-de-agente) usan el mismo contrato que la app.
+
+## Qué incluye
+
+| Área | Qué obtienes |
+| --- | --- |
+| **Editores** | Editor visual (TipTap) y modo código (CodeMirror 6). |
+| **Tareas** | Checkboxes en la app; **`gaveta todo`** en la CLI. |
+| **Enlaces** | `[[wikilinks]]`, `data-g-to`, pendientes, backlinks, grafo. |
+| **Markdown** | **`gaveta import`** / **`export`** (límites documentados en ida y vuelta). |
+| **CLI** | **`gaveta`** / **`gv`**: init, notas, grafo, búsqueda, doctor, serve, MCP, … |
+| **Local-first** | **`gaveta serve`** solo en **127.0.0.1**; índice SQLite FTS5; **Node ≥ 22.18**. |
+| **i18n** | CLI y interfaz web en **inglés y español** (`--lang`, `GAVETA_LANG`, preferencia guardada en la web). |
+
+![Vista de nota](assets/screenshot-note.png)
+
+## Instalación
+
+**macOS (principal) y Linux.** Requiere **Node.js ≥ 22.18** y **git**.
 
 ```bash
-corepack enable
-pnpm install
+curl -fsSL https://raw.githubusercontent.com/antonioaren/gaveta/main/install.sh | bash
 ```
 
-Ejecuta la CLI desde el repo sin instalarla (el título va como argumento; el HTML del cuerpo, con `--from -`):
+Sin flags, el instalador:
+
+- Clona o actualiza **`~/.local/share/gaveta`** desde **`main`** (clone completo para **`gaveta update`**)
+- Ejecuta **`pnpm install`** y construye la app web
+- Enlaza **`gaveta`** y **`gv`** en **`~/.local/bin`**
+- Crea **`~/Gaveta`** si no existe
+- Instala la skill si existen **`~/.cursor`** y/o **`~/.claude`**
+- Escribe **`~/.local/share/gaveta/env.sh`** con **`GAVETA_VAULT`**
+
+Opciones, desinstalación y actualizaciones: **[Instalación](installation.md)**.
+
+## Inicio rápido
+
+Tras instalar, abre una **nueva terminal** (o **`source ~/.local/share/gaveta/env.sh`**):
 
 ```bash
-pnpm exec gaveta init mi-vault --json
-
-echo '<article><h1>Other</h1><section id="cuerpo"><p>Nota de referencia.</p></section></article>' \
-  | pnpm exec gaveta new "Other" --type doc --vault mi-vault --from - --json
-
-echo '<article><h1>Origen</h1><section id="cuerpo"><p>Ver [[Other]]</p></section></article>' \
-  | pnpm exec gaveta new "Origen" --type doc --vault mi-vault --from - --json
-
-pnpm exec gaveta read Origen --as outline --vault mi-vault --json
-
-echo '<p>Más texto.</p>' \
-  | pnpm exec gaveta edit Origen --vault mi-vault --section cuerpo --append --from - --json
-
-pnpm exec gaveta search Other --vault mi-vault --json
-
-# macOS: abre la nota en el navegador (file://)
-open mi-vault/origen.html
+gaveta serve
 ```
 
-Para instalar desde un checkout de git (recomendado hoy) y dejar `gaveta` y `gv` en `~/.local/bin`:
+Abre la URL **127.0.0.1** que imprime el comando.
+
+Más detalle y primeras notas: **[Inicio rápido](quick-start.md)**.
+
+## Skill de agente
+
+Gaveta incluye una skill [Agent Skills](https://agentskills.io) generada desde el mismo origen que **`gaveta guide`**.
+
+| Mecanismo | Comando | Destino |
+| --- | --- | --- |
+| **Skill** | `gaveta skill install --target cursor --scope user` | p. ej. `~/.cursor/skills/gaveta/` |
+| **Reglas del vault** | `gaveta init --agent-instructions cursor` | `<vault>/.cursor/rules/gaveta.mdc` |
+
+El instalador ejecuta **`skill install --scope user`** al detectar Cursor o Claude Code. **`gaveta skill status`** comprueba versiones.
+
+Guía completa: **[Skill de agente](skill.md)**.
+
+## MCP (Claude Code)
+
+```bash
+claude mcp add gaveta -- gaveta mcp
+```
+
+**[MCP](mcp.md)**
+
+## Referencia CLI (resumen)
+
+**`gaveta guide`** · **[Referencia CLI](cli-reference.md)**
+
+## Estructura del vault
+
+**[Estructura del vault](vault-structure.md)**
+
+## Configuración
+
+**[Configuración](configuration.md)**
+
+## Desarrollo desde fuente
 
 ```bash
 git clone https://github.com/antonioaren/gaveta.git
 cd gaveta
 corepack enable
 pnpm install
-mkdir -p ~/.local/bin
-ln -sf "$(pwd)/packages/cli/bin/gaveta.js" ~/.local/bin/gaveta
-ln -sf "$(pwd)/packages/cli/bin/gaveta.js" ~/.local/bin/gv
-```
-
-Comprueba con `gaveta version` (muestra versión SemVer, commit git, Node y método de instalación). No hace falta `NODE_NO_WARNINGS`.
-
-### Actualizar
-
-En un checkout de git en la rama `main`, sin cambios locales sin confirmar:
-
-```bash
-gaveta update
-```
-
-Solo comprobar si hay actualización (`0` = al día, `1` = disponible):
-
-```bash
-gaveta update --check
-```
-
-Por defecto sigue el último tag `v*` (`--channel stable`); usa `--channel main` para seguir `origin/main`. Si la instalación no es un checkout de git, el comando muestra los pasos manuales. Tras actualizar, refresca los assets de `.gaveta/` del vault actual (o del indicado con `--vault`) sin tocar las notas. Ver [releasing.md](releasing.md) para publicar versiones.
-
-## Desarrollo
-
-Requisito: Node.js ≥ 22.18. pnpm 10 está fijado en `packageManager`.
-
-```bash
-pnpm install
 pnpm check
 pnpm dev
-pnpm exec gaveta version
 ```
 
-`pnpm check` ejecuta format, lint, typecheck, tests con cobertura, e2e y `pnpm audit --audit-level=high`. Es el mismo conjunto que la CI local. El flujo de trabajo de los agentes está en [AGENTS.md](../AGENTS.md).
-
-`gaveta` y `gv` son el mismo binario. `gaveta version` y `gaveta update` gestionan la versión instalada; `--json` escribe el sobre versionado, `--vault` localiza el vault y `--from` lee un archivo o stdin.
-
-### Importar desde Claude
-
-Convierte HTML generado por Claude (documentos, diapositivas, paneles o artefactos React) en notas Gaveta:
-
-```bash
-pnpm exec gaveta init mi-vault --json
-
-cp fixtures/claude/doc.html mi-vault/informe.html
-pnpm exec gaveta adopt informe.html --vault mi-vault --source claude --json
-
-cp fixtures/claude/react-app.html mi-vault/demo.html
-pnpm exec gaveta adopt demo.html --vault mi-vault --source claude --allow-cdn --json
-
-cat fixtures/claude/doc.html \
-  | pnpm exec gaveta new "Informe" --vault mi-vault --type doc --source claude --from - --json
-```
-
-Los scripts y estilos inline se eliminan en tipos declarativos (`doc`, `slides`, `dashboard`, `design`); el HTML interactivo se guarda como nota `artifact` dentro de un `iframe` aislado.
-
-| Paquete          | Ruta              | Rol                                        |
-| ---------------- | ----------------- | ------------------------------------------ |
-| `@gaveta/core`   | `packages/core`   | contrato, parser, vault, índice, operaciones |
-| `@gaveta/cli`    | `packages/cli`    | binario `gaveta` / `gv`                    |
-| `@gaveta/server` | `packages/server` | API local (`gaveta serve`)                 |
-| `@gaveta/web`    | `apps/web`        | visor y editor React + Vite                |
-
-Los paquetes de Node usan TypeScript estricto con `NodeNext` y sin emit. Los imports relativos llevan extensión `.ts`. La app usa la resolución de Vite.
-
-## MCP (Claude Code)
-
-`gaveta mcp` arranca un servidor [Model Context Protocol](https://modelcontextprotocol.io) por stdio. Cada comando de la CLI (salvo `mcp` y el bloqueante `serve`) es una herramienta MCP. Las respuestas usan el mismo sobre JSON que `gaveta … --json` (`ok`, `data`, `warnings`, códigos estables `E_*` / `W_*`). Indica `vault` en los argumentos de la herramienta o define `GAVETA_VAULT`; `lang` (`en` / `es`) equivale a `--lang`.
-
-Registro en Claude Code (con `gaveta` en el `PATH`):
-
-```bash
-claude mcp add gaveta -- gaveta mcp
-```
-
-Los registros y avisos van a stderr; stdout queda reservado al protocolo MCP.
+**[AGENTS.md](../AGENTS.md)** · **[Contribuir](../CONTRIBUTING.md)**
 
 ## Licencia
 
-Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](../LICENSE) para el texto completo.
+MIT — [LICENSE](../LICENSE)

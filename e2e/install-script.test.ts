@@ -38,7 +38,11 @@ function gavetaBin(home: string): string {
 
 function runGaveta(home: string, args: string[]): ReturnType<typeof spawnSync> {
   return spawnSync(gavetaBin(home), args, {
-    env: { ...process.env, HOME: home, PATH: `${join(home, '.local', 'bin')}:${process.env.PATH ?? ''}` },
+    env: {
+      ...process.env,
+      HOME: home,
+      PATH: `${join(home, '.local', 'bin')}:${process.env.PATH ?? ''}`,
+    },
     encoding: 'utf8',
   });
 }
@@ -55,7 +59,10 @@ it('T1.30: install.sh --source installs CLI, vault, serve, idempotent re-run, an
 
     const version = runGaveta(home, ['version', '--json']);
     expect(version.status).toBe(0);
-    const versionBody = parseJson<{ install: { method: string } }>(version.stdout ?? '');
+    if (typeof version.stdout !== 'string') {
+      throw new Error('expected utf8 stdout from gaveta version');
+    }
+    const versionBody = parseJson<{ install: { method: string } }>(version.stdout);
     expect(versionBody.data.install.method).toBe('git');
 
     const vaultRoot = join(home, 'Gaveta');
@@ -89,7 +96,7 @@ it('T1.30: install.sh --source installs CLI, vault, serve, idempotent re-run, an
             const body = parseJson<{ port: number; token: string }>(serveStdout);
             resolve({ port: body.data.port, token: body.data.token });
           } catch (error) {
-            reject(error);
+            reject(error instanceof Error ? error : new Error(String(error)));
           }
         }
       });
