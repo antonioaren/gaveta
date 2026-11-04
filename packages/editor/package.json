@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "@gaveta/core": "workspace:*",
-    "@tiptap/core": "3.32.0",
-    "@tiptap/pm": "3.32.0",
+    "@tiptap/core": "3.32.2",
+    "@tiptap/pm": "3.32.2",
     "parse5": "8.0.1"
   },
   "devDependencies": {
