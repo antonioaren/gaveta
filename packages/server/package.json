@@ -15,20 +15,20 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@fastify/rate-limit": "10.3.0",
-    "@fastify/static": "10.1.1",
-    "@fastify/websocket": "11.2.0",
+    "@fastify/rate-limit": "11.2.2",
+    "@fastify/static": "10.1.10",
+    "@fastify/websocket": "11.3.7",
     "@gaveta/core": "workspace:*",
     "@gaveta/i18n": "workspace:*",
-    "chokidar": "4.0.3",
-    "fastify": "5.12.2"
+    "chokidar": "6.0.0",
+    "fastify": "5.12.8"
   },
   "devDependencies": {
     "@gaveta/fixtures": "workspace:*",
     "@types/node": "catalog:",
-    "@types/ws": "8.18.1",
+    "@types/ws": "8.18.2",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "ws": "8.21.0"
+    "ws": "8.22.1"
   }
 }
