@@ -16,12 +16,12 @@
   },
   "dependencies": {
     "@fastify/rate-limit": "10.3.0",
-    "@fastify/static": "10.1.1",
+    "@fastify/static": "10.1.2",
     "@fastify/websocket": "11.2.0",
     "@gaveta/core": "workspace:*",
     "@gaveta/i18n": "workspace:*",
     "chokidar": "4.0.3",
-    "fastify": "5.12.2"
+    "fastify": "5.12.6"
   },
   "devDependencies": {
     "@gaveta/fixtures": "workspace:*",
